@@ -1,0 +1,16 @@
+\section{Large Language Models}
+Since the Transformer architecture \todo{Cite attention is all you need} brought us the first GPT and BERT models, LLMs have changed the NLP field.
+Now there are many powerful proprietary (OpenAI, Anthropic) and open-source (Llama, Qwen) models. \todo{cite}
+
+\section{Prompts}
+Prompts are instructions we give to the LLM to get the output we want.  
+It has been shown experimentally that small changes in prompt design, like simple paraphrasing, can influence the accuracy of the model's output. \todo{cite} 
+Naturally this inspired research into optimizing LLM performance by changing its prompts.
+\subsection{Prompting techniques}
+In solving challenging reasoning tasks, it is beneficial to get the model to show its reasoning steps. 
+As LLMs just predict the next token, building on its previous thoughts improves performance on tasks like the GSM8k benchmark.
+This technique, called Chain-of-Thought has been built upon which resulted in methods such as Tree-of-Thought, ReAct and Reflexion. \todo{cite prompt survey} 
+\subsection{Prompt optimization methods}
+There has been work of optimizing soft and discrete prompts. 
+As proprietary models usually do not allow access to its internal states, soft prompt optimization is not and option there.
+Several search and optimization methods have been employed in this task, like beam search and evolutionary algorithms. \todo{sota rewrite here}

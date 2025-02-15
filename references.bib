@@ -1,0 +1,230 @@
+%%% automatic prompt engineering motivation %%%
+
+% non ai expert prompt design
+@inproceedings{10.1145/3544548.3581388,
+  author    = {Zamfirescu-Pereira, J.D. and Wong, Richmond Y. and Hartmann, Bjoern and Yang, Qian},
+  title     = {Why Johnny Can’t Prompt: How Non-AI Experts Try (and Fail) to Design LLM Prompts},
+  year      = {2023},
+  isbn      = {9781450394215},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3544548.3581388},
+  doi       = {10.1145/3544548.3581388},
+  abstract  = {Pre-trained large language models (“LLMs”) like GPT-3 can engage in fluent, multi-turn instruction-taking out-of-the-box, making them attractive materials for designing natural language interactions. Using natural language to steer LLM outputs (“prompting”) has emerged as an important design technique potentially accessible to non-AI-experts. Crafting effective prompts can be challenging, however, and prompt-based interactions are brittle. Here, we explore whether non-AI-experts can successfully engage in “end-user prompt engineering” using a design probe—a prototype LLM-based chatbot design tool supporting development and systematic evaluation of prompting strategies. Ultimately, our probe participants explored prompt designs opportunistically, not systematically, and struggled in ways echoing end-user programming systems and interactive machine learning systems. Expectations stemming from human-to-human instructional experiences, and a tendency to overgeneralize, were barriers to effective prompt design. These findings have implications for non-AI-expert-facing LLM-based tool design and for improving LLM-and-prompt literacy among programmers and the public, and present opportunities for further research.},
+  booktitle = {Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems},
+  articleno = {437},
+  numpages  = {21},
+  keywords  = {design tools, end-users, language models},
+  location  = {Hamburg, Germany},
+  series    = {CHI '23}
+}
+
+% prompt sensitivity
+@misc{salinas2024butterflyeffectalteringprompts,
+  title         = {The Butterfly Effect of Altering Prompts: How Small Changes and Jailbreaks Affect Large Language Model Performance},
+  author        = {Abel Salinas and Fred Morstatter},
+  year          = {2024},
+  eprint        = {2401.03729},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2401.03729}
+}
+@misc{zhuo2024prosaassessingunderstandingprompt,
+  title         = {ProSA: Assessing and Understanding the Prompt Sensitivity of LLMs},
+  author        = {Jingming Zhuo and Songyang Zhang and Xinyu Fang and Haodong Duan and Dahua Lin and Kai Chen},
+  year          = {2024},
+  eprint        = {2410.12405},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2410.12405}
+}
+
+%%% prompt design techniques
+% cot
+@misc{wei2023chainofthoughtpromptingelicitsreasoning,
+  title         = {Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},
+  author        = {Jason Wei and Xuezhi Wang and Dale Schuurmans and Maarten Bosma and Brian Ichter and Fei Xia and Ed Chi and Quoc Le and Denny Zhou},
+  year          = {2023},
+  eprint        = {2201.11903},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2201.11903}
+}
+% react
+@misc{yao2023reactsynergizingreasoningacting,
+  title         = {ReAct: Synergizing Reasoning and Acting in Language Models},
+  author        = {Shunyu Yao and Jeffrey Zhao and Dian Yu and Nan Du and Izhak Shafran and Karthik Narasimhan and Yuan Cao},
+  year          = {2023},
+  eprint        = {2210.03629},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2210.03629}
+}
+% reflexion
+@misc{shinn2023reflexionlanguageagentsverbal,
+  title         = {Reflexion: Language Agents with Verbal Reinforcement Learning},
+  author        = {Noah Shinn and Federico Cassano and Edward Berman and Ashwin Gopinath and Karthik Narasimhan and Shunyu Yao},
+  year          = {2023},
+  eprint        = {2303.11366},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2303.11366}
+}
+% tot
+@misc{yao2023treethoughtsdeliberateproblem,
+  title         = {Tree of Thoughts: Deliberate Problem Solving with Large Language Models},
+  author        = {Shunyu Yao and Dian Yu and Jeffrey Zhao and Izhak Shafran and Thomas L. Griffiths and Yuan Cao and Karthik Narasimhan},
+  year          = {2023},
+  eprint        = {2305.10601},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2305.10601}
+}
+% survey
+@misc{schulhoff2024promptreportsystematicsurvey,
+  title         = {The Prompt Report: A Systematic Survey of Prompting Techniques},
+  author        = {Sander Schulhoff and Michael Ilie and Nishant Balepur and Konstantine Kahadze and Amanda Liu and Chenglei Si and Yinheng Li and Aayush Gupta and HyoJung Han and Sevien Schulhoff and Pranav Sandeep Dulepet and Saurav Vidyadhara and Dayeon Ki and Sweta Agrawal and Chau Pham and Gerson Kroiz and Feileen Li and Hudson Tao and Ashay Srivastava and Hevander Da Costa and Saloni Gupta and Megan L. Rogers and Inna Goncearenco and Giuseppe Sarli and Igor Galynker and Denis Peskoff and Marine Carpuat and Jules White and Shyamal Anadkat and Alexander Hoyle and Philip Resnik},
+  year          = {2024},
+  eprint        = {2406.06608},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2406.06608}
+}
+
+
+%%% prompt optimization theory (metaprompting)
+@misc{dewynter2024metaprompting,
+  title         = {On Meta-Prompting},
+  author        = {Adrian de Wynter and Xun Wang and Qilong Gu and Si-Qing Chen},
+  year          = {2024},
+  eprint        = {2312.06562},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2312.06562}
+}
+
+
+%%% evolutionary prompt optimization%%%
+@misc{cui2024phaseevounifiedincontextprompt,
+  title         = {PhaseEvo: Towards Unified In-Context Prompt Optimization for Large Language Models},
+  author        = {Wendi Cui and Jiaxin Zhang and Zhuohang Li and Hao Sun and Damien Lopez and Kamalika Das and Bradley Malin and Sricharan Kumar},
+  year          = {2024},
+  eprint        = {2402.11347},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2402.11347}
+}
+@misc{fernando2023promptbreederselfreferentialselfimprovementprompt,
+  title         = {Promptbreeder: Self-Referential Self-Improvement Via Prompt Evolution},
+  author        = {Chrisantha Fernando and Dylan Banarse and Henryk Michalewski and Simon Osindero and Tim Rocktäschel},
+  year          = {2023},
+  eprint        = {2309.16797},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2309.16797}
+}
+@misc{guo2024connectinglargelanguagemodels,
+  title         = {Connecting Large Language Models with Evolutionary Algorithms Yields Powerful Prompt Optimizers},
+  author        = {Qingyan Guo and Rui Wang and Junliang Guo and Bei Li and Kaitao Song and Xu Tan and Guoqing Liu and Jiang Bian and Yujiu Yang},
+  year          = {2024},
+  eprint        = {2309.08532},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2309.08532}
+}
+
+
+%%% other discrete prompt optimization%%%
+% APE
+@misc{zhou2023largelanguagemodelshumanlevel,
+  title         = {Large Language Models Are Human-Level Prompt Engineers},
+  author        = {Yongchao Zhou and Andrei Ioan Muresanu and Ziwen Han and Keiran Paster and Silviu Pitis and Harris Chan and Jimmy Ba},
+  year          = {2023},
+  eprint        = {2211.01910},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2211.01910}
+}
+% OPRO
+@misc{yang2024largelanguagemodelsoptimizers,
+  title         = {Large Language Models as Optimizers},
+  author        = {Chengrun Yang and Xuezhi Wang and Yifeng Lu and Hanxiao Liu and Quoc V. Le and Denny Zhou and Xinyun Chen},
+  year          = {2024},
+  eprint        = {2309.03409},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2309.03409}
+}
+@misc{he2024crispomultiaspectcritiquesuggestionguidedautomatic,
+  title         = {CriSPO: Multi-Aspect Critique-Suggestion-guided Automatic Prompt Optimization for Text Generation},
+  author        = {Han He and Qianchu Liu and Lei Xu and Chaitanya Shivade and Yi Zhang and Sundararajan Srinivasan and Katrin Kirchhoff},
+  year          = {2024},
+  eprint        = {2410.02748},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2410.02748}
+}
+% APO/ProTeGi
+@misc{pryzant2023automaticpromptoptimizationgradient,
+  title         = {Automatic Prompt Optimization with "Gradient Descent" and Beam Search},
+  author        = {Reid Pryzant and Dan Iter and Jerry Li and Yin Tat Lee and Chenguang Zhu and Michael Zeng},
+  year          = {2023},
+  eprint        = {2305.03495},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2305.03495}
+}
+% pseudogradients similar to APO
+@misc{tang2024unleashingpotentiallargelanguage,
+  title         = {Unleashing the Potential of Large Language Models as Prompt Optimizers: An Analogical Analysis with Gradient-based Model Optimizers},
+  author        = {Xinyu Tang and Xiaolei Wang and Wayne Xin Zhao and Siyuan Lu and Yaliang Li and Ji-Rong Wen},
+  year          = {2024},
+  eprint        = {2402.17564},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2402.17564}
+}
+% PE2
+@misc{ye2024promptengineeringpromptengineer,
+  title         = {Prompt Engineering a Prompt Engineer},
+  author        = {Qinyuan Ye and Maxamed Axmed and Reid Pryzant and Fereshte Khani},
+  year          = {2024},
+  eprint        = {2311.05661},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2311.05661}
+}
+
+% discrete prompt optimization with reinforcement learning
+@misc{deng2022rlpromptoptimizingdiscretetext,
+      title={RLPrompt: Optimizing Discrete Text Prompts with Reinforcement Learning}, 
+      author={Mingkai Deng and Jianyu Wang and Cheng-Ping Hsieh and Yihan Wang and Han Guo and Tianmin Shu and Meng Song and Eric P. Xing and Zhiting Hu},
+      year={2022},
+      eprint={2205.12548},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2205.12548}, 
+}
+
+%%% optimizing LLM chains with DSPy and MiProv2
+
+@misc{opsahlong2024optimizinginstructionsdemonstrationsmultistage,
+  title         = {Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs},
+  author        = {Krista Opsahl-Ong and Michael J Ryan and Josh Purtell and David Broman and Christopher Potts and Matei Zaharia and Omar Khattab},
+  year          = {2024},
+  eprint        = {2406.11695},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2406.11695}
+}
+
+@misc{khattab2023dspycompilingdeclarativelanguage,
+  title         = {DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines},
+  author        = {Omar Khattab and Arnav Singhvi and Paridhi Maheshwari and Zhiyuan Zhang and Keshav Santhanam and Sri Vardhamanan and Saiful Haq and Ashutosh Sharma and Thomas T. Joshi and Hanna Moazam and Heather Miller and Matei Zaharia and Christopher Potts},
+  year          = {2023},
+  eprint        = {2310.03714},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2310.03714}
+}
+

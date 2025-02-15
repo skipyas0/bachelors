@@ -1,0 +1,27 @@
+\subsection{Automatic Prompt Engineer \cite{zhou2023largelanguagemodelshumanlevel}}
+Authors of this ICLR paper focused on the problem of automatic prompt construction by a Large Language Model. The LLM creates a pool of candidate prompts based on a set of input-output examples.
+The quality of these prompts is then evaluated as the zero-shot performance of another LLM following these instructions. In a more complex version of the method, authors proposed an iterative Monte Carlo search, where the prompt-space around 
+the best performing candidates is sampled by constructing semantically similar prompts. However only marginal improvements were found compared to the simpler version. 
+\subsection{Promptbreeder \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}}
+This ICLR paper introduces a more complex evolutionary optimization method, promising better diversity. Semantic similarity of prompts is calculated as the cosine similarity of their BERT embeddings.
+Authors also describe the optimization process as "self-referential" due to the fact that the metaprompts (prompts that guide the optimization process of the prompt population) are optimized as well.
+\subsection{Evoprompt \cite{guo2024connectinglargelanguagemodels}}
+This paper, presented at ICLR 2024, presents a framework for optimizing discrete prompts without access to token probabilities. 
+In contrast to previous work on prompt optimization, this method is applicable in black-box LLMs like the GPT family from OpenAI.
+Authors used a LLM as an evolutionary operator inside a genetic algorithm to combine (crossover) and paraphrase (mutate) prompts. 
+Initial population was a combination of expert-made manual prompts as well as prompts constructed by the LLM.
+During evaluation, the authors found that the Evoprompt method outperfomed human-engineered prompts and existing optimization methods on 31 datasets covering language understanding, generation tasks, as well as BIG-Bench Hard (BBH) tasks.
+\subsection{OPRO \cite{yang2024largelanguagemodelsoptimizers}}
+Authors of this paper propose adding a history of prompts along with their respective scores to give the optimizer LLM more context.
+The language model can build on the best existing solutions. Authors also emphasize the importance of choosing the correct model sampling temperature to facilitate exploration or exploitation.
+When comparing this method to Evoprompt, authors point out their method does not rely so heavily on the quality of the initial prompt population.
+\subsection{ProTeGi \cite{pryzant2023automaticpromptoptimizationgradient}}
+The optimization method proposed in this paper is inspired by the concept of backpropagation. Text gradients are formed as critiques of the given prompt and its performance on a mini-batch of data.
+The LLM is instructed to move the prompt in the opposite direction of the gradient thus fixing its problems. In each iteration the current prompt is used to generate many new candidate prompts (expansion). 
+Next, a selection process is used to decide which prompts are worth carrying forward to the next iteration. Authors explore multiple methods of selection, for example UCB bandits or Successive Rejects.
+Authors found that the optimization process can begin to overfit or get caught in local minima, peaking at around 3 steps on all datasets.
+\subsection{CriSPO \cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}}
+This paper addresses the issue that most of the previous methods focus on optimizing prompts for tasks with only a single metric. However generative tasks require more nuanced guidance beyond a single numeric metric.
+First for each prompt the model constructs aspects on which the prompt could be critisized. For each aspect the model generates a critique highlighting potential problems of the generated outputs. 
+Rather than generating a new prompt with each suggestion, authors pack a history of critiques and suggestions into the optimizer for generating the next prompt, enabling more stable optimization over the infinite search space.
+As a second stage of the optimization process, authors propose Automatic Suffix Tuning, where the suffix can be used to optimize performance on a new metric without sacrificing performance on the primary metric.

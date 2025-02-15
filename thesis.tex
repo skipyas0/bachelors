@@ -1,0 +1,131 @@
+% arara: pdflatex: { synctex: yes }
+% arara: makeindex: { style: ctuthesis }
+% arara: bibtex
+
+% The class takes all the key=value arguments that \ctusetup does,
+% and a couple more: draft and oneside
+\documentclass[twoside]{ctuthesis}
+
+\ctusetup{
+	preprint = \ctuverlog,
+	mainlanguage = english,
+	titlelanguage = english,
+	otherlanguages = {czech},
+	title-czech = {Metody evoluční optimalizace vstupních řetězců pro velké jazykové modely},
+	title-english = {Methods of Evolutionary Optimization of Prompts for Large Language Models},
+	subtitle-czech = {},
+	subtitle-english = {},
+	doctype = B,
+	faculty = F3,
+	department-english = {Artificial Intelligence Center},
+	department-czech = {Centrum pro umělou inteligenci},
+	author = {Vojtěch Klouda},
+	supervisor = {Ing. Jan Drchal PhD.},
+	supervisor-address = {Resslova 307/9 Praha, E-322},
+%	supervisor-specialist = {John Doe},
+	fieldofstudy-english = {Artificial Intelligence},
+	subfieldofstudy-english = {Natural Language Processing},
+	fieldofstudy-czech = {Umělá inteligence},
+	subfieldofstudy-czech = {Zpracování přirozeného jazyka},
+	keywords-czech = {jazykový model, evoluční algoritmus},
+	keywords-english = {language model, evolutionary algorithm},
+	day = 10,
+	month = 5,
+	year = 2025,
+%	specification-file = {ctutest-zadani.pdf},
+%	front-specification = true,
+%	front-list-of-figures = false,
+%	front-list-of-tables = false,
+%	monochrome = true,
+%	layout-short = true,
+}
+
+\ctuprocess
+
+\addto\ctucaptionsczech{%
+	\def\supervisorname{Vedoucí}%
+	\def\subfieldofstudyname{Studijní program}%
+}
+
+\ctutemplateset{maketitle twocolumn default}{
+	\begin{twocolumnfrontmatterpage}
+		\ctutemplate{twocolumn.thanks}
+		\ctutemplate{twocolumn.declaration}
+		\ctutemplate{twocolumn.abstract.in.titlelanguage}
+		\ctutemplate{twocolumn.abstract.in.secondlanguage}
+		\ctutemplate{twocolumn.tableofcontents}
+		\ctutemplate{twocolumn.listoffigures}
+	\end{twocolumnfrontmatterpage}
+}
+
+\input{my_commands}
+
+% Theorem declarations, this is the reasonable default, anybody can do what they wish.
+% If you prefer theorems in italics rather than slanted, use \theoremstyle{plainit}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\theoremstyle{note}
+\newtheorem*{remark*}{Remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\setlength{\parskip}{5ex plus 0.2ex minus 0.2ex}
+
+% Abstract in Czech
+\begin{abstract-czech}
+	TODO
+\end{abstract-czech}
+
+% Abstract in English
+\begin{abstract-english}
+	TODO
+\end{abstract-english}
+
+% Acknowledgements / Podekovani
+\begin{thanks}
+	= )))
+\end{thanks}
+
+% Declaration / Prohlaseni
+\begin{declaration}
+Prohlašuji, že jsem předloženou práci vypracoval samostatně, a že jsem uvedl veškerou použitou literaturu.
+
+V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
+\end{declaration}
+
+% Only for testing purposes
+\listfiles
+\usepackage[pagewise]{lineno}
+\usepackage{lipsum,blindtext}
+\usepackage{mathrsfs} % provides \mathscr used in the ridiculous examples
+
+\begin{document}
+
+\maketitle
+
+\chapter{Introduction}
+This is all very important
+\chapter{Literature Review}
+\include{literature}
+
+
+\appendix
+
+\printindex
+
+\appendix
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+%\ctutemplate{specification.as.chapter}
+
+\end{document}
