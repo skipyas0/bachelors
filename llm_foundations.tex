@@ -1,0 +1,33 @@
+\section{Large Language Models}
+\subsection{Brief history of NLP approaches}
+The goal of this section is to familiarize the reader with the progress in the Natural Language Processing (NLP) field in the recent decade.
+
+\subsubsection{Pre-transformer era}
+\paragraph{Statistical NLP}
+Data-driven methods such as Hidden Markov models, Conditional Random Fields and Max Entropy models are 
+being used for part-of-speech tagging, named entity recognition, machine translation and speech recognition.
+\paragraph{Word embeddings}
+Algorithms that encode meaning of words in high-dimensional vectors allow models to understand words and relationships between them.
+\paragraph{lstm, seq2seq, attention}
+Attention allows models to connect key parts of input.
+
+\subsubsection{Transformer era}
+\paragraph{Attention is all you need}
+Discovers that simplifying the architecture and focusing on the attention mechanisms allows for much better efficiency in training and paves way for a new era in NLP.
+\paragraph{Pre-training+fine-tuning}
+New paradigm where the language model is first pre-trained on an enormous corpus of data and later fine-tuned for specific tasks, like instruction-tuning for assistants.
+\paragraph{multimodality}
+Visual embedders allow LLMs to understand images. Embeddings are conserved under different modalities ("dog" and a picture of a dog have the same embedding).
+\paragraph{Mixture-of-experts (MoE)}
+More efficient architecture that allows for delegating of work to several "expert" submodels, resulting in sparse computation as only a fraction of the model parameters is activated.
+\paragraph{Reinforcement learning}
+Supervised Fine-tuning (SFT) has been combined or sometimes replaced altogether by various forms of Reinforcement learning (RL).
+Proximal policy optimization based on human or AI feedback is the basis for assistant chat bots such as ChatGPT.
+Novel RL approaches (GRPO) used to promote reasoning.
+\paragraph{Inference-time compute}
+Development of reasoning models is converging on the idea that letting the model spend more compute time on each answer leads to better results.
+Using SFT and/or RL the model is taught to "think" or show its "inner monologue" as a part of the answer inside a designated "<think>" tag.
+When leaving the thought chain, the "</think>" tag can be substituted by an introspective question like "Wait, did I forget something?" resulting in a prolonged thinking chain. 
+potentially catching errors.
+\paragraph{Overview of best current models}
+Current models, with sizes around 1 trillion parameters, match or surpass average human performance on many benchmarks including math and coding.
