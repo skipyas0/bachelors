@@ -1,4 +1,7 @@
 \section{Prompting techniques}
+
+Prompting techniques encode human priors, making it difficult to assess a language model's intrinsic reasoning abilities \cite{wang2024chainofthoughtreasoningprompting}
+
 \subsection{Prompt engineering}
 Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
 This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
@@ -25,12 +28,17 @@ Prompts are distinguished based on the number of included examples.
 Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
 models can reuse knowledge from pre-training and solve many tasks when provided just by a few examples.
 \subsection{Prompting techniques}
+
 \subsubsection{Chain-of-thought (CoT)}
-Instructing the model to "think step-by-step" results significant improvements on many benchmarks. Some research has shown that this approach hurts performance on some tasks where humans perform better without thinking.
-Apart from more compute time being allocated at inference, the model also benefits from having its whole reasoning chain as a part of the context when writing the final answer to the task.
-Several variants exist, such as CoT with self-consistency, where the final answer is acquired by majority-voting from several thinking chains.
+\input{literature/chain-of-thought}
+
 \subsubsection{Reflexion}
-Model reflects on its response and improves it.
+Reflexion converts binary or scalar feedback from the environment into verbal feedback in the form 
+of a textual summary, which is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. \cite{shinn2023reflexionlanguageagentsverbal}
+
+Reflections go into a long-term memory context limited to a sliding window with maximum capacity. \cite{shinn2023reflexionlanguageagentsverbal}
+
+Improves performance over strong baselines on sequential decision making, reasoning and programming tasks. \cite{shinn2023reflexionlanguageagentsverbal}
 \subsubsection{ReAct}
 Multi-turn prompting technique that forms the basis of agentic LLMs. The model is given a set of tools, such as a Wikipedia search function or a math expression evaluator.
 The model can go through several steps of using the tools, which generates "observation". The model uses these observations to generate a final answer and leaves the ReAct chain when ready using a "finish" function.

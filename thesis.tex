@@ -11,10 +11,10 @@
 	mainlanguage = english,
 	titlelanguage = english,
 	otherlanguages = {czech},
-	title-czech = {Metody evoluční optimalizace vstupních řetězců pro velké jazykové modely},
-	title-english = {Methods of Evolutionary Optimization of Prompts for Large Language Models},
-	subtitle-czech = {},
-	subtitle-english = {},
+	title-czech = {abcd},
+	title-english = {Meta-prompts for LLM Prompt Optimization},
+	subtitle-czech = {abcd},
+	subtitle-english = {abcd},
 	doctype = B,
 	faculty = F3,
 	department-english = {Artificial Intelligence Center},
@@ -27,8 +27,8 @@
 	subfieldofstudy-english = {Natural Language Processing},
 	fieldofstudy-czech = {Umělá inteligence},
 	subfieldofstudy-czech = {Zpracování přirozeného jazyka},
-	keywords-czech = {jazykový model, evoluční algoritmus},
-	keywords-english = {language model, evolutionary algorithm},
+	keywords-czech = {jazykový model, optimalizace},
+	keywords-english = {language model, optimization},
 	day = 10,
 	month = 5,
 	year = 2025,
@@ -58,7 +58,7 @@
 	\end{twocolumnfrontmatterpage}
 }
 
-\input{my_commands}
+\input{project_files/my_commands}
 
 % Theorem declarations, this is the reasonable default, anybody can do what they wish.
 % If you prefer theorems in italics rather than slanted, use \theoremstyle{plainit}
@@ -117,21 +117,22 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \chapter{Literature}
 
 
-\include{llm_foundations}
+\include{literature/llm_foundations}
 
 
-\include{prompting_techniques}
+\include{literature/prompting_techniques}
 
 
-\include{optimization_methods}
+\include{literature/optimization_methods}
 
 
-\include{prompt_optimization}
+\include{literature/prompt_optimization}
 
 \chapter{Methodology}
-
+\include{my_work/methodology}
 
 \chapter{Experiments}
+\include{my_work/experiments}
 
 \appendix
 

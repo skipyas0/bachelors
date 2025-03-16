@@ -53,7 +53,7 @@
 }
 
 %%% prompt design techniques
-% cot
+% few-shot-cot
 @misc{wei2023chainofthoughtpromptingelicitsreasoning,
   title         = {Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},
   author        = {Jason Wei and Xuezhi Wang and Dale Schuurmans and Maarten Bosma and Brian Ichter and Fei Xia and Ed Chi and Quoc Le and Denny Zhou},
@@ -62,6 +62,58 @@
   archiveprefix = {arXiv},
   primaryclass  = {cs.CL},
   url           = {https://arxiv.org/abs/2201.11903}
+}
+% zero-shot-cot
+@inproceedings{NEURIPS2022_8bb0d291,
+ author = {Kojima, Takeshi and Gu, Shixiang (Shane) and Reid, Machel and Matsuo, Yutaka and Iwasawa, Yusuke},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {S. Koyejo and S. Mohamed and A. Agarwal and D. Belgrave and K. Cho and A. Oh},
+ pages = {22199--22213},
+ publisher = {Curran Associates, Inc.},
+ title = {Large Language Models are Zero-Shot Reasoners},
+ url = {https://proceedings.neurips.cc/paper_files/paper/2022/file/8bb0d291acd4acf06ef112099c16f326-Paper-Conference.pdf},
+ volume = {35},
+ year = {2022}
+}
+% cot hurts performance on some tasks
+@misc{liu2024mindstepbystep,
+      title={Mind Your Step (by Step): Chain-of-Thought can Reduce Performance on Tasks where Thinking Makes Humans Worse}, 
+      author={Ryan Liu and Jiayi Geng and Addison J. Wu and Ilia Sucholutsky and Tania Lombrozo and Thomas L. Griffiths},
+      year={2024},
+      eprint={2410.21333},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2410.21333}, 
+}
+% top-k sampling uncovers natural cot without prompting
+@misc{wang2024chainofthoughtreasoningprompting,
+      title={Chain-of-Thought Reasoning Without Prompting}, 
+      author={Xuezhi Wang and Denny Zhou},
+      year={2024},
+      eprint={2402.10200},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2402.10200}, 
+}
+% why cot works
+@misc{prystawski2023thinkstepstepreasoning,
+      title={Why think step by step? Reasoning emerges from the locality of experience}, 
+      author={Ben Prystawski and Michael Y. Li and Noah D. Goodman},
+      year={2023},
+      eprint={2304.03843},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2304.03843}, 
+}
+% cot self-consistency
+@misc{wang2023selfconsistencyimproveschainthought,
+      title={Self-Consistency Improves Chain of Thought Reasoning in Language Models}, 
+      author={Xuezhi Wang and Jason Wei and Dale Schuurmans and Quoc Le and Ed Chi and Sharan Narang and Aakanksha Chowdhery and Denny Zhou},
+      year={2023},
+      eprint={2203.11171},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2203.11171}, 
 }
 % react
 @misc{yao2023reactsynergizingreasoningacting,
@@ -241,3 +293,12 @@
   url           = {https://arxiv.org/abs/2310.03714}
 }
 
+@misc{soylu2024finetuningpromptoptimizationgreat,
+      title={Fine-Tuning and Prompt Optimization: Two Great Steps that Work Better Together}, 
+      author={Dilara Soylu and Christopher Potts and Omar Khattab},
+      year={2024},
+      eprint={2407.10930},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2407.10930}, 
+}

@@ -1,0 +1,18 @@
+\section{Datasets}
+Datasets were chosen according to the following requirements:
+\begin{enumerate}
+    \item The task is challenging for modern LLMs using a standard CoT prompt but has non-zero accuracy
+    \item Complex output (no multiple-choice answers)
+    \item Easy to check programmatically to avoid human/AI judges
+\end{enumerate} 
+\subsection{External dataset}
+We found the Livebench datasets to meet our requirements.
+\subsection{Custom dataset design}
+Sequences dataset challenges the pattern recognition and algebraic capabilities of the model 
+\section{Optimization methods}
+\subsection{Optimization operators}
+Metaprompts that define the transition between optimizer generations.
+\section{Experimental setup}
+Language model used for solving is gpt-4o-mini. Prompts for the solver model are optimized by the optimized model, for which we use the gpt-4o.
+To encourage diversity and exploration in the optimization process, a temperature of $0.7$ is used for the optimizer model. The solver model uses
+temperature $0.0$ to keep the outputs deterministic. 

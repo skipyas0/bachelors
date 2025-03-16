@@ -1,0 +1,63 @@
+\textbf{Principles}
+
+Chain of thought = coherent series of intermediate reasoning steps that lead to the final answer for a problem \cite{wei2023chainofthoughtpromptingelicitsreasoning}
+
+CoT allows models to allocate additional computation to problems with more reasoning steps (inference-time scaling) \cite{wei2023chainofthoughtpromptingelicitsreasoning}
+
+
+Examples of CoT reasoning in the prompt in a one/few-shot setting to facilitate a reasoning chain response. \cite{wei2023chainofthoughtpromptingelicitsreasoning}
+
+CoT prompting is an emergent ability of model scale, does not positively impact performance for small models \cite{wei2023chainofthoughtpromptingelicitsreasoning}
+
+CoT can been elicited by prompting techniques - few-shot with steps demonstrations or zero-shot with specific instructions \cite{wang2024chainofthoughtreasoningprompting}
+
+Few-shot-CoT requires human engineering of multi-step reasoning prompts and their performance deteriorates if prompt example and task question types are unmatched, suggesting high sensitivity to prompt design. \cite{NEURIPS2022_8bb0d291}
+
+LLMs are decent zero-shot reasoners by adding a simple "Let's think step-by-step" prompt, which is versatile and task-agnostic. Similar prompts that encourage reasoning also improve performance, which leaves the question of how to design better Zero-shot-CoT templates. \cite{NEURIPS2022_8bb0d291}
+
+Existing work suggest LLMs falter in direct-QA scenarios.  \cite{wang2024chainofthoughtreasoningprompting}
+Greedy decoding in a direct-QA scenario often does not contain a CoT path, which may stem from the model's skewed perception of problem difficulty as it might have been trained on simpler questions \cite{wang2024chainofthoughtreasoningprompting}
+
+Direct prediction is inaccurate for some inferences because the relevant variables are rarely seen together in training. \cite{prystawski2023thinkstepstepreasoning}
+
+Chain-of-thought reasoning improves estimation by incrementally chaining local statistical dependencies that are observed frequently in training. \cite{prystawski2023thinkstepstepreasoning}
+
+\textbf{CoT without prompting}
+
+CoT can been elicited by model training or tuning with significant amount of reasoning data \cite{wang2024chainofthoughtreasoningprompting}
+
+Exploring top-k, k>0 tokens at the first decoding step and continuing with greedy reveals natural CoT reasoning in many cases 
+with the resulting answer having much higher confidence and the decoding path with the highest answer confidence 
+among the top-10 decoding paths contains a CoT path in 88\% of the GSM8k samples. CoT-decoding can be easily combined with 
+CoT-prompting or weighted aggregation similar to self-consistency, yielding even larger reasoning gains over multiple language models \cite{wang2024chainofthoughtreasoningprompting}
+
+
+\textbf{Applicability}
+
+More performance gains for more complicated problems. \cite{wei2023chainofthoughtpromptingelicitsreasoning}
+
+Zero-shot-CoT outperforms simple Zero-shot on arithmetic tasks but does not provide performance gains on commonsense reasoning tasks. \cite{NEURIPS2022_8bb0d291}
+
+CoT can impact performance on tasks where verbal thinking and deliberation hurts performance in humans but for some
+it is less clear if they should generalize to LLMs \cite{liu2024mindstepbystep}
+
+Tasks where human limitations generalize to LLMs:
+Implicit statistical learining - 36\% performance decrease from gpt-4o to o1-preview
+Facial recognition, classifying data with patterns and exceptions - performance drops \cite{liu2024mindstepbystep}
+
+Tasks where human limitations do not generalize a significant performance decrease is not seen or performance increases:
+explaining a logical inconsistency:  assumes a reasonable baserate in recognizing logical inconsistencies
+spatial intuition: consequence of information encoded in visual and motor representations that are likely not available to models 
+aggregating features for a decision, complex, multi-dimensional tasks that exceed human working memory capacity but can easily fit in the context window of an LLM \cite{liu2024mindstepbystep}
+
+More advanced inference-time reasoning techniques like ToT alleviate performance a little but still underperform zero-shot. \cite{liu2024mindstepbystep}
+
+\textbf{Self-consistency}
+
+Self-consistency aggregates answers from diverse reasoning chains and selects the best one based on majority voting. \cite{wang2023selfconsistencyimproveschainthought}
+
+It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks and is useful for collecting rationales and providing uncertainty estimates. \cite{wang2023selfconsistencyimproveschainthought}
+
+Works with both few-shot and zero-shot CoT. \cite{wang2023selfconsistencyimproveschainthought}
+
+One limitation of self-consistency is that it incurs more computation cost. Small number of paths is enough, as in most cases the performance saturates quickly. \cite{wang2023selfconsistencyimproveschainthought}
