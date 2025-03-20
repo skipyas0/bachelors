@@ -3,6 +3,7 @@
 Prompting techniques encode human priors, making it difficult to assess a language model's intrinsic reasoning abilities \cite{wang2024chainofthoughtreasoningprompting}
 
 \subsection{Prompt engineering}
+In many modern LLM applications, prompts have become programs themselves. \cite{schnabel2024symbolicpromptprogramsearch}
 Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
 This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
 In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking modes, where it is said that humans
@@ -27,6 +28,11 @@ Prompts are distinguished based on the number of included examples.
 \end{table}        
 Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
 models can reuse knowledge from pre-training and solve many tasks when provided just by a few examples.
+
+Few-shot prompting highlights that LLMs can be seen as powerful pattern-completion engines. \cite{meyerson2024languagemodelcrossovervariation}
+
+Providing a prompt of examples from a distribution can condition the LLM to generate further high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
+
 \subsection{Prompting techniques}
 
 \subsubsection{Chain-of-thought (CoT)}
