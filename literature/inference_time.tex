@@ -1,0 +1,145 @@
+\section{Inference-time scaling}
+
+Language models are probabilistic models over sequences and most generation algorithms attempt to either find highly probable sequences or sample from the model’s distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+MAP decoding algorithms' objective is to choose the most likely sequence. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+The simplest but still widely used MAP algorithm is Greedy decoding that recursively selects the highest probability token from the next-token distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Beam search improves on greedy decoding in many settings but incurs a high computational cost. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+MAP decoding generations often fall outside of the typical set of sequences in the language model’s distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Alternative to MAP is to sample directly from the language model's distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Decoding strategies like nucleus, top-k and η- and ϵ-sampling interpolate between greedy and ancestral sampling while temperature sampling interpolates between greedy and uniform sampling. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Next-token distributions are usually not provided by APIs but instead token-level algorithms are implemented by the API provider and used by setting hyper-parameters. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Temperature sampling usually outperformed the other adapters in input-output tasks such as code generation and translation but in general, which adapter to use remains an open question. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Parser-based decoding can enforce a structural requirement, such as following a JSON schema, sometimes hindering performance with inflexible templates.  \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Meta-generators, or strategies that utilize sub-generators, can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+
+
+\subsection{Chained meta-generation}
+Chain-of-thought can be seen as a motivating example of chained meta-generation. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+\subsubsection{Chain-of-thought (CoT)}
+
+Longer CoTs do not consistently improve accuracy of o1-like models especially for weaker models like QwQ ans R1-Distill-1.5b. \cite{zeng2025revisitingtesttimescalingo1like}
+
+Average length of correct solutions is shorter than that of incorrect ones for the same questions. \cite{zeng2025revisitingtesttimescalingo1like}
+
+Models demonstrate limited ability to correct their answers during revision, with most revisions retaining the original answers or sometimes even changing correct answers for incorrect ones. \cite{zeng2025revisitingtesttimescalingo1like}
+
+Self-revision ability is a key factor in the effectiveness of sequential scaling for o1-like models. \cite{zeng2025revisitingtesttimescalingo1like}
+
+Models similar to o1 all primarily extend solution length by self-revision, which is characterized by use of markers such as "Wait" or "Alternatively". \cite{zeng2025revisitingtesttimescalingo1like}
+
+\input{literature/chain-of-thought}
+
+\todo{move CoT stuff here}
+
+\subsection{Parallel meta-generation}
+
+Parallel meta-generation involves multiple generations, with one being chosen based on some reward model or with voting. Alternatively, the results can be merged into a single final answer with the language model. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+
+Prompting techniques like chain-of-thought can increase answer quality at the cost of longer and more computationally expensive outputs. \cite{brown2024largelanguagemonkeysscaling}
+
+Generating large sample collections is only useful if the correct samples in a collection can be identified. \cite{brown2024largelanguagemonkeysscaling}
+
+It is possible and sometimes cost-effective, to amplify weaker models with many samples and outperform single samples from more capable models. \cite{brown2024largelanguagemonkeysscaling}
+
+Relationship between coverage and the number of samples can often be modeled using an exponentiated power law, suggesting a form of scaling laws for inference-time compute although not as exact as training scaling laws. \cite{brown2024largelanguagemonkeysscaling}
+
+Repeated sampling can make use of high batch sizes and specialized optimizations that improve system throughput relative to single-attempt inference workloads. \cite{brown2024largelanguagemonkeysscaling}
+
+Coverage and precision diverge as number of samples increases on tasks without automatic verifiers, highlighting the need for improving sample verification methods. \cite{brown2024largelanguagemonkeysscaling}
+
+
+All parallel scaling methods rely on guidance signals to select the optimal token, step, or solution from a set of candidates. \cite{zeng2025revisitingtesttimescalingo1like}
+
+For the same number of generated tokens, parallel scaling provides a significantly larger improvement in coverage compared to sequential scaling. \cite{zeng2025revisitingtesttimescalingo1like}
+
+Practical parallel scaling method must select a final answer from a set of candidate answers. \cite{zeng2025revisitingtesttimescalingo1like}
+
+Shortest majority vote takes into account the fact that correct solution chains are shorter on average and extends Majority vote by weighing solution counts with the log of average solution length for given solution category, outperforming Majority voting on AIME. \cite{zeng2025revisitingtesttimescalingo1like}
+
+\subsection{Step-level meta-generation}
+Step-level meta-generation implements search algorithms on the generation state-space, which can be made up of tokens or longer sequences. Many search algorithms and state evaluation functions are possible. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+
+Multi-turn inference-time methods with a fixed width exhibit diminishing gains when computational budget is increased, failing to leverage the vast output space of LLMs.\cite{misaki2025widerdeeperscalingllm} 
+
+Unlike the standard tasks typically tackled by tree search algorithms where the number of possible actions at each node is finite, each call to LLM can yield a new output even for the same input, making each node’s branching factor theoretically infinite.\cite{misaki2025widerdeeperscalingllm} 
+
+
+\subsubsection{Tree-of-thought}
+Similar to CoT with self-consistency but the reasoning chain is split up into steps creating a tree. This reasoning tree can then be explored using a graph search algorithm such as DFS.
+
+
+\subsection{Refinement meta-generation}
+Refinement meta-generation generates a revised version of the output based on past versions and additional information such as intrinsic or extrinsic feedback or environment observations. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+For extrinsic refinement, it is plausible that there are information sources which add new information, and hence lead to a potential gain with refinement but the efficacy of intrinsic refinement has been mixed. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+
+Inference-Time Scaling by training models to think before responding is insufficient because these methods include Reinforcement learning with verifiers, making them unsuitable for open-ended tasks. \cite{wang2025dedicatedfeedbackeditmodels}
+
+Authors train dedicated Feedback and Edit models that can be used at inference time to improve model responses to open-ended general domain tasks. \cite{wang2025dedicatedfeedbackeditmodels}
+
+Efficacy of LLMs in providing feedback and making edits to their own responses is unclear as using LLMs that were not specifically trained to provide feedback is ineffective compared to using high quality feedback. \cite{wang2025dedicatedfeedbackeditmodels}
+
+
+\subsubsection{Reflexion}
+Reflexion converts binary or scalar feedback from the environment into verbal feedback in the form 
+of a textual summary, which is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. \cite{shinn2023reflexionlanguageagentsverbal}
+
+Reflections go into a long-term memory context limited to a sliding window with maximum capacity. \cite{shinn2023reflexionlanguageagentsverbal}
+
+Improves performance over strong baselines on sequential decision making, reasoning and programming tasks. \cite{shinn2023reflexionlanguageagentsverbal}
+\subsubsection{ReAct}
+Multi-turn prompting technique that forms the basis of agentic LLMs. The model is given a set of tools, such as a Wikipedia search function or a math expression evaluator.
+The model can go through several steps of using the tools, which generates "observation". The model uses these observations to generate a final answer and leaves the ReAct chain when ready using a "finish" function.
+
+
+\section{Prompting techniques}
+
+Prompting techniques encode human priors, making it difficult to assess a language model's intrinsic reasoning abilities \cite{wang2024chainofthoughtreasoningprompting}
+
+\subsection{Prompt engineering}
+In many modern LLM applications, prompts have become programs themselves. \cite{schnabel2024symbolicpromptprogramsearch}
+Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
+This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
+In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking modes, where it is said that humans
+have a fast automatic "System 1" mode and a slow and deliberate "System 2" mode \cite{yao2023treethoughtsdeliberateproblem}. 
+With a good prompt we can shift the model from "System 1" to "System 2".
+\subsubsection{In-context learning}
+Prompts are distinguished based on the number of included examples.
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|p{12cm}|}
+    \hline
+    \textbf{Prompting Type} & \textbf{Description} \\
+    \hline
+    Zero-shot Prompting & Prompt has no examples, model relies on its pre-trained knowledge. \\
+    \hline
+    One-shot Prompting & Prompt has one example to guide the model. \\
+    \hline
+    Few-shot Prompting & Prompt includes a few examples (typically 2 to 5). \\
+    \hline
+    \end{tabular}
+    \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}
+\end{table}        
+Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
+models can reuse knowledge from pre-training and solve many tasks when provided just by a few examples.
+
+Few-shot prompting highlights that LLMs can be seen as powerful pattern-completion engines. \cite{meyerson2024languagemodelcrossovervariation}
+
+Providing a prompt of examples from a distribution can condition the LLM to generate further high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
+
+\subsection{Prompting techniques}
+\todo{talk about how we can achieve meta-generation just by updating the prompt}
