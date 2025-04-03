@@ -1,24 +1,47 @@
 \section{Background}
-In recent years large language models (LLMs) emerged as a revolutionary force not only in the field natural language processing (NLP) but in everyday life of the general population \todo{cite smth}. 
-The fundamental way to interact with these models is via text instructions or \textbf{prompts}. These prompts can be standalone or act as templates into which additional information,
-like a specific task or context, like from a database search, is inserted. This introduces the problem of \textbf{prompt engineering}, or finding the optimal prompt for a given situation.
-Prompt engineering emerges as a largely empirical field, with even experts experienced in the inner workings of LLMs relying on extensive trial-and-error bouts before finding a suitable prompt. 
-With even experts struggling, it is significantly harder for non-experts to design an effective prompt. This motivates the recent research into automated prompt engineering. Several research directions have
-emerged, such as soft prompt tuning and discrete prompt optimization. Soft prompt tuning is effective but relies on access to inner states of the LLMs with are unavailable when using current state-of-the-art APIs such as
-the OpenAI API. Furthermore, prompts resulting from soft prompt tuning are often unreadable. In this work we focus on methods of discrete prompt optimization. This problem is very challenging because of the high dimesionality of the language space in which we
-conduct the search and non-differentiability as there are no gradients in the text space.
+The central focus of this work is an instance of an LLM, denoted $\mathcal{M}$. 
+When appropriate, we can differentiate between instances with a lower index, specifying its purpose. 
+For example, when using separate LLM instances for optimizing and task-solving, we will denote them $\mathcal{M}_{optim}$ and $\mathcal{M}_{solve}$ respectively.
+This way, we put emphasis on the fact we can choose a different LLM provider and hyperparameters for each instance.
 
-\section{Objectives}
-The goal of this thesis is to compare several prompt optimization methods utilizing LLMs as the optimizing actors. That means, given a prompt $p_t$, where 
-$t$ denotes a step in the optimization process, the next prompt can be formulated as $p_{t+1}=\mathfrak{L}_{iter}(p_t)$, where $\mathfrak{L}_{iter}$ denotes
-an LLM initialized with specific instructions to facilitate the optimization mapping. The function $\mathfrak{L}_{iter}$ is an instance of a general LLM $\mathfrak{L}$ and 
+
+In general, $\mathcal{M}: \mathbb{T} \times \mathbb{T}$ is a stochastic (for a positive sampling temperature) mapping on the space of text sequences $\mathbb{T}$.
+A prompt $p \in \mathbb{T}$ is a text sequence that, when inputted into an LLM, produces an output
 \begin{equation}
-    \mathfrak{L}_{iter}(p_t) = \mathfrak{L}(p_t|m),
+    y = \mathcal{M}(p).
+\end{equation} 
+
+We can use LLMs to solve a general task
+\begin{equation}
+    t \in \mathcal{D} \vsep \mathcal{D} = \{ (q_1, g_1), (q_2, g_2), ... , (q_n, g_n), \},
 \end{equation}
-where $m$ denotes the set of instructions, or a prompt, for optimizing $p_t$. In context of prompt optimization when we are talking about a prompt for optimizing another prompts, we call it a \textbf{meta-prompt}.
-In this case, we can imagine $m$ as 
-\begin{equation*}
-    m \approx \text{Improve the following prompt \{insert\_prompt\}}.
-\end{equation*}
-By changing the metaprompt, one can easily change the nature of the optimization operator. In the following chapters, we will examine options for designing such operators and 
-compare their performance and effectivity on industry-standard datasets, as well as on a brand new custom dataset.
+where $\mathcal{D}$ is a dataset consisting of $n$ pairs of queries $q$ and gold-labels $g$. 
+For open-ended tasks, the gold-label does not exist.
+
+
+We can further define a prompt as
+\begin{equation}
+    p = \mathbf{i}(q),
+\end{equation}
+where $\mathbf{i} \in \mathbf{T}$ is a set of text instructions into which a task query $q$ is inserted. 
+
+\begin{algorithm}
+    \caption{General optimization loop}
+    \label{alg:genoptimloop}
+    \KwIn{Initialization Operator $\mathcal{O}_I$, Selection Operator $\mathcal{O}_S$, Expansion Operator $\mathcal{O}_E$, Termination Condition $\Phi_{stop}$}
+    \KwOut{Optimized Population $\mathcal{P}$}
+    \KwData{$\mathcal{P} \gets \mathcal{O}_I$} \tcp{Initialize the population}
+    \While{$\neg \Phi_{stop}(\mathcal{P})$}{
+        \tcp{Selection and Expansion Steps}
+        $\mathcal{P}_{\text{selected}} \gets \mathcal{O}_S(\mathcal{P})$ \\ 
+        $\mathcal{P}_{\text{expanded}} \gets \mathcal{O}_E(\mathcal{P}_{\text{selected}})$ \\
+        $\mathcal{P} \gets \mathcal{P}_{\text{expanded}}$ \tcp{Update the population} 
+        }
+        \Return{$\mathcal{P}$} \tcp{Return the optimized population}
+    \end{algorithm}
+    
+Next, we move onto the optimization notation. In Algorithm \ref{alg:genoptimloop} we can see the general outline of a population-based optimization method.
+The initialization operator $\mathcal{O}_I$ creates an initial population of individuals $\mathcal{P}$. 
+Then, in each step, a selection operator $\mathcal{O}_S$ selects a portion of the population according to some criteria. 
+These selected individuals are then used by the expansion operator $\mathcal{O}_E$ to create new individuals.
+This process continues until a termination condition $\Phi_{stop}$ is reached.

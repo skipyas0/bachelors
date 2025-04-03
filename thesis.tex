@@ -41,6 +41,7 @@
 }
 
 \ctuprocess
+\usepackage[linesnumbered, ruled, vlined]{algorithm2e}
 
 \addto\ctucaptionsczech{%
 	\def\supervisorname{Vedoucí}%
@@ -58,7 +59,7 @@
 	\end{twocolumnfrontmatterpage}
 }
 
-\input{project_files/my_commands}
+\input{my_commands}
 
 % Theorem declarations, this is the reasonable default, anybody can do what they wish.
 % If you prefer theorems in italics rather than slanted, use \theoremstyle{plainit}
@@ -117,22 +118,16 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \chapter{Literature}
 
 
-\include{literature/llm_foundations}
+\include{inference_time}
 
 
-\include{literature/inference_time}
-
-
-\include{literature/optimization_methods}
-
-
-\include{literature/prompt_optimization}
+\include{prompt_optimization}
 
 \chapter{Methodology}
-\include{my_work/methodology}
+\include{methodology}
 
 \chapter{Experiments}
-\include{my_work/experiments}
+\include{experiments}
 
 \appendix
 

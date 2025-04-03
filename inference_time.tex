@@ -1,5 +1,6 @@
 \section{Inference-time scaling}
 
+
 Language models are probabilistic models over sequences and most generation algorithms attempt to either find highly probable sequences or sample from the model’s distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
 
 MAP decoding algorithms' objective is to choose the most likely sequence. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
@@ -12,7 +13,7 @@ MAP decoding generations often fall outside of the typical set of sequences in t
 
 Alternative to MAP is to sample directly from the language model's distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
 
-Decoding strategies like nucleus, top-k and η- and ϵ-sampling interpolate between greedy and ancestral sampling while temperature sampling interpolates between greedy and uniform sampling. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+Decoding strategies like nucleus, top-k and $\eta$- and $\epsilon$-sampling interpolate between greedy and ancestral sampling while temperature sampling interpolates between greedy and uniform sampling. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
 
 Next-token distributions are usually not provided by APIs but instead token-level algorithms are implemented by the API provider and used by setting hyper-parameters. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
 
@@ -39,7 +40,7 @@ Self-revision ability is a key factor in the effectiveness of sequential scaling
 
 Models similar to o1 all primarily extend solution length by self-revision, which is characterized by use of markers such as "Wait" or "Alternatively". \cite{zeng2025revisitingtesttimescalingo1like}
 
-\input{literature/chain-of-thought}
+\input{chain-of-thought}
 
 \todo{move CoT stuff here}
 
