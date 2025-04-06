@@ -8,14 +8,14 @@ This way, we put emphasis on the fact we can choose a different LLM provider and
 In general, $\mathcal{M}: \mathbb{T} \times \mathbb{T}$ is a stochastic (for a positive sampling temperature) mapping on the space of text sequences $\mathbb{T}$.
 A prompt $p \in \mathbb{T}$ is a text sequence that, when inputted into an LLM, produces an output
 \begin{equation}
-    y = \mathcal{M}(p).
+    y \sim \mathcal{M}(p).
 \end{equation} 
 
 We can use LLMs to solve a general task
 \begin{equation}
     t \in \mathcal{D} \vsep \mathcal{D} = \{ (q_1, g_1), (q_2, g_2), ... , (q_n, g_n), \},
 \end{equation}
-where $\mathcal{D}$ is a dataset consisting of $n$ pairs of queries $q$ and gold-labels $g$. 
+where $\mathbb{D}$ is a dataset consisting of $n$ pairs of queries $q$ and gold-labels $g$. 
 For open-ended tasks, the gold-label does not exist.
 
 

@@ -71,9 +71,11 @@ After finishing a thought process, the model tries to self-revise, which is mark
 The model then tries to spot mistakes or inconsistencies in its reasoning or propose an alternative solution. 
 Self-revision ability is thus a key factor in the effectiveness of sequential scaling for reasoning models. \cite{zeng2025revisitingtesttimescalingo1like}
 
-Chain-of-thought improves performance on arithmetic and coding tasks with more performance gains 
+Prompting techniques like chain-of-thought can increase answer quality 
+at the cost of longer and more computationally expensive outputs. \cite{brown2024largelanguagemonkeysscaling}
+Performance gains are observed mainly on arithmetic and coding tasks with more performance gains 
 being observed for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
-However research by Liu et al.\cite{liu2024mindstepbystep} suggests that for some tasks CoT can be detrimental.
+Further research by Liu et al.\cite{liu2024mindstepbystep} suggests that for some tasks CoT can be detrimental.
 Their experiments proved their hypothesis that CoT hurts performance on tasks where humans do better without deliberation
 and where the nature of LLM, like the much greater context memory, does not provide an advantage over human thinking. 
 This phenomenon was observed on tasks like facial recognition, implicit statistical learning or pattern recognition.
@@ -86,37 +88,64 @@ Because self-revision accounts for most of the CoT length, the effectiveness of 
 Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
 during self-revision. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
 
-\textbf{Applicability}
-
-
-More advanced inference-time reasoning techniques like ToT alleviate performance a little but still underperform zero-shot. \cite{liu2024mindstepbystep}
-
-\textbf{Self-consistency}
-
-Self-consistency aggregates answers from diverse reasoning chains and selects the best one based on majority voting. \cite{wang2023selfconsistencyimproveschainthought}
-
-It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks and is useful for collecting rationales and providing uncertainty estimates. \cite{wang2023selfconsistencyimproveschainthought}
-
-Works with both few-shot and zero-shot CoT. \cite{wang2023selfconsistencyimproveschainthought}
-
-One limitation of self-consistency is that it incurs more computation cost. Small number of paths is enough, as in most cases the performance saturates quickly. \cite{wang2023selfconsistencyimproveschainthought}
-
 \subsection{Parallel meta-generation}
 
-Parallel meta-generation involves multiple generations, with one being chosen based on some reward model or with voting. Alternatively, the results can be merged into a single final answer with the language model. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+Parallel meta-generation involves multiple generations concurrently. 
+The final answer can then be chosen - with a reward model or with 
+voting - or constructed from the ensemble of generations \cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+
+One of the simplest such techniques is self-consistency\cite{wang2023selfconsistencyimproveschainthought} (SC),
+a method which builds upon CoT to aggregate answers from diverse reasoning 
+chains and selects the best one based on majority voting. 
+It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks \cite{wang2023selfconsistencyimproveschainthought}.
+The effectiveness of SC comes from the fact that, for tasks with objective answers, there are more ways to be right than wrong.
+For our next discussion of SC and related methods we will compare the 
+terms \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ for a dataset ${\mathbb{D}}$.
+Given a language model $\mathcal{M}$, a task query $q_k \in {\mathbb{D}}$ and a task 
+instruction $\mathbf{i}$, we can define the generation collection of length $n$ as
+\begin{equation}
+    Y_k = \{y_{jk}\mid j \in 1, ..., n\},
+\end{equation}
+\begin{equation}
+    y_{jk} \sim \mathcal{M}(\mathbf{i}(q_k)).
+\end{equation}
+For objective tasks we can check the correctness with a metric $\mathcal{G}$
+\begin{equation}
+    \mathcal{G}_{k}(y_{jk}, q_k) = 
+    \begin{cases}
+        1.0 & y_{jk} \text{ is the correct answer for } q_k\\
+        0.0 & y_{jk} \text{ is an incorrect answer for } q_k.
+    \end{cases}
+\end{equation}
+To choose the final answer, we will define a answer selection function $\mathcal{S}(Y)$. 
+This can be a majority vote selection function or some reward-based method.
+We can now define \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ as
+\begin{align}
+    \mathrm{C}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \max_{j=1,...,n} \mathcal{G}_k(y_{jk}, q_k) \\
+    \mathrm{A}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \mathcal{G}_k\left( \mathcal{S}(Y_k), q_k \right).
+\end{align}
 
 
-Prompting techniques like chain-of-thought can increase answer quality at the cost of longer and more computationally expensive outputs. \cite{brown2024largelanguagemonkeysscaling}
+
+Works with both few-shot and zero-shot CoT. \cite{wang2023selfconsistencyimproveschainthought}
+One limitation of self-consistency is that it incurs more computation cost. 
+Small number of paths is enough, as in most cases the performance saturates quickly. \cite{wang2023selfconsistencyimproveschainthought}
+
+
+
 
 Generating large sample collections is only useful if the correct samples in a collection can be identified. \cite{brown2024largelanguagemonkeysscaling}
 
-It is possible and sometimes cost-effective, to amplify weaker models with many samples and outperform single samples from more capable models. \cite{brown2024largelanguagemonkeysscaling}
+It is possible and sometimes cost-effective, to amplify weaker models with many samples and outperform 
+single samples from more capable models. \cite{brown2024largelanguagemonkeysscaling}
 
 Relationship between coverage and the number of samples can often be modeled using an exponentiated power law, suggesting a form of scaling laws for inference-time compute although not as exact as training scaling laws. \cite{brown2024largelanguagemonkeysscaling}
 
-Repeated sampling can make use of high batch sizes and specialized optimizations that improve system throughput relative to single-attempt inference workloads. \cite{brown2024largelanguagemonkeysscaling}
+Repeated sampling can make use of high batch sizes and specialized optimizations that improve 
+system throughput relative to single-attempt inference workloads. \cite{brown2024largelanguagemonkeysscaling}
 
-Coverage and precision diverge as number of samples increases on tasks without automatic verifiers, highlighting the need for improving sample verification methods. \cite{brown2024largelanguagemonkeysscaling}
+Coverage and precision diverge as number of samples increases on tasks without automatic verifiers, 
+highlighting the need for improving sample verification methods. \cite{brown2024largelanguagemonkeysscaling}
 
 
 All parallel scaling methods rely on guidance signals to select the optimal token, step, or solution from a set of candidates. \cite{zeng2025revisitingtesttimescalingo1like}
