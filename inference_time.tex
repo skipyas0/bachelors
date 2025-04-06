@@ -1,48 +1,105 @@
 \section{Inference-time scaling}
+Inference-time scaling or test-time scaling is a paradigm that has gained traction in the recent years
+with the advent of dedicated reasoning models \todo{cite some model cards / deepseek}. 
+As opposed to training-time scaling, where the performance of models scales with 
+training times, model parameter counts and dataset sizes \todo{cite smth about training scaling},
+inference-time scaling aims to improve performance by dedicating more resources to each inference call.
 
+At their heart, LLMs are probabilistic models over sequences and to generate a sequence, they employ generation algorithms. 
+Welleck et al.\cite{welleck2024decodingmetagenerationinferencetimealgorithms} provide an overview of these generation algorithms
+and then frame more advanced inference-time techniques as meta-generations, or strategies that employ sub-generators.
+Most generation algorithms attempt to find either highly probable sequences (MAP algorithms) or sample from the model's distribution.
+The simplest MAP algorithm is greedy decoding, which recursively finds the next token with the highest probability in the distribution.
 
-Language models are probabilistic models over sequences and most generation algorithms attempt to either find highly probable sequences or sample from the model’s distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+A generalization of greedy decoding is the beam search algorithm which maintains a structure of possible prefixes and each step expands them and scores them.
+An example of a beam search algorithm\cite{wang2024chainofthoughtreasoningprompting} can identify decoding branches where the model 
+employs a reasoning chain to solve a given task. Authors of this algorithm found that answer tokens found in the decoding paths with a reasoning chains 
+have greater token probabilities, meaning the model shows greater confidence in its answer having reasoned about it beforehand.
+In general beam search improves on simple greedy decoding but at a high computational cost.
 
-MAP decoding algorithms' objective is to choose the most likely sequence. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+An interpolation between greedy decoding and uniform sampling is temperature sampling, which 
+outperforms other adapters in input-output tasks like code generation and translation. 
+An example of algorithms that sample from the model's distribution is the ancestral sampling algorithm.
+Interpolating between ancestral sampling and simple greedy sampling gave rise to decding algorithms such as
+nucleus, top-k and $\eta$- and $\epsilon$-sampling. When we require a structured output, for example a JSON data 
+structure following a JSON schema, we can utilize parser-based decoding, which enforce a structural requirement.
+This can however come at worsened performance when using inflexible templates.
 
-The simplest but still widely used MAP algorithm is Greedy decoding that recursively selects the highest probability token from the next-token distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Beam search improves on greedy decoding in many settings but incurs a high computational cost. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-MAP decoding generations often fall outside of the typical set of sequences in the language model’s distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Alternative to MAP is to sample directly from the language model's distribution. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Decoding strategies like nucleus, top-k and $\eta$- and $\epsilon$-sampling interpolate between greedy and ancestral sampling while temperature sampling interpolates between greedy and uniform sampling. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Next-token distributions are usually not provided by APIs but instead token-level algorithms are implemented by the API provider and used by setting hyper-parameters. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Temperature sampling usually outperformed the other adapters in input-output tasks such as code generation and translation but in general, which adapter to use remains an open question. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Parser-based decoding can enforce a structural requirement, such as following a JSON schema, sometimes hindering performance with inflexible templates.  \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-Meta-generators, or strategies that utilize sub-generators, can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-
-
+These strategies can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
 
 \subsection{Chained meta-generation}
-Chain-of-thought can be seen as a motivating example of chained meta-generation. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+
+Chained meta-generation is the composition of several subgenerators in sequence. 
+These can be LLM calls or other functions that use previous inputs, such as code execution function \todo{cite program of thought}.
+The subgenerators can be implemented as several LLM calls or with a single call given sufficient instructions in the prompt. \cite{khattab2023dspycompilingdeclarativelanguage}
+Some examples include Program-of-thought, Plan-and-Solve and Chain-of-Thought techniques.
 
 \subsubsection{Chain-of-thought (CoT)}
+Chain-of-Thought (CoT) is a LLM prompting technique that works by inducing a coherent series of intermediate 
+reasoning steps that lead to the final answer for a problem\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
+Existing work suggest LLMs falter in a direct-QA scenarios (without inducing CoT), where the greedy decoding path mostly does not contain a reasoning chain\cite{wang2024chainofthoughtreasoningprompting}. 
+In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking 
+modes, where it is said that humans have a fast automatic "System 1" mode and a slow and deliberate "System 2" mode\cite{yao2023treethoughtsdeliberateproblem}. 
+In direct-QA mode, the LLM can underestimate the difficulty of the task\cite{wang2024chainofthoughtreasoningprompting} and stay in the "System 1" thinking mode.
+By crafting a good prompt that instructs the model to reason we can shift the model from "System 1" to "System 2" thinking.
+Furthermore, CoT allows models to allocate additional computation to problems with more reasoning steps\cite{wei2023chainofthoughtpromptingelicitsreasoning}
+Prystawski et al.\cite{prystawski2023thinkstepstepreasoning} also speculate that direct prediction fails for tasks where
+the relevant variables are rarely seen together in training, whereas CoT reasoning can incrementally chain known dependencies. 
 
-Longer CoTs do not consistently improve accuracy of o1-like models especially for weaker models like QwQ ans R1-Distill-1.5b. \cite{zeng2025revisitingtesttimescalingo1like}
 
-Average length of correct solutions is shorter than that of incorrect ones for the same questions. \cite{zeng2025revisitingtesttimescalingo1like}
+CoT can been elicited by prompting techniques - few-shot with steps demonstrations or 
+zero-shot with specific instructions\cite{wang2024chainofthoughtreasoningprompting}
+First CoT methods\cite{wei2023chainofthoughtpromptingelicitsreasoning} involved one/few-shot prompting, 
+where the prompt included examples of CoT reasoning in the prompt in facilitate a reasoning chain response.
+Although effective, this requires human engineering of multi-step reasoning prompts.
+This method is also highly sensitive to prompt design with performance deteriorating 
+for mismatched prompt example and task question types\cite{NEURIPS2022_8bb0d291}.
+For this method, authors found that CoT is an emergent capability of model scale 
+and did not observe benefits for small models\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
 
-Models demonstrate limited ability to correct their answers during revision, with most revisions retaining the original answers or sometimes even changing correct answers for incorrect ones. \cite{zeng2025revisitingtesttimescalingo1like}
+On the other hand, zero-shot prompting can induce a reasoning chain with a simple prompt like "Let's think step-by-step",
+making it versatile and task-agnostic\cite{NEURIPS2022_8bb0d291}. Similar prompts also improve reasoning performance and 
+some research\todo{tady OPRO? nebo kde hledali cot prefixy} has been been done on finding the optimal CoT prefix prompt.
 
-Self-revision ability is a key factor in the effectiveness of sequential scaling for o1-like models. \cite{zeng2025revisitingtesttimescalingo1like}
+Apart from prompting, CoT can been elicited by model training or tuning. 
+This method, requiring a significant amount of reasoning data\cite{wang2024chainofthoughtreasoningprompting},
+has gained traction with the development of dedicated reasoning models like OpenAI's o1 or Deepseek-R1\todo{cite o1 deepseek}.
+Using methods such as supervised fine-tuning (SFT) or reinforcement learning (RL), the model is trained to
+automatically produce longer reasoning chains, often bound in dedicated "thought" tags or tokens. These models have shown significant performance boosts on reasoning benchmarks \todo{cite}.
+Models similar to o1 all primarily extend solution length by self-revision\cite{zeng2025revisitingtesttimescalingo1like}
+After finishing a thought process, the model tries to self-revise, which is marked by words such as "Wait" or "Alternatively". 
+The model then tries to spot mistakes or inconsistencies in its reasoning or propose an alternative solution. 
+Self-revision ability is thus a key factor in the effectiveness of sequential scaling for reasoning models. \cite{zeng2025revisitingtesttimescalingo1like}
 
-Models similar to o1 all primarily extend solution length by self-revision, which is characterized by use of markers such as "Wait" or "Alternatively". \cite{zeng2025revisitingtesttimescalingo1like}
+Chain-of-thought improves performance on arithmetic and coding tasks with more performance gains 
+being observed for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
+However research by Liu et al.\cite{liu2024mindstepbystep} suggests that for some tasks CoT can be detrimental.
+Their experiments proved their hypothesis that CoT hurts performance on tasks where humans do better without deliberation
+and where the nature of LLM, like the much greater context memory, does not provide an advantage over human thinking. 
+This phenomenon was observed on tasks like facial recognition, implicit statistical learning or pattern recognition.
+Limited performance gains were noticed on commonsense reasoning tasks\cite{NEURIPS2022_8bb0d291}.
 
-\input{chain-of-thought}
+Longer reasoning chains mean more computing power spent at inference. How far can we take this sequential scaling?
+In their study, Zeng at al.\cite{zeng2025revisitingtesttimescalingo1like} argue that longer CoTs do not consistently improve accuracy of reasoning models.
+Furthermore, they find that the average length of correct solutions is shorter than that of incorrect ones. 
+Because self-revision accounts for most of the CoT length, the effectiveness of the method relies on the model's ability to self-revise.
+Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
+during self-revision. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
 
-\todo{move CoT stuff here}
+\textbf{Applicability}
+
+
+More advanced inference-time reasoning techniques like ToT alleviate performance a little but still underperform zero-shot. \cite{liu2024mindstepbystep}
+
+\textbf{Self-consistency}
+
+Self-consistency aggregates answers from diverse reasoning chains and selects the best one based on majority voting. \cite{wang2023selfconsistencyimproveschainthought}
+
+It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks and is useful for collecting rationales and providing uncertainty estimates. \cite{wang2023selfconsistencyimproveschainthought}
+
+Works with both few-shot and zero-shot CoT. \cite{wang2023selfconsistencyimproveschainthought}
+
+One limitation of self-consistency is that it incurs more computation cost. Small number of paths is enough, as in most cases the performance saturates quickly. \cite{wang2023selfconsistencyimproveschainthought}
 
 \subsection{Parallel meta-generation}
 
@@ -99,12 +156,12 @@ Efficacy of LLMs in providing feedback and making edits to their own responses i
 Reflexion converts binary or scalar feedback from the environment into verbal feedback in the form 
 of a textual summary, which is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. \cite{shinn2023reflexionlanguageagentsverbal}
 
+The model can go through several steps of using the tools, which generates "observation". The model uses these observations to generate a final answer and leaves the ReAct chain when ready using a "finish" function.
 Reflections go into a long-term memory context limited to a sliding window with maximum capacity. \cite{shinn2023reflexionlanguageagentsverbal}
 
 Improves performance over strong baselines on sequential decision making, reasoning and programming tasks. \cite{shinn2023reflexionlanguageagentsverbal}
 \subsubsection{ReAct}
 Multi-turn prompting technique that forms the basis of agentic LLMs. The model is given a set of tools, such as a Wikipedia search function or a math expression evaluator.
-The model can go through several steps of using the tools, which generates "observation". The model uses these observations to generate a final answer and leaves the ReAct chain when ready using a "finish" function.
 
 
 \section{Prompting techniques}
@@ -115,9 +172,7 @@ Prompting techniques encode human priors, making it difficult to assess a langua
 In many modern LLM applications, prompts have become programs themselves. \cite{schnabel2024symbolicpromptprogramsearch}
 Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
 This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
-In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking modes, where it is said that humans
-have a fast automatic "System 1" mode and a slow and deliberate "System 2" mode \cite{yao2023treethoughtsdeliberateproblem}. 
-With a good prompt we can shift the model from "System 1" to "System 2".
+
 \subsubsection{In-context learning}
 Prompts are distinguished based on the number of included examples.
 \begin{table}[h!]
