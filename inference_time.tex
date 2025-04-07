@@ -50,12 +50,12 @@ the relevant variables are rarely seen together in training, whereas CoT reasoni
 CoT can been elicited by prompting techniques - few-shot with steps demonstrations or 
 zero-shot with specific instructions\cite{wang2024chainofthoughtreasoningprompting}
 First CoT methods\cite{wei2023chainofthoughtpromptingelicitsreasoning} involved one/few-shot prompting, 
-where the prompt included examples of CoT reasoning in the prompt in facilitate a reasoning chain response.
 Although effective, this requires human engineering of multi-step reasoning prompts.
 This method is also highly sensitive to prompt design with performance deteriorating 
 for mismatched prompt example and task question types\cite{NEURIPS2022_8bb0d291}.
 For this method, authors found that CoT is an emergent capability of model scale 
 and did not observe benefits for small models\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
+where the prompt included examples of CoT reasoning in the prompt in facilitate a reasoning chain response.
 
 On the other hand, zero-shot prompting can induce a reasoning chain with a simple prompt like "Let's think step-by-step",
 making it versatile and task-agnostic\cite{NEURIPS2022_8bb0d291}. Similar prompts also improve reasoning performance and 
@@ -97,8 +97,9 @@ voting - or constructed from the ensemble of generations \cite{welleck2024decodi
 One of the simplest such techniques is self-consistency\cite{wang2023selfconsistencyimproveschainthought} (SC),
 a method which builds upon CoT to aggregate answers from diverse reasoning 
 chains and selects the best one based on majority voting. 
-It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks \cite{wang2023selfconsistencyimproveschainthought}.
-The effectiveness of SC comes from the fact that, for tasks with objective answers, there are more ways to be right than wrong.
+It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks 
+at the cost of increased computation expenditure\cite{wang2023selfconsistencyimproveschainthought}.
+The effectiveness of SC comes from the fact that, for tasks with objective answers, there are more ways to be right than to be wrong.
 For our next discussion of SC and related methods we will compare the 
 terms \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ for a dataset ${\mathbb{D}}$.
 Given a language model $\mathcal{M}$, a task query $q_k \in {\mathbb{D}}$ and a task 
@@ -124,37 +125,26 @@ We can now define \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accura
     \mathrm{C}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \max_{j=1,...,n} \mathcal{G}_k(y_{jk}, q_k) \\
     \mathrm{A}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \mathcal{G}_k\left( \mathcal{S}(Y_k), q_k \right).
 \end{align}
+It is easy to see why coverage, or the fraction of tasks where at least one sample resulted 
+in a correct answer, might rise as we increase the amount of samples in SC generation. 
+Indeed research\cite{brown2024largelanguagemonkeysscaling} has found that the relationship of coverage and the 
+number of samples can be modeled by an exponentiated power law, suggesting a scaling law for inference
+similar to the training scaling laws\todo{cite smth about training laws}.
+However coverage alone is no enough to paint to complete picture as generating large sample 
+collections is only useful if the correct samples in a collection can be identified\cite{brown2024largelanguagemonkeysscaling} and Practical
+parallel scaling methods must be able to select the best final answer from the set of candidates\cite{zeng2025revisitingtesttimescalingo1like}.
+The accuracy gain of SC tends to saturate quickly as we increase the number of paths\cite{wang2023selfconsistencyimproveschainthought}
+with simple majority voting as coverage and accuracy diverge\cite{brown2024largelanguagemonkeysscaling}, highlighting the need
+for automatic answer verification. Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} make use of the fact that
+the correct solutions have shorter CoT on average and develop a length-weighted majority vote that outperformes simple majority voting on 
+the AIME\todo{cite} benchmark.
 
-
-
-Works with both few-shot and zero-shot CoT. \cite{wang2023selfconsistencyimproveschainthought}
-One limitation of self-consistency is that it incurs more computation cost. 
-Small number of paths is enough, as in most cases the performance saturates quickly. \cite{wang2023selfconsistencyimproveschainthought}
-
-
-
-
-Generating large sample collections is only useful if the correct samples in a collection can be identified. \cite{brown2024largelanguagemonkeysscaling}
-
-It is possible and sometimes cost-effective, to amplify weaker models with many samples and outperform 
-single samples from more capable models. \cite{brown2024largelanguagemonkeysscaling}
-
-Relationship between coverage and the number of samples can often be modeled using an exponentiated power law, suggesting a form of scaling laws for inference-time compute although not as exact as training scaling laws. \cite{brown2024largelanguagemonkeysscaling}
-
-Repeated sampling can make use of high batch sizes and specialized optimizations that improve 
-system throughput relative to single-attempt inference workloads. \cite{brown2024largelanguagemonkeysscaling}
-
-Coverage and precision diverge as number of samples increases on tasks without automatic verifiers, 
-highlighting the need for improving sample verification methods. \cite{brown2024largelanguagemonkeysscaling}
-
-
-All parallel scaling methods rely on guidance signals to select the optimal token, step, or solution from a set of candidates. \cite{zeng2025revisitingtesttimescalingo1like}
-
-For the same number of generated tokens, parallel scaling provides a significantly larger improvement in coverage compared to sequential scaling. \cite{zeng2025revisitingtesttimescalingo1like}
-
-Practical parallel scaling method must select a final answer from a set of candidate answers. \cite{zeng2025revisitingtesttimescalingo1like}
-
-Shortest majority vote takes into account the fact that correct solution chains are shorter on average and extends Majority vote by weighing solution counts with the log of average solution length for given solution category, outperforming Majority voting on AIME. \cite{zeng2025revisitingtesttimescalingo1like}
+Parallel inference-time scaling provides ample room for further research as authors\cite{zeng2025revisitingtesttimescalingo1like}
+that it offers a significantly higher improvement in coverage compared to sequential scaling for the same amount of processed tokens. 
+Brown et al.\cite{brown2024largelanguagemonkeysscaling} find that parallel scaling allows weaker models to 
+outperform single-sampling with bigger and more expensive models, sometimes reducing cost.
+This is helped by the fact that parallel sampling can make use of batching and other system throughput optimization
+available for parallel inference\cite{brown2024largelanguagemonkeysscaling}.
 
 \subsection{Step-level meta-generation}
 Step-level meta-generation implements search algorithms on the generation state-space, which can be made up of tokens or longer sequences. Many search algorithms and state evaluation functions are possible. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
