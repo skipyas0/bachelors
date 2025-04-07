@@ -183,38 +183,3 @@ Improves performance over strong baselines on sequential decision making, reason
 Multi-turn prompting technique that forms the basis of agentic LLMs. The model is given a set of tools, such as a Wikipedia search function or a math expression evaluator.
 
 
-\section{Prompting techniques}
-
-Prompting techniques encode human priors, making it difficult to assess a language model's intrinsic reasoning abilities \cite{wang2024chainofthoughtreasoningprompting}
-
-\subsection{Prompt engineering}
-In many modern LLM applications, prompts have become programs themselves. \cite{schnabel2024symbolicpromptprogramsearch}
-Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
-This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
-
-\subsubsection{In-context learning}
-Prompts are distinguished based on the number of included examples.
-\begin{table}[h!]
-    \centering
-    \begin{tabular}{|c|p{12cm}|}
-    \hline
-    \textbf{Prompting Type} & \textbf{Description} \\
-    \hline
-    Zero-shot Prompting & Prompt has no examples, model relies on its pre-trained knowledge. \\
-    \hline
-    One-shot Prompting & Prompt has one example to guide the model. \\
-    \hline
-    Few-shot Prompting & Prompt includes a few examples (typically 2 to 5). \\
-    \hline
-    \end{tabular}
-    \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}
-\end{table}        
-Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
-models can reuse knowledge from pre-training and solve many tasks when provided just by a few examples.
-
-Few-shot prompting highlights that LLMs can be seen as powerful pattern-completion engines. \cite{meyerson2024languagemodelcrossovervariation}
-
-Providing a prompt of examples from a distribution can condition the LLM to generate further high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
-
-\subsection{Prompting techniques}
-\todo{talk about how we can achieve meta-generation just by updating the prompt}
