@@ -1,15 +1,40 @@
-\section{Prompting techniques}
+\section{Prompt engineering}
+Maintaining the notation outlined in \ref{sec:notation}, prompt $p = \mathbf{i}(q)$ is a combination 
+of a set of instruction $\mathbf{i}$ and a query $q$. 
+
+By prompt engineering we mean crafting a instruction set which 
+transforms the query into a result according to our task requirements.
+Our task requirements can for example be
+\begin{itemize}
+    \item obtaining the correct answer for a mathematical problem
+    \item fixing a bug in a code base
+    \item explaining the contents of an image.
+\end{itemize}
+Each of these tasks needs a separate instruction set $\mathbf{i}$ which can then be used with multiple queries,
+representing specific task instances. This signifies a shift from the training and fine-tuning paradigm, where 
+a base model is first trained on a large corpus of data and then adapted for a specific task with supervised fine-tuning.
+This process requires a substantial amount of training data and computation power, making specialized LLMs unsuitable
+for many users and applications, where extensive data collection is infeasible.
+
+Prompting\todo{talk bt prompting substituting finetuning, find a source}
+
+Since the inception of modern LLMs, prompt engineering has evolved into a field of its own. Current LLM systems, often containing
+multiple chained and interlinked models, require robust and well thought-out prompts at each step. 
+Indeed, in many modern LLM applications, prompts have become programs themselves\cite{schnabel2024symbolicpromptprogramsearch}, 
+marking a huge leap from the basic text messages of the early LLM days.
+
 
 Prompting techniques encode human priors, making it difficult to assess a language model's intrinsic reasoning abilities \cite{wang2024chainofthoughtreasoningprompting}
 
-\subsection{Prompt engineering}
 In many modern LLM applications, prompts have become programs themselves. \cite{schnabel2024symbolicpromptprogramsearch}
 Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
 This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
 
 \subsubsection{In-context learning}
+
 Prompts are distinguished based on the number of included examples.
-\begin{table}[h!]
+
+\begin{table}[ht!]
     \centering
     \begin{tabular}{|c|p{8cm}|}
     \hline
@@ -24,12 +49,14 @@ Prompts are distinguished based on the number of included examples.
     \end{tabular}
     \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}
 \end{table}        
-Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
+Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the 
+knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
 models can reuse knowledge from pre-training and solve many tasks when provided just by a few examples.
 
 Few-shot prompting highlights that LLMs can be seen as powerful pattern-completion engines. \cite{meyerson2024languagemodelcrossovervariation}
 
-Providing a prompt of examples from a distribution can condition the LLM to generate further high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
+Providing a prompt of examples from a distribution can condition the LLM to generate further 
+high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
 
 \subsection{Prompting techniques}
 \todo{talk about how we can achieve meta-generation just by updating the prompt}
