@@ -1,51 +1,60 @@
 \section{Inference-time scaling}
-Inference-time scaling or test-time scaling is a paradigm that has gained traction in the recent years
-with the advent of dedicated reasoning models \todo{cite some model cards / deepseek}. 
+Inference-time scaling or test-time scaling is a paradigm that has gained traction in recent years
+with the advent of dedicated reasoning models\cite{openai2024openaio1card}\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}. 
 As opposed to training-time scaling, where the performance of models scales with 
-training times, model parameter counts and dataset sizes \todo{cite smth about training scaling},
+training times, model parameter counts and dataset sizes\cite{kaplan2020scalinglawsneurallanguage},
 inference-time scaling aims to improve performance by dedicating more resources to each inference call.
 
-At their heart, LLMs are probabilistic models over sequences and to generate a sequence, they employ generation algorithms. 
+At their heart LLMs are probabilistic models over sequences and to generate a sequence they employ generation algorithms. 
 Welleck et al.\cite{welleck2024decodingmetagenerationinferencetimealgorithms} provide an overview of these generation algorithms
 and then frame more advanced inference-time techniques as meta-generations, or strategies that employ sub-generators.
 Most generation algorithms attempt to find either highly probable sequences (MAP algorithms) or sample from the model's distribution.
 The simplest MAP algorithm is greedy decoding, which recursively finds the next token with the highest probability in the distribution.
+An example of algorithms that sample from the model's distribution is the ancestral sampling algorithm.
 
 A generalization of greedy decoding is the beam search algorithm which maintains a structure of possible prefixes and each step expands them and scores them.
-An example of a beam search algorithm\cite{wang2024chainofthoughtreasoningprompting} can identify decoding branches where the model 
-employs a reasoning chain to solve a given task. Authors of this algorithm found that answer tokens found in the decoding paths with a reasoning chains 
-have greater token probabilities, meaning the model shows greater confidence in its answer having reasoned about it beforehand.
-In general beam search improves on simple greedy decoding but at a high computational cost.
+An example\cite{wang2024chainofthoughtreasoningprompting} of a beam search algorithm can identify decoding branches where the model 
+employs a reasoning chain to solve a given task. Authors of this algorithm found that answer tokens found in the decoding paths with a reasoning chain 
+have greater token probabilities. This means that the model shows greater confidence in its answer having reasoned about it beforehand.
+In general beam search improves on simple greedy decoding but at a high computational cost\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
 
-An interpolation between greedy decoding and uniform sampling is temperature sampling, which 
-outperforms other adapters in input-output tasks like code generation and translation. 
-An example of algorithms that sample from the model's distribution is the ancestral sampling algorithm.
-Interpolating between ancestral sampling and simple greedy sampling gave rise to decding algorithms such as
+Another class of generation algorithms are those which interpolate between more categories of sampling algorithms.
+Temperature sampling, which outperforms other adapters in input-output tasks like code generation and translation,
+is an interpolation between greedy sampling and uniform sampling. 
+Interpolating between ancestral sampling and simple greedy sampling gave rise to decoding algorithms such as
 nucleus, top-k and $\eta$- and $\epsilon$-sampling. When we require a structured output, for example a JSON data 
-structure following a JSON schema, we can utilize parser-based decoding, which enforce a structural requirement.
+structure following a JSON schema, we can utilize parser-based decoding, which enforces a structural requirement.
 This can however come at worsened performance when using inflexible templates.
-
-These strategies can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+\newpage
+These low-level generator can be interconnected into more complex technique, which Welleck et al. call meta-generators\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+We will stick to their terminology and discuss different sequence-level meta-generation algorithms. We will omit further discussion of token-level methods as
+they are irrelevant to the main topic of this thesis. These strategies can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators.
 
 \subsection{Chained meta-generation}
 
 Chained meta-generation is the composition of several subgenerators in sequence. 
-These can be LLM calls or other functions that use previous inputs, such as code execution function \todo{cite program of thought}.
+These can be LLM calls or other functions that use previous inputs, such as a code execution function\cite{chen2023programthoughtspromptingdisentangling}
+or a tool for interaction with and arbitrary environment or a data source\cite{yao2023reactsynergizingreasoningacting}.
 The subgenerators can be implemented as several LLM calls or with a single call given sufficient instructions in the prompt. \cite{khattab2023dspycompilingdeclarativelanguage}
-Some examples include Program-of-thought, Plan-and-Solve and Chain-of-Thought techniques.
+Some examples include Program of Thoughts\cite{chen2023programthoughtspromptingdisentangling}, ReAct\cite{yao2023reactsynergizingreasoningacting} 
+and Chain-of-Thought\cite{NEURIPS2022_8bb0d291}\cite{wei2023chainofthoughtpromptingelicitsreasoning} techniques.
 
-\subsubsection{Chain-of-thought (CoT)}
-Chain-of-Thought (CoT) is a LLM prompting technique that works by inducing a coherent series of intermediate 
-reasoning steps that lead to the final answer for a problem\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
-Existing work suggest LLMs falter in a direct-QA scenarios (without inducing CoT), where the greedy decoding path mostly does not contain a reasoning chain\cite{wang2024chainofthoughtreasoningprompting}. 
 In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking 
 modes, where it is said that humans have a fast automatic "System 1" mode and a slow and deliberate "System 2" mode\cite{yao2023treethoughtsdeliberateproblem}. 
 In direct-QA mode, the LLM can underestimate the difficulty of the task\cite{wang2024chainofthoughtreasoningprompting} and stay in the "System 1" thinking mode.
+Simple greedy decoding paths mostly do not contain a reasoning chain\cite{wang2024chainofthoughtreasoningprompting}, which means the model tends to make a guess, staying in "System 1".
 By crafting a good prompt that instructs the model to reason we can shift the model from "System 1" to "System 2" thinking.
-Furthermore, CoT allows models to allocate additional computation to problems with more reasoning steps\cite{wei2023chainofthoughtpromptingelicitsreasoning}
-Prystawski et al.\cite{prystawski2023thinkstepstepreasoning} also speculate that direct prediction fails for tasks where
-the relevant variables are rarely seen together in training, whereas CoT reasoning can incrementally chain known dependencies. 
+Another reason for the effectiveness of chained generation is that in LLM training
+some concepts and variables are observed more frequently than others\cite{prystawski2023thinkstepstepreasoning}. 
+This discrepancy hurts performance in direct-QA scenarios where the relevant
+variables are rarely seen together in training. With CoT, models can incrementally chain known dependencies and bridge conceptional gaps.
 
+\subsubsection{Chain-of-thought}\label{sec:cot}
+Chain-of-Thought\cite{wei2023chainofthoughtpromptingelicitsreasoning} (CoT) is a LLM prompting technique that works by inducing a coherent series of intermediate 
+reasoning steps that lead to the final answer for a problem, thereby increasing computation time. 
+Upon its discovery, it brought a dramatic performance increase on arithmetic tasks, where models previously struggled.
+This enhanced capability comes with the cost of longer and more computationally expensive outputs\cite{brown2024largelanguagemonkeysscaling} and
+is more noticeable for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}. 
 
 CoT can been elicited by prompting techniques - few-shot with steps demonstrations or 
 zero-shot with specific instructions\cite{wang2024chainofthoughtreasoningprompting}
@@ -57,49 +66,53 @@ For this method, authors found that CoT is an emergent capability of model scale
 and did not observe benefits for small models\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
 where the prompt included examples of CoT reasoning in the prompt in facilitate a reasoning chain response.
 
-On the other hand, zero-shot prompting can induce a reasoning chain with a simple prompt like "Let's think step-by-step",
+On the other hand, zero-shot prompting induces a reasoning chain with a simple prompt like "Let's think step-by-step",
 making it versatile and task-agnostic\cite{NEURIPS2022_8bb0d291}. Similar prompts also improve reasoning performance and 
-some research\todo{tady OPRO? nebo kde hledali cot prefixy} has been been done on finding the optimal CoT prefix prompt.
+some research\cite{yang2024largelanguagemodelsoptimizers} has been done on finding the optimal CoT prefix prompt.
 
-Apart from prompting, CoT can been elicited by model training or tuning. 
+Apart from prompting, CoT can be elicited and improved by model training or tuning. 
 This method, requiring a significant amount of reasoning data\cite{wang2024chainofthoughtreasoningprompting},
-has gained traction with the development of dedicated reasoning models like OpenAI's o1 or Deepseek-R1\todo{cite o1 deepseek}.
+has gained traction with the development of dedicated reasoning models like OpenAI's o1\cite{openai2024openaio1card} or Deepseek-R1\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}.
 Using methods such as supervised fine-tuning (SFT) or reinforcement learning (RL), the model is trained to
-automatically produce longer reasoning chains, often bound in dedicated "thought" tags or tokens. These models have shown significant performance boosts on reasoning benchmarks \todo{cite}.
-Models similar to o1 all primarily extend solution length by self-revision\cite{zeng2025revisitingtesttimescalingo1like}
+automatically produce longer reasoning chains, often bound in dedicated "thought" tags or tokens. 
+These models have shown significant performance boosts on reasoning benchmarks\cite{openai2024openaio1card}\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}.
+
+Models similar to o1 all primarily extend solution length by self-revision\cite{zeng2025revisitingtesttimescalingo1like}.
 After finishing a thought process, the model tries to self-revise, which is marked by words such as "Wait" or "Alternatively". 
 The model then tries to spot mistakes or inconsistencies in its reasoning or propose an alternative solution. 
-Self-revision ability is thus a key factor in the effectiveness of sequential scaling for reasoning models. \cite{zeng2025revisitingtesttimescalingo1like}
+Self-revision ability is thus a key factor in the effectiveness of sequential scaling for reasoning models\cite{zeng2025revisitingtesttimescalingo1like}.
 
-Prompting techniques like chain-of-thought can increase answer quality 
-at the cost of longer and more computationally expensive outputs. \cite{brown2024largelanguagemonkeysscaling}
-Performance gains are observed mainly on arithmetic and coding tasks with more performance gains 
-being observed for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
+Longer reasoning chains mean more computing power spent at inference. How far can we take this sequential scaling?
+In their study, Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} argue that longer CoTs do not consistently improve accuracy of reasoning models.
+Furthermore, they find that the average length of correct solutions is shorter than that of incorrect ones. 
+\newpage
+Because self-revision accounts for most of the CoT length, the effectiveness of the method relies on the model's ability to self-revise.
+Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
+during self-revision. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
+
 Further research by Liu et al.\cite{liu2024mindstepbystep} suggests that for some tasks CoT can be detrimental.
 Their experiments proved their hypothesis that CoT hurts performance on tasks where humans do better without deliberation
 and where the nature of LLM, like the much greater context memory, does not provide an advantage over human thinking. 
 This phenomenon was observed on tasks like facial recognition, implicit statistical learning or pattern recognition.
-Limited performance gains were noticed on commonsense reasoning tasks\cite{NEURIPS2022_8bb0d291}.
-
-Longer reasoning chains mean more computing power spent at inference. How far can we take this sequential scaling?
-In their study, Zeng at al.\cite{zeng2025revisitingtesttimescalingo1like} argue that longer CoTs do not consistently improve accuracy of reasoning models.
-Furthermore, they find that the average length of correct solutions is shorter than that of incorrect ones. 
-Because self-revision accounts for most of the CoT length, the effectiveness of the method relies on the model's ability to self-revise.
-Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
-during self-revision. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
 
 \subsection{Parallel meta-generation}
 
 Parallel meta-generation involves multiple generations concurrently. 
 The final answer can then be chosen - with a reward model or with 
-voting - or constructed from the ensemble of generations \cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+voting - or constructed from the ensemble of generations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+
+Parallel meta-generation allows weaker models to outperform bigger and more expensive models\cite{brown2024largelanguagemonkeysscaling}.
+This can sometimes reduce cost as multiple samples with a smaller model are cheaper than a single sample with a more capable model.
+This is helped by the fact that parallel sampling can make use of batching and other system throughput optimization
+available for parallel inference\cite{brown2024largelanguagemonkeysscaling}.
 
 One of the simplest such techniques is self-consistency\cite{wang2023selfconsistencyimproveschainthought} (SC),
 a method which builds upon CoT to aggregate answers from diverse reasoning 
 chains and selects the best one based on majority voting. 
 It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks 
 at the cost of increased computation expenditure\cite{wang2023selfconsistencyimproveschainthought}.
-The effectiveness of SC comes from the fact that, for tasks with objective answers, there are more ways to be right than to be wrong.
+The effectiveness of SC with majority-voting comes from the fact that, for tasks with objective answers, there are often more ways to be wrong than to be right.
+\newpage
 For our next discussion of SC and related methods we will compare the 
 terms \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ for a dataset ${\mathbb{D}}$.
 Given a language model $\mathcal{M}$, a task query $q_k \in {\mathbb{D}}$ and a task 
@@ -118,68 +131,77 @@ For objective tasks we can check the correctness with a metric $\mathcal{G}$
         0.0 & y_{jk} \text{ is an incorrect answer for } q_k.
     \end{cases}
 \end{equation}
-To choose the final answer, we will define a answer selection function $\mathcal{S}(Y)$. 
+To choose the final answer, we will define an answer selection function $\mathcal{S}(Y)$. 
 This can be a majority vote selection function or some reward-based method.
 We can now define \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ as
 \begin{align}
     \mathrm{C}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \max_{j=1,...,n} \mathcal{G}_k(y_{jk}, q_k) \\
     \mathrm{A}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \mathcal{G}_k\left( \mathcal{S}(Y_k), q_k \right).
 \end{align}
-It is easy to see why coverage, or the fraction of tasks where at least one sample resulted 
-in a correct answer, might rise as we increase the amount of samples in SC generation. 
+In plain language, coverage is the fraction of the tasks where at least one sample results in a correct answer,
+whereas accuracy is the fraction of the tasks where a correct answer is selected by the algorithm as a final answer.
+
+It is easy to see why coverage might rise as we increase the amount of samples $n$ in SC generation.
+One could imagine that as letting students answer with their top $n$ guesses for each question on a test. 
 Indeed research\cite{brown2024largelanguagemonkeysscaling} has found that the relationship of coverage and the 
 number of samples can be modeled by an exponentiated power law, suggesting a scaling law for inference
-similar to the training scaling laws\todo{cite smth about training laws}.
-However coverage alone is no enough to paint to complete picture as generating large sample 
-collections is only useful if the correct samples in a collection can be identified\cite{brown2024largelanguagemonkeysscaling} and Practical
-parallel scaling methods must be able to select the best final answer from the set of candidates\cite{zeng2025revisitingtesttimescalingo1like}.
-The accuracy gain of SC tends to saturate quickly as we increase the number of paths\cite{wang2023selfconsistencyimproveschainthought}
-with simple majority voting as coverage and accuracy diverge\cite{brown2024largelanguagemonkeysscaling}, highlighting the need
-for automatic answer verification. Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} make use of the fact that
-the correct solutions have shorter CoT on average and develop a length-weighted majority vote that outperformes simple majority voting on 
-the AIME\todo{cite} benchmark.
+similar to the training scaling laws\cite{kaplan2020scalinglawsneurallanguage}.
 
-Parallel inference-time scaling provides ample room for further research as authors\cite{zeng2025revisitingtesttimescalingo1like}
-that it offers a significantly higher improvement in coverage compared to sequential scaling for the same amount of processed tokens. 
-Brown et al.\cite{brown2024largelanguagemonkeysscaling} find that parallel scaling allows weaker models to 
-outperform single-sampling with bigger and more expensive models, sometimes reducing cost.
-This is helped by the fact that parallel sampling can make use of batching and other system throughput optimization
-available for parallel inference\cite{brown2024largelanguagemonkeysscaling}.
+However coverage alone is not enough to paint the complete picture. What good is it to have a large collection which contains a correct answer
+if we cannot verify which one is correct. Parallel scaling with large sample collections is only useful 
+if the correct samples in a collection can be identified\cite{brown2024largelanguagemonkeysscaling}\cite{zeng2025revisitingtesttimescalingo1like}.
+The accuracy gain of SC tends to saturate quickly as we increase the number of paths\cite{wang2023selfconsistencyimproveschainthought}.
+Although coverage rises, it diverges\cite{brown2024largelanguagemonkeysscaling} from accuracy as the algorithm is unable to select the correct answer from the collection.
+This highlight the necessity to develop better answer selection mechanisms than simple majority voting and automatic answer verification methods.
+\newpage
+Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} make use of the fact that
+correct solutions have shorter CoT on average and develop a length-weighted majority vote that outperforms simple majority voting on 
+the challenging math benchmarks. GLaPE\cite{zhang2024glapegoldlabelagnosticprompt} is a method for gold label-agnostic evaluation which makes use
+of the fact that incorrect answers tend to be inconsistent. 
 
 \subsection{Step-level meta-generation}
-Step-level meta-generation implements search algorithms on the generation state-space, which can be made up of tokens or longer sequences. Many search algorithms and state evaluation functions are possible. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+Maintaining the terminology of Welleck et al.\cite{welleck2024decodingmetagenerationinferencetimealgorithms}, step-level meta-generation
+algorithms implement search on the generation state-space. This can be done on the token level or on the level of longer sequences,
+but in this section we will focus on the latter.
 
+Previously discussed inference-time scaling techniques all relied on sequential or parallel linear thought processes. 
+They do not explore different continuations within a thought process and do not make use of 
+planning, lookahead, or backtracking\cite{yao2023treethoughtsdeliberateproblem}. These methods also do not allow 
+combining the flow of reasoning upon discovering new insights, something humans utilize when solving problems\cite{Besta_2024}.
 
-Multi-turn inference-time methods with a fixed width exhibit diminishing gains when computational budget is increased, failing to leverage the vast output space of LLMs.\cite{misaki2025widerdeeperscalingllm} 
+By generalizing CoT\cite{wei2023chainofthoughtpromptingelicitsreasoning}\cite{NEURIPS2022_8bb0d291} into a tree structure,
+Yao et al.\cite{yao2023treethoughtsdeliberateproblem} present Tree of Thoughts (ToT), a technique which maintains a tree of thought.
+In this tree, each node is a thought in a form of a coherent language sequence, serving as an intermediate step
+in the reasoning process. For traversing the tree, a general tree-search algorithm, such as breadth-first or depth-first search, can be employed.
 
-Unlike the standard tasks typically tackled by tree search algorithms where the number of possible actions at each node is finite, each call to LLM can yield a new output even for the same input, making each node’s branching factor theoretically infinite.\cite{misaki2025widerdeeperscalingllm} 
+An important parameter in ToT is the branching factor. Unlike the standard tasks typically tackled by tree search algorithms 
+where the number of possible actions at each node is finite, each call to LLM can yield a new output even for 
+the same input, making each node's branching factor theoretically infinite\cite{misaki2025widerdeeperscalingllm}.
+Misaki et al.\cite{misaki2025widerdeeperscalingllm} argue that fixed-width multi-turn methods exhibit diminishing gains 
+and develop a tree search method with an adaptive branching factor, leading to a more balanced exploration and exploitation capability. 
+\newpage
+Although ToT allows for planning and backtracking from unpromising thought chains, its structure is still too rigid\cite{Besta_2024}.
+For example, it is not possible to combine thoughts from independent branches from the tree. Graph of Thoughts\cite{Besta_2024} (GoT) is 
+a framework that models the reasoning process as a heterogenous directed graph where each vertex is a thought containing a (partial) solution
+and edges are dependencies between these thoughts\cite{Besta_2024}. 
 
-
-\subsubsection{Tree-of-thought}
-Similar to CoT with self-consistency but the reasoning chain is split up into steps creating a tree. This reasoning tree can then be explored using a graph search algorithm such as DFS.
-
+In both chain- and tree-based inference-time scaling methods, a substantial amount of compute power is allocated to
+processing historical information that is not beneficial to the reasoning process. To alleviate this,
+Atom of Thoughts\cite{teng2025atomthoughtsmarkovllm} (AoT) iteratively decomposes the current question into a directed acyclic graph.
+The graph consists of subquestions which, depending on whether they have dependencies, are dependent or independent.
+All the independent questions can be answered directly and their answers added combined as context with the remaining subquestions
+to be contracted into a new current question. 
 
 \subsection{Refinement meta-generation}
-Refinement meta-generation generates a revised version of the output based on past versions and additional information such as intrinsic or extrinsic feedback or environment observations. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
-For extrinsic refinement, it is plausible that there are information sources which add new information, and hence lead to a potential gain with refinement but the efficacy of intrinsic refinement has been mixed. \cite{welleck2024decodingmetagenerationinferencetimealgorithms}
+The last category of meta-generation algorithms are refinement algorithms. Refinement algorithms work by alternating between generation and refinement.
+The refiner generates a revised version of the output based on past versions and additional information such as intrinsic or extrinsic feedback or environment observations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}. 
+Intrinsic refinement comes from the model inspecting its own answers. As we discussed in \ref{sec:cot}, models struggle with self-revision and rarely modify their answers in long reasoning chains.
+Feedback from general models is ineffective compared to dedicated feedback models or other quality feedback sources\cite{wang2025dedicatedfeedbackeditmodels}. 
 
+For extrinsic refinement, the model can utilize external information which can lead to a potential gain with refinement\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+One example of a refinement-based framework, Reflexion\cite{shinn2023reflexionlanguageagentsverbal}, converts binary or scalar feedback from the environment into verbal feedback in the form 
+of a textual summary. This feedback is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. 
+Reflexion improves performance over strong baselines on sequential decision making, reasoning and programming tasks\cite{shinn2023reflexionlanguageagentsverbal}.
 
-Inference-Time Scaling by training models to think before responding is insufficient because these methods include Reinforcement learning with verifiers, making them unsuitable for open-ended tasks. \cite{wang2025dedicatedfeedbackeditmodels}
-
-Authors train dedicated Feedback and Edit models that can be used at inference time to improve model responses to open-ended general domain tasks. \cite{wang2025dedicatedfeedbackeditmodels}
-
-Efficacy of LLMs in providing feedback and making edits to their own responses is unclear as using LLMs that were not specifically trained to provide feedback is ineffective compared to using high quality feedback. \cite{wang2025dedicatedfeedbackeditmodels}
-
-
-\subsubsection{Reflexion}
-Reflexion converts binary or scalar feedback from the environment into verbal feedback in the form 
-of a textual summary, which is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. \cite{shinn2023reflexionlanguageagentsverbal}
-
-The model can go through several steps of using the tools, which generates "observation". The model uses these observations to generate a final answer and leaves the ReAct chain when ready using a "finish" function.
-Reflections go into a long-term memory context limited to a sliding window with maximum capacity. \cite{shinn2023reflexionlanguageagentsverbal}
-
-Improves performance over strong baselines on sequential decision making, reasoning and programming tasks. \cite{shinn2023reflexionlanguageagentsverbal}
-\subsubsection{ReAct}
-Multi-turn prompting technique that forms the basis of agentic LLMs. The model is given a set of tools, such as a Wikipedia search function or a math expression evaluator.
 
 

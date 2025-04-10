@@ -1,7 +1,15 @@
 \section{Prompt optimization}
+In a previous section on inference-time algorithms, we outlined several methods for improving the performance of LLM generation
+and contrasted it to the traditional training-time scaling paradigm. In this section, we will discuss prompt optimization. 
+This technique fits in neither training- or inference-time scaling techniques, as the computation allocated on
+optimizing our prompts can then be amortized over multiple uses of the prompt. We will refer to this as compile-time\cite{schnabel2024symbolicpromptprogramsearch} scaling.
+
+
 Prompt engineering is a language generation task requiring complex reasoning to identify model error's and remedy them by modifying the prompt \cite{ye2024promptengineeringpromptengineer}
 Creating effective prompts often requires substantial trial-and-error experimentation and deep task-specific knowledge \cite{xiang2025selfsupervisedpromptoptimization}
 Compile-time optimization is carried out only once before deployment thus amortizing the optimization cost over multiple uses of the prompt program. \cite{schnabel2024symbolicpromptprogramsearch}
+
+
 
 \subsection{Soft prompt tuning}
 Prompts for models which allow access to gradients, which is not the case for proprietary models accessed via APIs, can be optimized in the high-dimensional embedding space.
