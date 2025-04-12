@@ -14,24 +14,76 @@ Each of these tasks needs a separate instruction set $\mathbf{i}$ which can then
 representing specific task instances. This signifies a shift from the training and fine-tuning paradigm, where 
 a base model is first trained on a large corpus of data and then adapted for a specific task with supervised fine-tuning.
 This process requires a substantial amount of training data and computation power, making specialized LLMs unsuitable
-for many users and applications, where extensive data collection is infeasible.
+for many users and for applications, where extensive data collection is infeasible.
 
-Prompting\todo{talk bt prompting substituting finetuning, find a source}
 
 Since the inception of modern LLMs, prompt engineering has evolved into a field of its own. Current LLM systems, often containing
 multiple chained and interlinked models, require robust and well thought-out prompts at each step. 
 Indeed, in many modern LLM applications, prompts have become programs themselves\cite{schnabel2024symbolicpromptprogramsearch}, 
 marking a huge leap from the basic text messages of the early LLM days.
 
+In this section, we will briefly cover the most notable prompt engineering techniques, which we will then
+be able to utilize in our study of automatic prompt optimization.
 
-Prompting techniques encode human priors, making it difficult to assess a language model's intrinsic reasoning abilities \cite{wang2024chainofthoughtreasoningprompting}
+\subsection{Components of a prompt}
+We can dissect a prompt into several components\cite{schulhoff2024promptreportsystematicsurvey}.
+\begin{itemize}
+    \item \textbf{Directive:} The main task of the prompt, e.g., \textit{"Write an email to a coworker."}
+    \item \textbf{Context:} Everything necessary or beneficial to completing the directive, e.g., \textit{"I was supposed to send a report to my boss, but I forgot."}
+    \item \textbf{Examples:} How you would have solved a similar task, e.g. a past email on a similar topic.
+    \item \textbf{Output specifications:} Style and format instructions, e.g., \textit{"Respond with three paragraphs in formal style with tasteful emojis."}
+\end{itemize}
 
-In many modern LLM applications, prompts have become programs themselves. \cite{schnabel2024symbolicpromptprogramsearch}
-Motivation for prompt engineering is to improve the model's capabilities not by changing the underlying weights with training on data but by crafting an optimal instruction string, or a prompt.
-This can be done by providing examples of the task as a part of the prompt or by instructing the model how to solve the task.
+Although flexible and sometimes blended together, high-performing prompts often follow this structure and order. 
+In more technical applications, it is beneficial to use tags or delimiters to explicitly separate components.
+Models often reward prompts with a more code-like structure\cite{10.1145/3544548.3581388}. 
+We now discuss each component in detail.
 
-\subsubsection{In-context learning}
+\subsubsection{Directive}
+The directive should be a clear and objective description of the task. 
+Specific requirements that narrow the scope should be avoided and left for other components.
+A good rule of thumb is to treat the directive as a subject to an email. 
 
+In cases where the prompt serves as a prompt template, meaning it can be reused with various data points,
+the directive can include a placeholder. For example consider this directive
+\begin{verbatim}
+    Write a limerick about {topic}.
+\end{verbatim}
+This directive, and the prompt to which it belongs, could be reused for multiple values of \textit{topic}.
+
+\subsubsection{Context}
+Context should provide all the background information relevant to the task at hand.
+The user can include more information about why they are using the model for the task,
+define the target audience or attach relevant documents. For example, a prompt that asks the LLM to explain a code snippet:
+
+In this case, the first part is the directive and the second part is the context, which specifies the user's situation.
+Without the context, the model might explain each line of the snippet in too much detail and not explain the dictionary unwrapping operator specifically.
+
+The context can become the endpoint for retrieval pipelines, which search a data source for 
+relevant documents, or memory mechanisms, which gather personal information about the user from other conversations. 
+\begin{verbatim}
+Explain this Python code snippet.
+```python
+    user_info = {'name': 'Alice', 'age': 30, 'city': 'New York'}
+    def greet_user(**kwargs):
+        print(f"Hello, {kwargs['name']} from {kwargs['city']}!")
+    greet_user(**user_info)
+```
+
+I am a beginner to Python programming. 
+I understand the function definition and that user_info is a dictionary, 
+but I don't know what the double asterisk does in the function call. 
+Can you explain how the double asterisk 
+works in this context and what it does step by step?
+\end{verbatim} 
+
+Another possible feature of the context component is role-assignment. 
+We can instruct the model to adopt an identity or an expertise level.
+For example, we can tell the model something like "You are a experienced business analyst".
+This primes the model to use a more technical language in its response.
+
+\subsubsection{Examples}
+Sufficiently large models trained on massive datasets a
 Prompts are distinguished based on the number of included examples.
 
 \begin{table}[ht!]
@@ -58,5 +110,4 @@ Few-shot prompting highlights that LLMs can be seen as powerful pattern-completi
 Providing a prompt of examples from a distribution can condition the LLM to generate further 
 high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
 
-\subsection{Prompting techniques}
-\todo{talk about how we can achieve meta-generation just by updating the prompt}
+\subsubsection{Output specifications}
