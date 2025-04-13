@@ -2,12 +2,26 @@
 In a previous section on inference-time algorithms, we outlined several methods for improving the performance of LLM generation
 and contrasted it to the traditional training-time scaling paradigm. In this section, we will discuss prompt optimization. 
 This technique fits in neither training- or inference-time scaling techniques, as the computation allocated on
-optimizing our prompts can then be amortized over multiple uses of the prompt. We will refer to this as compile-time\cite{schnabel2024symbolicpromptprogramsearch} scaling.
+optimizing our prompts can then be amortized over multiple uses of the prompt. 
+We will refer to this as compile-time\cite{schnabel2024symbolicpromptprogramsearch} scaling.
+
+We will first discuss the motivation for automatizing the prompt engineering process. 
+Prompt engineering is a largely empirical field without rigorous foundations.
+Although research agrees on some best practices, creating effective prompts 
+often requires substantial trial-and-error experimentation and deep task-specific 
+knowledge\cite{xiang2025selfsupervisedpromptoptimization}.
+
+As LLM use permeates into the general public, research\cite{10.1145/3544548.3581388} notes difficulties 
+of the average user with prompt design and evaluation as users bring expectations from human-to-human 
+interactions to prompt design. These include the expectation that semantically equivalent instructions 
+should produce equivalent results. This however does not hold and even minute
+alterations to the prompt can dramatically influence the suitability of the answer\cite{zhuo2024prosaassessingunderstandingprompt}.
 
 
-Prompt engineering is a language generation task requiring complex reasoning to identify model error's and remedy them by modifying the prompt \cite{ye2024promptengineeringpromptengineer}
-Creating effective prompts often requires substantial trial-and-error experimentation and deep task-specific knowledge \cite{xiang2025selfsupervisedpromptoptimization}
-Compile-time optimization is carried out only once before deployment thus amortizing the optimization cost over multiple uses of the prompt program. \cite{schnabel2024symbolicpromptprogramsearch}
+
+Prompt engineering is a language generation task requiring complex 
+reasoning to identify model error's and remedy them by modifying the prompt \cite{ye2024promptengineeringpromptengineer}
+
 
 
 
