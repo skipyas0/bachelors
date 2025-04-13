@@ -56,26 +56,28 @@ Context should provide all the background information relevant to the task at ha
 The user can include more information about why they are using the model for the task,
 define the target audience or attach relevant documents. For example, a prompt that asks the LLM to explain a code snippet:
 
+\begin{verbatim}
+    Explain this Python code snippet.
+    ```python
+        user_info = {'name': 'Alice', 'age': 30, 'city': 'New York'}
+        def greet_user(**kwargs):
+            print(f"Hello, {kwargs['name']} from {kwargs['city']}!")
+        greet_user(**user_info)
+    ```
+    
+    I am a beginner to Python programming. 
+    I understand the function definition 
+    and that user_info is a dictionary, 
+    but I don't know what the double asterisk does. 
+    Can you explain how the double asterisk 
+    works in this context and what it does step by step?
+    \end{verbatim} 
+
 In this case, the first part is the directive and the second part is the context, which specifies the user's situation.
 Without the context, the model might explain each line of the snippet in too much detail and not explain the dictionary unwrapping operator specifically.
 
 The context can become the endpoint for retrieval pipelines, which search a data source for 
 relevant documents, or memory mechanisms, which gather personal information about the user from other conversations. 
-\begin{verbatim}
-Explain this Python code snippet.
-```python
-    user_info = {'name': 'Alice', 'age': 30, 'city': 'New York'}
-    def greet_user(**kwargs):
-        print(f"Hello, {kwargs['name']} from {kwargs['city']}!")
-    greet_user(**user_info)
-```
-
-I am a beginner to Python programming. 
-I understand the function definition and that user_info is a dictionary, 
-but I don't know what the double asterisk does in the function call. 
-Can you explain how the double asterisk 
-works in this context and what it does step by step?
-\end{verbatim} 
 
 Another possible feature of the context component is role-assignment. 
 We can instruct the model to adopt an identity or an expertise level.
@@ -83,31 +85,44 @@ For example, we can tell the model something like "You are a experienced busines
 This primes the model to use a more technical language in its response.
 
 \subsubsection{Examples}
-Sufficiently large models trained on massive datasets a
-Prompts are distinguished based on the number of included examples.
-
+By providing examples of solutions to similar tasks, we can condition the LLM to generate
+further examples from that distribution\cite{meyerson2024languagemodelcrossovervariation}, increasing the 
+chance of a suitable completion. Furthermore, examples make the decoding more robust and decrease prompt sensitivity\cite{zhuo2024prosaassessingunderstandingprompt}.
 \begin{table}[ht!]
     \centering
+    
     \begin{tabular}{|c|p{8cm}|}
-    \hline
-    \textbf{Prompting Type} & \textbf{Description} \\
-    \hline
-    Zero-shot Prompting & Prompt has no examples. Model relies on its pre-trained knowledge. \\
-    \hline
-    One-shot Prompting & Prompt has one example to guide the model. \\
-    \hline
-    Few-shot Prompting & Prompt includes a few examples (typically 2 to 5). \\
-    \hline
+        \hline
+        \textbf{Prompting Type} & \textbf{Description} \\
+        \hline
+        Zero-shot Prompting & Prompt has no examples. Model relies on its pre-trained knowledge. \\
+        \hline
+        One-shot Prompting & Prompt has one example to guide the model. \\
+        \hline
+        Few-shot Prompting & Prompt includes a few examples (typically 2 to 5). \\
+        \hline
     \end{tabular}
-    \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}
+    \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}\label{tab:nshot}
 \end{table}        
-Research\cite{brown2020languagemodelsfewshotlearners} has shown that with growing model size the 
-knowledge-generalizing ability of the model increases. Instead of expensive fine-tuning
-models can reuse knowledge from pre-training and solve many tasks when provided just by a few examples.
-
-Few-shot prompting highlights that LLMs can be seen as powerful pattern-completion engines. \cite{meyerson2024languagemodelcrossovervariation}
-
-Providing a prompt of examples from a distribution can condition the LLM to generate further 
-high-probability examples from that distribution \cite{meyerson2024languagemodelcrossovervariation}
+Table \ref{tab:nshot} shows the agreed-upon terminology for prompts with examples.
+In some cases, Few-shot prompting can be effective even without the use of other instructions\cite{brown2020languagemodelsfewshotlearners}.
+When adding examples to a prompt, we have to pay attention to several aspects\cite{schulhoff2024promptreportsystematicsurvey}.
+\begin{itemize}
+    \item \textbf{Exemplar quantity}: More is better with diminishing returns.
+    \item \textbf{Exemplar ordering}: Models tend to pay more attention to the last examples.
+    \item \textbf{Exemplar label distribution}: Unbalanced labels in examples skew model generation.
+    \item \textbf{Exemplar label quality}: It is unclear whether incorrect examples hurt performance.
+    \item \textbf{Exemplar format}: Optimal format may vary across tasks.
+    \item \textbf{Exemplar similarity}: Effect of exemplar similarity depends on the situation.
+\end{itemize}
 
 \subsubsection{Output specifications}
+With this component, we guide the structure, tone, style and formatting of the LLM's answer. 
+A common technique, discussed in \ref{sec:cot} is inducing reasoning
+with a CoT prompt, like "Let's think step-by-step", or instructing the LLM to 
+first plan the solution and then execute it. 
+
+We can influence the length of the answer, ask the model to be formal or humorous,
+request specific formatting, like the use of \LaTeX equations, or have it answer in a JSON format
+for a machine-readable response. Users should test multiple configurations as changing the output format
+can influence the final prediction\cite{salinas2024butterflyeffectalteringprompts}.
