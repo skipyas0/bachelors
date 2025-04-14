@@ -15,12 +15,56 @@ As LLM use permeates into the general public, research\cite{10.1145/3544548.3581
 of the average user with prompt design and evaluation as users bring expectations from human-to-human 
 interactions to prompt design. These include the expectation that semantically equivalent instructions 
 should produce equivalent results. This however does not hold and even minute
-alterations to the prompt can dramatically influence the suitability of the answer\cite{zhuo2024prosaassessingunderstandingprompt}.
+alterations to the prompt, like adding a single space to the end, can dramatically influence the answer\cite{zhuo2024prosaassessingunderstandingprompt}\cite{salinas2024butterflyeffectalteringprompts}.
+The average user is not used to the meticulous process of systematic program crafting and debugging. It seems that
+some coding proficiency is, in a way, a prerequisite for prompt engineering. With these limitations barring the general public from utilizing LLMs to their full potential,
+automatic prompt engineering and prompt optimization (PO) have become an exceptionally active research field in the recent years.
 
+We can divide the PO research into two distinct branches depending on whether 
+they treat prompts as sequences of discrete tokens or as soft embedding vectors. 
+Both approaches have their pros and cons, summarized in table \ref{tab:disxcont}.
+\begin{table}[htbp]
+    \centering
+    \caption{Comparison of Soft vs. Discrete Prompt Optimization}\label{tab:disxcont}
+    \begin{tabular}{lcc}
+    \toprule
+    \textbf{Feature} & \textbf{Soft Optimization} & \textbf{Discrete Optimization} \\
+    \midrule
+    Gradient use      & $\checkmark$   & $\times$ \\
+    Interpretability  & $\downarrow$ & $\uparrow$ \\
+    Transferability  & $\downarrow$ & $\uparrow$ \\
+    Cost  & $\downarrow$ & $\uparrow$ \\
+    Usable with APIs  & $\times$   & $\checkmark$ \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+    
+In this thesis, we will study methods of discrete PO.
+Table \ref{tab:optsurvey} offers an overview of discrete PO literature.
+\begin{landscape}
+    \begin{table}[htbp]
+    \centering
+    \caption{Survey of Discrete PO Methods}\label{tab:optsurvey}
+    \begin{tabularx}{\linewidth}{@{}l l X X X@{}}
+    \toprule
+    \textbf{Date} & \textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} \\
+    \midrule
+    11/2022 & APE\cite{zhou2023largelanguagemodelshumanlevel}           & [placeholder] & [placeholder] & [placeholder] \\
+    05/2023 & APO\cite{pryzant2023automaticpromptoptimizationgradient}           & [placeholder] & [placeholder] & [placeholder] \\
+    09/2023 & OPRO\cite{yang2024largelanguagemodelsoptimizers}          & [placeholder] & [placeholder] & [placeholder] \\
+    09/2023 & Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} & [placeholder] & [placeholder] & [placeholder] \\
+    09/2023 & Evoprompt\cite{guo2024connectinglargelanguagemodels}          & [placeholder] & [placeholder] & [placeholder] \\
+    11/2023 & PE2\cite{ye2024promptengineeringpromptengineer}           & [placeholder] & [placeholder] & [placeholder] \\
+    02/2024 & PhaseEvo\cite{cui2024phaseevounifiedincontextprompt}      & [placeholder] & [placeholder] & [placeholder] \\
+    04/2024 & SAMMO\cite{schnabel2024symbolicpromptprogramsearch}          & [placeholder] & [placeholder] & [placeholder] \\
+    06/2024 & MIPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}       & [placeholder] & [placeholder] & [placeholder] \\
+    10/2024 & CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}        & [placeholder] & [placeholder] & [placeholder] \\
+    02/2025 & SPO\cite{xiang2025selfsupervisedpromptoptimization}           & [placeholder] & [placeholder] & [placeholder] \\
+    \bottomrule
+\end{tabularx}
+\end{table}
+\end{landscape}
 
-
-Prompt engineering is a language generation task requiring complex 
-reasoning to identify model error's and remedy them by modifying the prompt \cite{ye2024promptengineeringpromptengineer}
 
 
 
