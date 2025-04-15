@@ -16,6 +16,7 @@ of the average user with prompt design and evaluation as users bring expectation
 interactions to prompt design. These include the expectation that semantically equivalent instructions 
 should produce equivalent results. This however does not hold and even minute
 alterations to the prompt, like adding a single space to the end, can dramatically influence the answer\cite{zhuo2024prosaassessingunderstandingprompt}\cite{salinas2024butterflyeffectalteringprompts}.
+
 The average user is not used to the meticulous process of systematic program crafting and debugging. It seems that
 some coding proficiency is, in a way, a prerequisite for prompt engineering. With these limitations barring the general public from utilizing LLMs to their full potential,
 automatic prompt engineering and prompt optimization (PO) have become an exceptionally active research field in the recent years.
@@ -38,54 +39,69 @@ Both approaches have their pros and cons, summarized in table \ref{tab:disxcont}
     \bottomrule
     \end{tabular}
     \end{table}
-    
+
+Although soft PO is more effective as it allows for the use of 
+continous optimization methods such as gradient descent, with the increasing size of models
+it gets more expensive akin to fine-tuning. Furthermore, many of the most capable models are 
+only accessible through proprietary APIs, which rarely allow access to the inner states of the LLM.
+Optimizing prompts for an LLM hidden behind an API is inherently a black-box problem.
 In this thesis, we will study methods of discrete PO.
-Table \ref{tab:optsurvey} offers an overview of discrete PO literature.
+
+Table \ref{tab:optsurvey} offers an overview of discrete PO literature. Note that only only selected articles are included based on
+\begin{enumerate}
+    \item being somewhat comparable,
+    \item being relevant to the implementation part of this thesis.
+\end{enumerate}
+Also note that, due to space-constraints, only the most notable aspects of the methods are included. 
+For a more comprehensive overview of PO methods, we refer the reader to a survey\cite{ramnath2025systematicsurveyautomaticprompt} by Ramnath et al.
+
 \begin{landscape}
-    \begin{table}[htbp]
-    \centering
-    \caption{Survey of Discrete PO Methods}\label{tab:optsurvey}
-    \begin{tabularx}{\linewidth}{@{}l l X X X@{}}
-    \toprule
-    \textbf{Date} & \textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} \\
-    \midrule
-    11/2022 & APE\cite{zhou2023largelanguagemodelshumanlevel}           & [placeholder] & [placeholder] & [placeholder] \\
-    05/2023 & APO\cite{pryzant2023automaticpromptoptimizationgradient}           & [placeholder] & [placeholder] & [placeholder] \\
-    09/2023 & OPRO\cite{yang2024largelanguagemodelsoptimizers}          & [placeholder] & [placeholder] & [placeholder] \\
-    09/2023 & Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} & [placeholder] & [placeholder] & [placeholder] \\
-    09/2023 & Evoprompt\cite{guo2024connectinglargelanguagemodels}          & [placeholder] & [placeholder] & [placeholder] \\
-    11/2023 & PE2\cite{ye2024promptengineeringpromptengineer}           & [placeholder] & [placeholder] & [placeholder] \\
-    02/2024 & PhaseEvo\cite{cui2024phaseevounifiedincontextprompt}      & [placeholder] & [placeholder] & [placeholder] \\
-    04/2024 & SAMMO\cite{schnabel2024symbolicpromptprogramsearch}          & [placeholder] & [placeholder] & [placeholder] \\
-    06/2024 & MIPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}       & [placeholder] & [placeholder] & [placeholder] \\
-    10/2024 & CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}        & [placeholder] & [placeholder] & [placeholder] \\
-    02/2025 & SPO\cite{xiang2025selfsupervisedpromptoptimization}           & [placeholder] & [placeholder] & [placeholder] \\
-    \bottomrule
-\end{tabularx}
-\end{table}
+\rowcolors{2}{gray!10}{white}
+\begin{longtable}{@{}l l p{3.5cm} p{3.5cm} p{3.5cm} p{3.5cm}@{}}
+\caption{Survey of Discrete PO Methods.} \label{tab:optsurvey} \\
+
+\toprule
+\textbf{Date} & \textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} & \textbf{Notes} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{Date} & \textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} & \textbf{Notes} \\
+\midrule
+\endhead
+11/2022 & APE\cite{zhou2023largelanguagemodelshumanlevel} & instruction induction & filter top highest score prompts & paraphrasing & exploring space around best prompts yields marginal improvements \\
+05/2023 & ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} & manual initial prompt & advanced with UCB Bandits and Succesive Rejects & uses a critique of a prompt as a "gradient" & state-of-the-art according to\cite{wan2024teachbettersmarterinstructions} \\
+09/2023 & OPRO\cite{yang2024largelanguagemodelsoptimizers} & baseline prompt with instruction induction for next iteration & filter top highest score prompts & meta-prompt with scored prompts and exemplars & uses a high sampling temperature for diversity \\
+09/2023 & Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} & seeded mutation of problem description & binary tournament & random operator out of 9 total & also mutates the optimizer meta-prompt and examples \\
+09/2023 & Evoprompt\cite{guo2024connectinglargelanguagemodels} & manual prompts and instruction induction & roulette and filter based on score & crossover and mutation & considers two evolutionary algorithm variants \\
+11/2023 & PE2\cite{ye2024promptengineeringpromptengineer} & manual or instruction induction & filter top highest score prompts & advanced meta-prompt with step-by-step instructions & optionally includes examples besides prompts in the meta-prompt \\
+02/2024 & PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} & manual or instruction induction & [placeholder] &  & [placeholder] \\
+04/2024 & SAMMO\cite{schnabel2024symbolicpromptprogramsearch} & [placeholder] & [placeholder] & [placeholder] & [placeholder] \\
+05/2024 & PromptWizard\cite{agarwal2024promptwizardtaskawarepromptoptimization} & variations from problem description & improves the best prompt & critique + synthesis & improves examples after instructions \\
+06/2024 & MIPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage} & [placeholder] & [placeholder] & [placeholder] & part of the DSPy\cite{khattab2023dspycompilingdeclarativelanguage} framework \\
+10/2024 & CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic} & [placeholder] & [placeholder] & [placeholder] & [placeholder] \\
+10/2024 & SPRIG\cite{zhang2024sprigimprovinglargelanguage} & [placeholder] & [placeholder] & [placeholder] & focus is on task-agnostic system prompts \\
+02/2025 & SPO\cite{xiang2025selfsupervisedpromptoptimization} & [placeholder] & [placeholder] & [placeholder] & [placeholder] \\
+\bottomrule
+\end{longtable}
 \end{landscape}
 
 
 
 
+The area of optimizing prompts discretely while utilizing language models 
+as optimization operators has attracted significant research interest in recent years.
 
-\subsection{Soft prompt tuning}
-Prompts for models which allow access to gradients, which is not the case for proprietary models accessed via APIs, can be optimized in the high-dimensional embedding space.
-
-This makes the optimization problem continous. Soft prompts however pose the problem of interpretability and are non-transferable across different LLMs \cite{deng2022rlpromptoptimizingdiscretetext}.
-
-Continuous prompt-optimization techniques, although effective, require parameters of LLMs inaccessible to black-box APIs and often fall short of interpretability. \cite{guo2024connectinglargelanguagemodels}
-
-\subsection{Discrete prompt tuning}
-The area of optimizing prompts discretely while utilizing language models as optimization operators has attracted significant research interest in recent years.
-
-Natural language prompt engineering is particularly interesting because it is a natural interface for humans to communicate with machines, but plain language prompts do not always produce the desired result. \cite{zhou2023largelanguagemodelshumanlevel}
+Natural language prompt engineering is particularly interesting because it is a 
+natural interface for humans to communicate with machines, but plain language prompts do not always produce the desired result. \cite{zhou2023largelanguagemodelshumanlevel}
 
 Natural language program synthesis search space is infinitely large. \cite{zhou2023largelanguagemodelshumanlevel}
 
 Discrete tokens are not amenable to gradient-based optimization and brute-force search has an exponential complexity. \cite{deng2022rlpromptoptimizingdiscretetext}
 
-Unlike perturbing e.g. network weights continuously which predictably generates small changes in functionality, perturbing code requires discrete changes which often dramatically change functionality. \cite{lehman2022evolutionlargemodels}
+Unlike perturbing e.g. network weights continuously which predictably generates small changes in functionality, 
+perturbing code requires discrete changes which often dramatically change functionality. \cite{lehman2022evolutionlargemodels}
+
 \textbf{Reinforcement learning}
 
 Heuristics based on “enumeration (e.g., paraphrasing)-then-selection” do not explore the prompt space systematically \cite{deng2022rlpromptoptimizingdiscretetext}
