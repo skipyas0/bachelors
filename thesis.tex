@@ -108,11 +108,85 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \usepackage{lipsum,blindtext}
 \usepackage{mathrsfs} % provides \mathscr used in the ridiculous examples
 \usepackage{pdflscape}
-\usepackage{longtable}
+\usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{array} % put in preamble if not already there
 \usepackage[table]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{xparse}
+\usepackage{expl3}
 
+\ExplSyntaxOn
+
+\NewDocumentCommand{\hlboxx}{m m m}
+ {
+  \hlboxx_inner:nnn { #1 } { #2 } { #3 }
+ }
+
+\cs_new_protected:Nn \hlboxx_inner:nnn
+ {
+  % store and transform the title
+  \tl_set:Nn \l_tmpa_tl { #2 }
+  \tl_lower_case:N \l_tmpa_tl
+  \tl_remove_all:Nn \l_tmpa_tl { ~ }
+
+  % generate label string manually
+  \tl_set:Nx \l_tmpb_tl { box:\l_tmpa_tl }
+
+  % now insert into tcolorbox
+  \begin{tcolorbox}[
+    colback=#1!10!white,
+    colframe=#1!80!black,
+    boxrule=0.8pt,
+    arc=4pt,
+    left=6pt,
+    right=6pt,
+    top=4pt,
+    bottom=4pt,
+    enhanced,
+    breakable,
+    label={\tl_use:N \l_tmpb_tl},
+    title={#2}
+  ]
+  #3
+  \end{tcolorbox}
+ }
+
+\ExplSyntaxOff
+
+\newcommand{\hlbox}[2]{%
+  \begin{tcolorbox}[colback=#1!10!white,
+                    colframe=#1!80!black,
+                    boxrule=0.8pt,
+                    arc=4pt,
+                    left=6pt,
+                    right=6pt,
+                    top=4pt,
+                    bottom=4pt,
+                    enhanced,
+                    breakable]
+  #2
+  \end{tcolorbox}
+}
+\newcommand{\hlspan}[2]{%
+  \tcbox[colback=#1!10!white,
+         colframe=#1!80!black,
+         on line,
+         boxrule=0.6pt,
+         arc=3pt,
+         boxsep=1pt,
+         left=2pt,
+         right=2pt,
+         enhanced]{#2}
+}
+\newtcolorbox[auto counter, number within=section]{promptbox}[2][]{%
+  colback=gray!5!white, colframe=ctublue,
+  title={\hlspan{ctublue}{\thetcbcounter} #2},
+  fonttitle=\bfseries,
+  enhanced,
+  breakable,
+  #1
+}
 \begin{document}
 
 \maketitle

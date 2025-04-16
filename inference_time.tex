@@ -1,4 +1,4 @@
-\section{Inference-time scaling}
+\section{Inference-time scaling}\label{sec:inference}
 Inference-time scaling or test-time scaling is a paradigm that has gained traction in recent years
 with the advent of dedicated reasoning models\cite{openai2024openaio1card}\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}. 
 As opposed to training-time scaling, where the performance of models scales with 
@@ -192,7 +192,7 @@ The graph consists of subquestions which, depending on whether they have depende
 All the independent questions can be answered directly and their answers added combined as context with the remaining subquestions
 to be contracted into a new current question. 
 
-\subsection{Refinement meta-generation}
+\subsection{Refinement meta-generation} \label{sec:refine}
 The last category of meta-generation algorithms are refinement algorithms. Refinement algorithms work by alternating between generation and refinement.
 The refiner generates a revised version of the output based on past versions and additional information such as intrinsic or extrinsic feedback or environment observations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}. 
 Intrinsic refinement comes from the model inspecting its own answers. As we discussed in \ref{sec:cot}, models struggle with self-revision and rarely modify their answers in long reasoning chains.

@@ -6,9 +6,9 @@ This way, we put emphasis on the fact we can choose a different LLM provider and
 
 
 In general, $\mathcal{M}: \mathbb{T} \times \mathbb{T}$ is a stochastic (for a positive sampling temperature) mapping on the space of text sequences $\mathbb{T}$.
-A prompt $p \in \mathbb{T}$ is a text sequence that, when inputted into an LLM, produces an output
+A prompt $P \in \mathbb{T}$ is a text sequence that, when inputted into an LLM, produces an output
 \begin{equation}
-    y \sim \mathcal{M}(p).
+    y \sim \mathcal{M}(P).
 \end{equation} 
 
 We can use LLMs to solve a general task
@@ -16,14 +16,15 @@ We can use LLMs to solve a general task
     t \in \mathcal{D} \vsep \mathcal{D} = \{ (q_1, g_1), (q_2, g_2), ... , (q_n, g_n), \},
 \end{equation}
 where $\mathbb{D}$ is a dataset consisting of $n$ pairs of queries $q$ and gold-labels $g$. 
-For open-ended tasks, the gold-label does not exist.
+For open-ended tasks, the gold-label does not exist, $g_k = \varnothing \forall k$.
 
 
 We can further define a prompt as
 \begin{equation}
-    p = \mathbf{i}(q),
+    P = \mathbf{p}(q),
 \end{equation}
-where $\mathbf{i} \in \mathbf{T}$ is a set of text instructions into which a task query $q$ is inserted. 
+where $\mathbf{p} \in \mathbf{T}$ is a set of text instructions into which a task query $q$ is inserted. 
+We will call the text instructions $p$ a \textit{prompt template}.
 
 \begin{algorithm}
     \caption{General optimization loop}

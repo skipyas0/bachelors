@@ -16,11 +16,26 @@ of the average user with prompt design and evaluation as users bring expectation
 interactions to prompt design. These include the expectation that semantically equivalent instructions 
 should produce equivalent results. This however does not hold and even minute
 alterations to the prompt, like adding a single space to the end, can dramatically influence the answer\cite{zhuo2024prosaassessingunderstandingprompt}\cite{salinas2024butterflyeffectalteringprompts}.
+As another example in \ref{tab:cotprefixperf}, zero-shot CoT\cite{NEURIPS2022_8bb0d291} prefixes have vastly different performance on mathematical tasks.
+\begin{table}[htbp]
+    \centering
+    \caption{Vastly different performance of CoT prefixes on GSM8K as per Yang et al.\cite{yang2024largelanguagemodelsoptimizers}}
+    \label{tab:cotprefixperf}
+    \begin{tabularx}{\linewidth}{Xc}
+    \toprule
+    \textbf{Prompt} & \textbf{GSM8K accuracy (\%)} \\
+    \midrule
+    ``Let's think step by step.'' & 71.8 \\
+    ``Let's solve the problem together.'' & 60.5 \\
+    ``Let's work together to solve this problem step by step.'' & 49.4 \\
+    \bottomrule
+    \end{tabularx}
+\end{table}
 
 The average user is not used to the meticulous process of systematic program crafting and debugging. It seems that
 some coding proficiency is, in a way, a prerequisite for prompt engineering. With these limitations barring the general public from utilizing LLMs to their full potential,
 automatic prompt engineering and prompt optimization (PO) have become an exceptionally active research field in the recent years.
-
+\newpage
 We can divide the PO research into two distinct branches depending on whether 
 they treat prompts as sequences of discrete tokens or as soft embedding vectors. 
 Both approaches have their pros and cons, summarized in table \ref{tab:disxcont}.
@@ -41,10 +56,11 @@ Both approaches have their pros and cons, summarized in table \ref{tab:disxcont}
     \end{table}
 
 Although soft PO is more effective as it allows for the use of 
-continous optimization methods such as gradient descent, with the increasing size of models
+continuous optimization methods such as gradient descent, with the increasing size of models
 it gets more expensive akin to fine-tuning. Furthermore, many of the most capable models are 
-only accessible through proprietary APIs, which rarely allow access to the inner states of the LLM.
-Optimizing prompts for an LLM hidden behind an API is inherently a black-box problem.
+only accessible through proprietary APIs, which rarely allow access to the inner states of the LLM,
+rendering soft PO unusable.
+Optimizing prompts for an LLM hidden behind an API is inherently a black-box problem. 
 In this thesis, we will study methods of discrete PO.
 
 Table \ref{tab:optsurvey} offers an overview of discrete PO literature. Note that only only selected articles are included based on
@@ -55,78 +71,144 @@ Table \ref{tab:optsurvey} offers an overview of discrete PO literature. Note tha
 Also note that, due to space-constraints, only the most notable aspects of the methods are included. 
 For a more comprehensive overview of PO methods, we refer the reader to a survey\cite{ramnath2025systematicsurveyautomaticprompt} by Ramnath et al.
 
+\newcolumntype{Y}{>{\raggedright\arraybackslash}p{4.25cm}}     
 \begin{landscape}
-\rowcolors{2}{gray!10}{white}
-\begin{longtable}{@{}l l p{3.5cm} p{3.5cm} p{3.5cm} p{3.5cm}@{}}
-\caption{Survey of Discrete PO Methods.} \label{tab:optsurvey} \\
-
+\rowcolors{2}{ctubluebg}{white}
+\begin{table}[htbp]
+\centering
+\caption{Survey of Discrete PO Methods.}\label{tab:optsurvey}
+\begin{tabularx}{\linewidth}{@{}l Y Y Y Y@{}}
 \toprule
-\textbf{Date} & \textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} & \textbf{Notes} \\
+\textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} & \textbf{Notes} \\
 \midrule
-\endfirsthead
 
-\toprule
-\textbf{Date} & \textbf{Method} & \textbf{Initialization} & \textbf{Selection} & \textbf{Expansion} & \textbf{Notes} \\
-\midrule
-\endhead
-11/2022 & APE\cite{zhou2023largelanguagemodelshumanlevel} & instruction induction & filter top highest score prompts & paraphrasing & exploring space around best prompts yields marginal improvements \\
-05/2023 & ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} & manual initial prompt & advanced with UCB Bandits and Succesive Rejects & uses a critique of a prompt as a "gradient" & state-of-the-art according to\cite{wan2024teachbettersmarterinstructions} \\
-09/2023 & OPRO\cite{yang2024largelanguagemodelsoptimizers} & baseline prompt with instruction induction for next iteration & filter top highest score prompts & meta-prompt with scored prompts and exemplars & uses a high sampling temperature for diversity \\
-09/2023 & Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} & seeded mutation of problem description & binary tournament & random operator out of 9 total & also mutates the optimizer meta-prompt and examples \\
-09/2023 & Evoprompt\cite{guo2024connectinglargelanguagemodels} & manual prompts and instruction induction & roulette and filter based on score & crossover and mutation & considers two evolutionary algorithm variants \\
-11/2023 & PE2\cite{ye2024promptengineeringpromptengineer} & manual or instruction induction & filter top highest score prompts & advanced meta-prompt with step-by-step instructions & optionally includes examples besides prompts in the meta-prompt \\
-02/2024 & PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} & manual or instruction induction & [placeholder] &  & [placeholder] \\
-04/2024 & SAMMO\cite{schnabel2024symbolicpromptprogramsearch} & [placeholder] & [placeholder] & [placeholder] & [placeholder] \\
-05/2024 & PromptWizard\cite{agarwal2024promptwizardtaskawarepromptoptimization} & variations from problem description & improves the best prompt & critique + synthesis & improves examples after instructions \\
-06/2024 & MIPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage} & [placeholder] & [placeholder] & [placeholder] & part of the DSPy\cite{khattab2023dspycompilingdeclarativelanguage} framework \\
-10/2024 & CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic} & [placeholder] & [placeholder] & [placeholder] & [placeholder] \\
-10/2024 & SPRIG\cite{zhang2024sprigimprovinglargelanguage} & [placeholder] & [placeholder] & [placeholder] & focus is on task-agnostic system prompts \\
-02/2025 & SPO\cite{xiang2025selfsupervisedpromptoptimization} & [placeholder] & [placeholder] & [placeholder] & [placeholder] \\
+APE\cite{zhou2023largelanguagemodelshumanlevel} & instruction induction & filter top-k prompts & paraphrasing & iterating does not help \\
+ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} & manual initial prompt & UCB Bandits, Succesive Rejects & critique of a prompt as a "gradient" & state-of-the-art according to\cite{wan2024teachbettersmarterinstructions} \\
+OPRO\cite{yang2024largelanguagemodelsoptimizers} & baseline prompt, instruction induction & filter top-k prompts & meta-prompt with scored prompts and exemplars & high sampling temperature for diversity \\
+Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} & seeded mutation of problem description & binary tournament & random operator out of 9 total & mutates meta-prompt, ICL examples \\
+Evoprompt\cite{guo2024connectinglargelanguagemodels} & manual prompts and instruction induction & roulette and filter based on score & crossover and mutation & two operator variants \\
+PE2\cite{ye2024promptengineeringpromptengineer} & manual or instruction induction & filter top-k prompts & meta-prompt with step-by-step instructions & optional task examples in meta-prompt \\
+PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} & manual or instruction induction & no filtering, success vector Hamming distance & instruction induction, EDA, crossover, feedback, paraphrase & alternates local, global search \\
+PromptWizard\cite{agarwal2024promptwizardtaskawarepromptoptimization} & variations from problem description & selects best prompt & critique + synthesis & improves examples after instructions \\
+CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic} & manual initial prompt & filter top-k prompts & meta-prompt with critique history & self-generates critique aspects \\
+SPRIG\cite{zhang2024sprigimprovinglargelanguage} & blank prompt & filters tens of thousands of candidates with UCB & edit-based enumeration of sentence-level operations & focus is on task-agnostic system prompts \\
+SPO\cite{xiang2025selfsupervisedpromptoptimization} & basic prompt template (e.g. CoT) & winner of pairwise evaluation & metaprompt utilizing feedback from evaluation & focus is on reference-free optimization\\
 \bottomrule
-\end{longtable}
+\end{tabularx}
+\end{table}
 \end{landscape}
 
+We can further divide the discrete PO research into two branches, depending on whether 
+the method optimizes instructions (IO) or examples (EO). While some methods jointly optimize both, most
+research focuses on optimizing either one or optimizes them independently. 
+
+Although underrepresented in literature, EO provides superior performance than IO\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}\cite{wan2024teachbettersmarterinstructions}.
+The best performance is achieved when EO and IO are combined and should not be treated separately.
+
+\subsection{Exemplar optimization}
+
+As we discussed in \ref{sec:icl}, In-Context Learing (ICL) is a powerful way of conditioning the LLM to produce
+task-appropriate outputs. Exemplar optimization aims to enrich the prompt by selecting a handful of optimal examples.
 
 
 
-The area of optimizing prompts discretely while utilizing language models 
-as optimization operators has attracted significant research interest in recent years.
+\subsection{Instruction optimization}
+The problem of finding the optimal instruction set can be formulated as a natural language program synthesis problem\cite{zhou2023largelanguagemodelshumanlevel}.
+Although natural language program formulation is favorable as it represents a 
+natural interface for humans to communicate with machines, it brings its own set of problems.
+Compared to automatic program synthesis methods, the search space of natural language is even larger. 
+This makes finding the right instructions extremely difficult. 
 
-Natural language prompt engineering is particularly interesting because it is a 
-natural interface for humans to communicate with machines, but plain language prompts do not always produce the desired result. \cite{zhou2023largelanguagemodelshumanlevel}
+With continuous optimization, minor perturbations of e.g. network weights generates predictably small changes in functionality.
+Discrete changes on the other hand often dramatically change functionality\cite{lehman2022evolutionlargemodels} 
+and are not amenable to gradient-based optimization\cite{deng2022rlpromptoptimizingdiscretetext}. 
 
-Natural language program synthesis search space is infinitely large. \cite{zhou2023largelanguagemodelshumanlevel}
 
-Discrete tokens are not amenable to gradient-based optimization and brute-force search has an exponential complexity. \cite{deng2022rlpromptoptimizingdiscretetext}
+\subsubsection{Enumeration-based approaches}
+First discrete PO research such as APE\cite{zhou2023largelanguagemodelshumanlevel} 
+relied on Monte Carlo search, based on the idea of Instruction Induction\cite{honovich2022instructioninductionexamplesnatural}.
+This concept works by reverse-engineering instructions from a few task samples with a meta-prompt template like in \ref{box:insinductexample}. 
 
-Unlike perturbing e.g. network weights continuously which predictably generates small changes in functionality, 
-perturbing code requires discrete changes which often dramatically change functionality. \cite{lehman2022evolutionlargemodels}
 
-\textbf{Reinforcement learning}
+\begin{promptbox}
+    [label={box:insinductexample}]{Instruction Induction}
+    \textbf{LLM Input:} \hlbox{ctublue}{Below are a few examples of a task. \newline Write a set of instructions that would help me solve other examples of the task. 
+    \hlbox{ctulightblue}{\textbf{Q:} Jim earns 10 dollars per hour as a waiter. How much does he earn for 5 hours and 45 minutes of work? \\
+    \textbf{A:} Jim earns $5*10=50$ dollars for the full 5 hours and $10*\frac{3}{4}=7.5$ dollars for the 45 minutes. That makes $50+7.5=57.5$ dollars in total. \#\#\#\# 57.5 \\
+    \textbf{Q:} ... \textbf{A:} ... }}
+    \textbf{LLM Output:}
+    \hlbox{ctublue}{Use step-by-step logical thinking to solve this mathematical word problem. Show your work and write your numerical answer separated by '\#\#\#\#'.}
+    
+\end{promptbox}
 
-Heuristics based on “enumeration (e.g., paraphrasing)-then-selection” do not explore the prompt space systematically \cite{deng2022rlpromptoptimizingdiscretetext}
+By repeating this process with a non-zero sampling temperature while varying the example set,
+the LLM produces a diverse set of prompts. APE then scores them on a validation set and selects the instructions with the best performance.
+Extending this method, iterative APE explores local space around promising prompts by paraphrasing them.
+This however brought marginal performance gains in comparison to the basic Instruction Induction sampling\cite{zhou2023largelanguagemodelshumanlevel}.
+Deng et al.\cite{deng2022rlpromptoptimizingdiscretetext} argue that this is because "paraphrasing-then-selection" methods do not explore the prompt space systematically.
 
-RLPrompt trains a policy network which is inserted as a MLP layer into a frozen compact model. \cite{deng2022rlpromptoptimizingdiscretetext}
+Although the research has moved onto more advanced iterative optimization methods, Instruction Induction remains one of the 
+most common ways of initialization in literature. The alternatives are manual initialization, which 
+either consists of a basic prompt, or expertly prompt-engineering prompts. 
+The former poses a problem, as starting the search with high-quality instructions 
+is essential due to the intractably large search space\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}. 
+The latter is beneficial as it allows the optimization to leverage human knowledge\cite{guo2024connectinglargelanguagemodels}, but
+to an extent defeats the purpose of automatic PO. Also, it is impossible to have pre-defined expert prompts for tasks that are not known yet.
 
-Agent chooses the next token at each step using the previous tokens according to a learned policy. When the prompt is completed, the agent receives the task reward. \cite{deng2022rlpromptoptimizingdiscretetext}
+\subsubsection{"Gradient"-based approaches}
+Although gradient-based optimization is unavailable in the discrete text space, many prompt optimization methods try to approximate with,
+as Tang et al.\cite{tang2024unleashingpotentiallargelanguage} put it, analogical gradient forms. Gradient forms provide a clear
+optimization direction in a hill-climber setting and allow the use gradient descent strategies such momentum, step size, warm-up and decay.
 
-The policy network can also take another inputs, leading to input-specific prompts. \cite{deng2022rlpromptoptimizingdiscretetext}
+The simplest gradient form is a series of prompts and their scores in a meta-prompt instructing the optimizer LLM
+to create a new prompt in the sequence. The hope is for the model to extrapolate beyond the sequence of prompts
+and apply the observed pattern to acquire a better performing prompt. 
+
+Ablations in OPRO\cite{yang2024largelanguagemodelsoptimizers} show that both the ascending order of the prompts
+as well showing scores in beneficial to the optimization process. Furthermore, another crucial part
+of the meta-prompt according to\cite{yang2024largelanguagemodelsoptimizers} are examples of the task similar to the
+Instruction Induction meta-prompt. This helps the LLM better understand the task at hand. 
+
+\begin{promptbox}
+    [label={box:oprometa}]{Prompt+Score Meta-prompt}
+    \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
+    Below is a sequence of past prompts and their scores.\\
+    Design a new prompt in the sequence so that it achieves a better score. 
+    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.'' \hfill \textbf{Score}: 34.5\;\\
+     ...\\
+     \textbf{Prompt $n$:} ''Let's think step-by-step.'' \hfill \textbf{Score}: 70.3\;
+    }
+    \hlbox{ctuorange}{\textbf{Optional:} Examples of the task like in \ref{box:insinductexample} }
+    }
+    \textbf{LLM Output:}
+    \hlbox{ctublue}{Plan and solve the challenge while showing your work.}
+\end{promptbox}
+
+\newpage
+
+In \ref{sec:inference} we discussed the LLM's ability to self-refine, which works best with access to an extrinsic information source.
+With feedback-based PO, the LLM outputs for each prompt - combined with the LLM's human-like task comprehension\cite{xiang2025selfsupervisedpromptoptimization} -
+represent a rich source of quality information for prompt refinement. 
+
+\subsubsection{Evolution-based approaches}
+
+\subsubsection{Other approaches}
+
 
 
 
 Meta-prompts are flexible but studies lack principled guidelines about their design. \cite{tang2024unleashingpotentiallargelanguage}
 
-Reproduces key model parameter learning factors - update direction and update method - in LLMs to seek theoretical foundations. \cite{tang2024unleashingpotentiallargelanguage}
+Analogical momentum forms inspired by the momentum method involve including the optimization trajectory in the meta-prompt. 
+To fit into the context limit and reduce noise, trajectory can be summarized or k most recent/relevant/important gradients can be retrieved. \cite{tang2024unleashingpotentiallargelanguage}
 
-OPRO\cite{yang2024largelanguagemodelsoptimizers} and APO\cite{pryzant2023automaticpromptoptimizationgradient} introduced analogical "gradient" forms. \cite{tang2024unleashingpotentiallargelanguage}
-
-Analogical momentum forms inspired by the momentum method involve including the optimization trajectory in the meta-prompt. To fit into the context limit and reduce noise, trajectory can be summarized or k most recent/relevant/important gradients can be retrieved. \cite{tang2024unleashingpotentiallargelanguage}
-
-To mimic effects or learning rate, prompt variation can be limited by edit distance (maximum words to be changed). Warm-up and decay strategies can be applied to this constraint. \cite{tang2024unleashingpotentiallargelanguage}
+To mimic effects or learning rate, prompt variation can be limited by edit distance (maximum words to be changed). 
+Warm-up and decay strategies can be applied to this constraint. \cite{tang2024unleashingpotentiallargelanguage}
 
 New prompt can be created by editing a previous prompt or generate a new one by following a demonstration. \cite{tang2024unleashingpotentiallargelanguage}
 
-In an experiment on BBH, authors found that optimization without reflection performs better and the best momentum method being relevance. For prompt variation control, the best combination was cosine decay and no warm-up.  \cite{tang2024unleashingpotentiallargelanguage}
+In an experiment on BBH, authors found that optimization without reflection performs better and the best momentum method being relevance. 
+For prompt variation control, the best combination was cosine decay and no warm-up.  \cite{tang2024unleashingpotentiallargelanguage}
 
 Summarization-based trajectory is less helpful because it tends to only capture common elements. \cite{tang2024unleashingpotentiallargelanguage}
 
@@ -134,19 +216,16 @@ Task input-output examples are beneficial in the meta-prompt to provide addition
 
 GPT-4 can consistently find better task prompts than GPT-3.5-turbo, which suggests the need for a capable model as the prompt optimizer \cite{tang2024unleashingpotentiallargelanguage}
 
-Trajectory-based methods perform very well possible because trajectory helps the prompt optimizer pay more attention to the important information instead of the noise in the current step. \cite{tang2024unleashingpotentiallargelanguage}
-
-\textbf{APE}
-LLMs are used to construct a good set of candidate solutions by inferring the most likely instructions from input/output demonstrations. \cite{zhou2023largelanguagemodelshumanlevel}
-
-Local search around the best candidates by resampling - asking the LLM to paraphrase the candidate prompt - this however only provides marginal improvements over just choosing the best-performing prompt from instruction induction. \cite{zhou2023largelanguagemodelshumanlevel}
-
-APE was used to improve on Zero-Shot-CoT \cite{NEURIPS2022_8bb0d291} universal "Let's think by step" prompt"on GSM8k.\cite{zhou2023largelanguagemodelshumanlevel}
+Trajectory-based methods perform very well possible because trajectory 
+helps the prompt optimizer pay more attention to the important information instead of the noise in the current step. \cite{tang2024unleashingpotentiallargelanguage}
 
 
-Prompt to the LLM optimizer is called the meta-prompt and includes previous prompts with their training accuracies sorted in ascending order along with the task description and training set samples. \cite{yang2024largelanguagemodelsoptimizers}
 
-The main advantage of LLMs for optimization is their ability of understanding natural language, which allows people to describe their optimization tasks without formal specifications. \cite{yang2024largelanguagemodelsoptimizers}
+Prompt to the LLM optimizer is called the meta-prompt and includes previous prompts with their 
+training accuracies sorted in ascending order along with the task description and training set samples. \cite{yang2024largelanguagemodelsoptimizers}
+
+The main advantage of LLMs for optimization is their ability of understanding natural language, 
+which allows people to describe their optimization tasks without formal specifications. \cite{yang2024largelanguagemodelsoptimizers}
 
 Motivated by linear regression and TSP and on small-scale traveling salesman problems, OPRO performs on par with some hand-crafted heuristic algorithms. \cite{yang2024largelanguagemodelsoptimizers}
 
@@ -158,7 +237,6 @@ Only the top instructions are kept in the meta-prompt to fit in the LLM context 
 
 New outstanding solution is usually found only all the prompts are of similar quality: first all the worse prompts are purged and substituted by a prompt similar to the current best. \cite{yang2024largelanguagemodelsoptimizers}
 
-Semantically similar instructions have vastly different performance on GSM8k: “Let’s think step by step.” achieves accuracy 71.8, “Let’s solve the problem together.” has accuracy 60.5, while the accuracy of “Let’s work together to solve this problem step by step.” is only 49.4. \cite{yang2024largelanguagemodelsoptimizers}
 
 
 
@@ -168,7 +246,8 @@ Semantically similar instructions have vastly different performance on GSM8k: �
 With increasing complexity of prompt structure, many prompt optimization techniques are no longer applicable. \cite{schnabel2024symbolicpromptprogramsearch}
 Symbolic prompt programs (SPPs) can be represented as directed acyclic graphs where nodes are functions (subprograms) and edges indicate call dependencies. \cite{schnabel2024symbolicpromptprogramsearch}
 
-Search space can be defined in two ways, as an enumerative search, where a small number of options is known beforehand, and iterative search, where a large search space is explored with iterative search strategies. \cite{schnabel2024symbolicpromptprogramsearch}
+Search space can be defined in two ways, as an enumerative search, where a small number of options is known beforehand, 
+and iterative search, where a large search space is explored with iterative search strategies. \cite{schnabel2024symbolicpromptprogramsearch}
 
 
 
@@ -201,7 +280,6 @@ CriSPO outperforms OPRO \cite{yang2024largelanguagemodelsoptimizers} both on sum
 
 Most prompt optimizer approaches do not apply to multi-stage LLM programs where we lack gold labels or evaluation metrics for individual LLM calls. \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
 
-Proposing a few high-quality instructions is essential due to the intractably large search space. \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
 
 Uses a surrogate Bayesian optimization model, which is updated periodically by evaluating the program on batches, to sample instructions and demonstrations for each stage of the LLM program \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
 
@@ -216,13 +294,12 @@ There is considerable synergy potential between the fields of evolutionary compu
 
 \textbf{LLM-based variation operator}
 
-
-
 LLMs trained on code can suggest intelligent mutations and thus sidestepping many of the challenges in evolving programs. \cite{lehman2022evolutionlargemodels}
 
 Genetic programming still offers an advantage when the programming task is far from the training distribution of the LLM. \cite{lehman2022evolutionlargemodels}
 
 Genetic programming can in principle evolve in any space. \cite{lehman2022evolutionlargemodels}
+
 \todo{this can be connected with the idea that prompts=programs}
 
 Topic of mutation is guided by previously chosen "commit message" \todo{this is like a pseudogradient}. \cite{lehman2022evolutionlargemodels}
@@ -234,7 +311,8 @@ The pattern-completion ability of few-shot prompting can be leveraged to create 
 
 Performance at in-context learning improves with model scale, implying that methods relying upon this capability will benefit from continuing progress in LLM training. \cite{meyerson2024languagemodelcrossovervariation}
 
-Advent of large, pretrained foundation models marked a significant step in the paradigm of evolutionary recombination with deep generative models, where these new models can be directly leveraged without additional training and allow for searching more abstract spaces. \cite{meyerson2024languagemodelcrossovervariation}
+Advent of large, pretrained foundation models marked a significant step in the paradigm of evolutionary 
+recombination with deep generative models, where these new models can be directly leveraged without additional training and allow for searching more abstract spaces. \cite{meyerson2024languagemodelcrossovervariation}
 
 Next-token prediction naturally lends itself to creating an evolutionary variation operator. \cite{meyerson2024languagemodelcrossovervariation}
 
@@ -256,13 +334,16 @@ The level of stochasticity in LMX can be controlled by the softmax temperature p
 
 
 \textbf{Frameworks}
-Building upon the inherent ability of LLMs to paraphrase (mutation) and combine (crossover) text, an interesting intersection of traditional evolutionary algorithms and modern LLMs has formed. 
+Building upon the inherent ability of LLMs to paraphrase (mutation) and 
+combine (crossover) text, an interesting intersection of traditional evolutionary algorithms and modern LLMs has formed. 
 
 
-Sequences of phrases can be regarded as gene sequences in typical Evolutionary algorithms. \cite{guo2024connectinglargelanguagemodels}
+Sequences of phrases can be regarded as gene sequences in 
+typical Evolutionary algorithms. \cite{guo2024connectinglargelanguagemodels}
 
 
-Considers two widely used EAs: Genetic Algorithm and Differential Evolution with DE outperforming GA on most tasks \cite{guo2024connectinglargelanguagemodels}
+Considers two widely used EAs: Genetic Algorithm and 
+Differential Evolution with DE outperforming GA on most tasks \cite{guo2024connectinglargelanguagemodels}
 
 ELM uses a MAP-elites Quality Diversity algorithm. \cite{lehman2022evolutionlargemodels}
 
@@ -364,3 +445,5 @@ It is possible to construct a general-purpose meta-prompt. \cite{dewynter2024met
 Meta-prompts will perform better than standard prompts at executing a wide range of tasks.  \cite{dewynter2024metaprompting}.
 
 In tests meta-generated prompts were ranked as more useful than the baselines as well as producing content that was rated more suitable.  \cite{dewynter2024metaprompting}.
+
+\subsection{General LLM-based optimization}

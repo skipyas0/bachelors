@@ -84,27 +84,28 @@ We can instruct the model to adopt an identity or an expertise level.
 For example, we can tell the model something like "You are a experienced business analyst".
 This primes the model to use a more technical language in its response.
 
-\subsubsection{Examples}
+\subsubsection{Examples}\label{sec:icl}
 By providing examples of solutions to similar tasks, we can condition the LLM to generate
 further examples from that distribution\cite{meyerson2024languagemodelcrossovervariation}, increasing the 
 chance of a suitable completion. Furthermore, examples make the decoding more robust and decrease prompt sensitivity\cite{zhuo2024prosaassessingunderstandingprompt}.
 \begin{table}[ht!]
     \centering
     
-    \begin{tabular}{|c|p{8cm}|}
+    \begin{tabular}{ c p{8cm} }
         \hline
         \textbf{Prompting Type} & \textbf{Description} \\
         \hline
-        Zero-shot Prompting & Prompt has no examples. Model relies on its pre-trained knowledge. \\
-        \hline
+        Zero-shot Prompting & Prompt has no examples. Model relies on instructions and pre-trained knowledge. \\
+        
         One-shot Prompting & Prompt has one example to guide the model. \\
-        \hline
-        Few-shot Prompting & Prompt includes a few examples (typically 2 to 5). \\
+        
+        Few-shot Prompting & Prompt includes a few examples. \\
         \hline
     \end{tabular}
     \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}\label{tab:nshot}
 \end{table}        
-Table \ref{tab:nshot} shows the agreed-upon terminology for prompts with examples.
+Table \ref{tab:nshot} shows the agreed-upon terminology for prompts with examples. 
+The concept of adding examples to the prompt is also called In-Context Learning (ICL).
 In some cases, Few-shot prompting can be effective even without the use of other instructions\cite{brown2020languagemodelsfewshotlearners}.
 When adding examples to a prompt, we have to pay attention to several aspects\cite{schulhoff2024promptreportsystematicsurvey}.
 \begin{itemize}
