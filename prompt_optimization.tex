@@ -102,16 +102,16 @@ We can further divide the discrete PO research into two branches, depending on w
 the method optimizes instructions (IO) or examples (EO). While some methods jointly optimize both, most
 research focuses on optimizing either one or optimizes them independently. 
 
-Although underrepresented in literature, EO provides superior performance than IO\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}\cite{wan2024teachbettersmarterinstructions}.
-The best performance is achieved when EO and IO are combined and should not be treated separately.
-
-
-
 \subsection{Exemplar optimization}
 
-As we discussed in \ref{sec:icl}, In-Context Learing (ICL) is a powerful way of conditioning the LLM to produce
-task-appropriate outputs. Exemplar optimization aims to enrich the prompt by selecting a handful of optimal examples.
+Exemplar optimization (EO) focuses on selecting the most effective demonstrations for ICL, a powerful technique we discussed in \ref{sec:icl},
+where the LLM learns the task implicitly from labeled input-output pairs. Although underrepresented in literature\cite{wan2024teachbettersmarterinstructions},
+recent work\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}\cite{wan2024teachbettersmarterinstructions} shows that intelligently selected
+exemplars often outperform optimized instructions alone and even simple optimization methods like random search can lead to significant gains across diverse tasks.
+This effect is further amplified when EO is used together with IO, suggesting that the two should be co-optimized rather than treated separately\cite{wan2024teachbettersmarterinstructions}
 
+EO is useful even for tasks without available examples with techniques like Bootstrapping\cite{khattab2023dspycompilingdeclarativelanguage},
+which utilizes inputs solved during optimization. By indentifying useful and informative solutions, it allows for EO without hand-crafted input-output pairs.
 
 
 \subsection{Instruction optimization}
@@ -356,6 +356,6 @@ an intuitive interface. Most importantly, it allows for optimizing the whole pip
 with the promise of declarative LLM program design without extensive prompt engineering. DSPy offers several pipeline optimization
 methods, like MiPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage} and BetterTogether\cite{soylu2024finetuningpromptoptimizationgreat}.
 MiPROv2 generalizes OPRO\cite{yang2024largelanguagemodelsoptimizers} to multi-stage joint example and instruction optimization
-utilizing a surrogate Bayesian model to find the optimal configuration. With BetterTogether, Soylu et al. show that IO/EO and fine-tuning
+utilizing a surrogate Bayesian model to find the optimal configuration. With BetterTogether, Soylu et al. show that PO and fine-tuning
 complement each other, achieving superior performance.
 
