@@ -105,6 +105,8 @@ research focuses on optimizing either one or optimizes them independently.
 Although underrepresented in literature, EO provides superior performance than IO\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}\cite{wan2024teachbettersmarterinstructions}.
 The best performance is achieved when EO and IO are combined and should not be treated separately.
 
+
+
 \subsection{Exemplar optimization}
 
 As we discussed in \ref{sec:icl}, In-Context Learing (ICL) is a powerful way of conditioning the LLM to produce
@@ -166,8 +168,8 @@ and apply the observed pattern to acquire a better performing prompt.
 
 Ablations in OPRO\cite{yang2024largelanguagemodelsoptimizers} show that both the ascending order of the prompts
 as well showing scores in beneficial to the optimization process. Furthermore, another crucial part
-of the meta-prompt according to\cite{yang2024largelanguagemodelsoptimizers} are examples of the task similar to the
-Instruction Induction meta-prompt. This helps the LLM better understand the task at hand. 
+of the meta-prompt according to \cite{yang2024largelanguagemodelsoptimizers} and \cite{tang2024unleashingpotentiallargelanguage} are examples of the task similar to the
+Instruction Induction meta-prompt. This helps the LLM better understand the task at hand. An alternative would be to include a description of the task\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}.
 
 \begin{promptbox}
     [label={box:oprometa}]{Prompt+Score Meta-prompt}
@@ -186,264 +188,174 @@ Instruction Induction meta-prompt. This helps the LLM better understand the task
 
 \newpage
 
-In \ref{sec:inference} we discussed the LLM's ability to self-refine, which works best with access to an extrinsic information source.
-With feedback-based PO, the LLM outputs for each prompt - combined with the LLM's human-like task comprehension\cite{xiang2025selfsupervisedpromptoptimization} -
-represent a rich source of quality information for prompt refinement. 
+Another branch of research, e.g. ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} and CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
+focus on using model feedback as a part of the optimization signal. Outputs of LLMs contain rich quality 
+information that directly reflects prompt effectiveness\cite{xiang2025selfsupervisedpromptoptimization}. 
+Utilizing this information makes for a stronger optimization signal than just a numerical score.
+This is pronounced particularly for text-generation tasks, where applying PO methods based on prompt+score pairs 
+is challenging due to the lack of effective optimization signals\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}.
+A single number does not capture the nuances of text and opportunities for improvement. 
+
+Pryzant et al.\cite{pryzant2023automaticpromptoptimizationgradient}
+compare the prompt critique to a gradient in the text space. The LLM can in principle, thanks to its human-like task comprehension\cite{xiang2025selfsupervisedpromptoptimization},
+perform a sort of gradient descent by fixing the issues found by the critique. The LLM outputs on a task can be viewed as an environment observation - an extrinsic information source.
+This is, as we discussed in \ref{sec:inference}, crucial for the LLM's ability to self-refine. 
+Feedback-enriched meta-prompts, such as \ref{box:crispometa}, may include prompt scores as well.
+
+\begin{promptbox}
+    [label={box:crispometa}]{Prompt+Feedback+Score Meta-prompt}
+    \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
+    Below is a sequence of past prompts and their critiques and scores.\\
+    Design a new prompt in the sequence so that it achieves a better score. 
+    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.'' \hfill \textbf{Score}: 34.5\;\\
+     \textbf{Critique:} Does not encourage step-by-step reasoning.\\
+     ...\\
+     \textbf{Prompt $n$:} ''Let's think step-by-step.'' \hfill \textbf{Score}: 70.3\;
+     \textbf{Critique:} Too general, could be more enthusiastic.
+    }
+    }
+    \textbf{LLM Output:} 
+    \hlbox{ctublue}{Yay! Let's solve this math problem with logical thinking! }
+\end{promptbox}
+
+The instructions in \ref{box:oprometa} and \ref{box:crispometa} are rather basic and can be endlessly
+improved via prompt engineering. For example Ye et al.\cite{ye2024promptengineeringpromptengineer} attempt to 
+improve on APE and ProTeGi by designing a more complete meta-prompt. 
+
+By extending the gradient analogy, Tang et al.\cite{tang2024unleashingpotentiallargelanguage} introduce other concepts
+known from traditional machine learning. First, the learning rate can be implemented by limiting the number of token, word or sentence edits the model
+can make. Next, we can encorporate variable learning rate with strategies such as warm-up (learning rate grows in the beggining) or decay (learning rate
+gets smaller towards the end).
+
+Another way of balancing exploration and exploitation, besides edit limit-based learning rate analogies, is tuning the LLM sampling temperature . 
+Lower temperature encourages exploitation in the local solution space and higher temperature allows 
+more aggressive exploration of different solutions\cite{yang2024largelanguagemodelsoptimizers}.
+
+By encorporate a history of past prompts in the metaprompt, we implement an analogy of momentum, a concept 
+from machine learning which utilizes past gradients.
+Including the optimization trajectory is useful but poses the problem of inflating the meta-prompt. 
+This means higher costs per prompt generation, but also risks of surpassing the LLM's context length limit.
+To fit into the context limit, trajectory can be summarized or retrieved based on recency, relevance or importance\cite{tang2024unleashingpotentiallargelanguage}.
+
 
 \subsubsection{Evolution-based approaches}
+Evolutionary Algorithms (EAs) are a time-proven and versatile optimization method. 
+They have been shown to be effective in search spaces with millions and billions of variables\cite{meyerson2024languagemodelcrossovervariation}
+by emulating the processes observed in natural evolution using crossover (sexual reproduction) and mutation (asexual reproduction) operators.
+Although widely successful, EAs have been limited by the challenging nature of operator design.
+Developing them requires extensive manual crafting with domain knowledge\cite{liu2024largelanguagemodelsevolutionary}.
+
+With the advent on LLMs and few-shot prompting, their pattern-completion ability can be leveraged \\to create a form of intelligent 
+evolutionary crossover\cite{meyerson2024languagemodelcrossovervariation}, which can be in theory truly general.
+In principle, LLMs can mutate and combine any text representation that has moderate support in its training dataset
+and perform any genetic operator through fine-tuning or prompt engineering.
+The intersection between LLMs and EAs, among other traditional algorithms, emerges as an exciting branch of research.
+
+It lends itself to leverage LLM-powered EAs to improve prompts for the LLM, extending previously
+discussed PO methods. The seminal work in this space was EvoPrompt\cite{guo2024connectinglargelanguagemodels},
+which repurposed two EAs: Genetic Algorithm and Differential Evolution for PO. 
+Treating the text sequences in prompts as gene sequences, EvoPrompt performes crossover and mutation
+on text prompts. 
+
+EA-based PO seems to demostrate lower sensitivity to initial prompts. Although EvoPrompt utilizes some manual prompts,
+it achieves similar results with randomly sampled initial population as when using the best prompts\cite{guo2024connectinglargelanguagemodels}.
+On the other hand, they suffer from extremely high computational cost and slow convergence speed\cite{cui2024phaseevounifiedincontextprompt}.
+
+Methods like PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} and Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} strive to
+improve the efficiency and convergence of EA-based PO methods by supercharging them with more operators to provide balance between exploration and exploitation.
+Cui et al.\cite{cui2024phaseevounifiedincontextprompt} argue that the standard EA operators prioritize exploration and categorize them as global operators.
+To supplement them, they introduce local operators based on feedback, optimization trajectory and paraphrasing. By alternating between global and local 
+search, PhaseEvo demostrates better cost-efficiency compared to other EA-based PO methods\cite{cui2024phaseevounifiedincontextprompt}. 
+
+In Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}, authors also include multiple different operators.
+Besides variations of previously discussed operators, they also include shuffling ICL examples and, most notably, a "hyper-prompt" which mutates 
+the optimizer meta-prompt in hope to make the method self-referential. A possible flaw in this method is the fact that it
+selects the operators randomly at each step, leading to diminished efficiency compared to a more organized approach\cite{cui2024phaseevounifiedincontextprompt}
+and hundreds of evaluations necessary before convergence\cite{wan2024teachbettersmarterinstructions}.
+
+All three discussed EA-based methods utilize Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} to some extent, usually
+using calling it "Lamarckian mutation". Besides initialization, Lamarckian mutation can be useful for adding task-relevant prompts
+to the population in case the optimization diverges\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}. 
+
+\begin{promptbox}
+    [label={box:mutate}]{Mutation Meta-prompt}
+    \textbf{LLM Input:} \hlbox{ctublue}{Rewrite the prompt below in a semantically equivalent but novel way.
+    \hlbox{ctulightblue}{
+     \textbf{Prompt:} ''Let's think step-by-step.'' 
+    }
+    }
+    \textbf{LLM Output:} 
+    \hlbox{ctublue}{We will solve this in logical increments.}
+\end{promptbox}
+
+\begin{promptbox}
+    [label={box:crossover}]{Crossover/EDA Meta-prompt}
+    \textbf{LLM Input:} \hlbox{ctublue}{Combine the following prompts into a novel prompt. 
+    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.''\\
+     ...\\
+     \textbf{Prompt $n$:} ''Let's think step-by-step.''
+    }
+    }
+    \textbf{LLM Output:}
+    \hlbox{ctublue}{Do the step-by-step thinking and solve the math problem.}
+\end{promptbox}
+
+In \ref{box:mutate} and \ref{box:crossover} the reader can find possible meta-prompts for a mutation and a crossover operater, respectively.
+By changing the meta-instructions in \ref{box:crossover} and increasing $n$, we can shift the crossover operator into a Estimation-of-distribution (EDA)
+operator. Whereas crossover aims to combine 2-3 prompts into 1, EDA infers the distribution of a larger number of prompts and tries to 
+create a new prompt from that distribution. 
+
+An important factor in the implementation of the crossover and EDA operators is the way of selecting prompt specimens.
+In EvoPrompt\cite{guo2024connectinglargelanguagemodels}, a roulette selection method is employed. Other methods utilize more advanced
+selection methods to encourage diversity. Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} filters inputs
+for its EDA based on their BERT embedding and PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} selects parent prompts
+based on the Hamming distance of their "performance vectors", which hold the prompts' performance on task samples.  
+This way ensures that the prompts that get paired with each other do not make the same mistakes.
+
+Another important factor in the design of the operator is the ordering. Both Promptbreeder and PhaseEvo sort 
+the prompts in ascending order of fitness. To prevent the model from relying too much on the last prompts, the authors
+lie to the model by telling it the prompt are in descending order of fitness. 
+This somewhat curbs the bias toward the later examples\cite{cui2024phaseevounifiedincontextprompt}.
+
+EAs are but one of many metaheuristics historically used for optimization and the 
+interactions of LLMs and metaheuristics is poised to be a fruitful research area in the near future.
+In their research Pan et al.\cite{pan2024plumpromptlearningusing} used and compared several metaheuristics
+including Hill-Climbing, Simulated Annealing, Genetic Algorithm, Tabu Search and Harmony Search for PO.
+
+
+\subsubsection{Note on evaluation cost reduction} 
+In many PO methods, prompt candidate evalutation is the most computation-intensive part of the process.
+Especially with score-based evaluation, it has to be performed multi times to ensure scoring stability\cite{xiang2025selfsupervisedpromptoptimization}.
+To lower the evaluation costs, research adopts two approaches. 
+
+First branch, represented by ProTeGI\cite{pryzant2023automaticpromptoptimizationgradient} and SPRIG\cite{zhang2024sprigimprovinglargelanguage} use strategies such as
+UCB and Succesive Rejects to allocate evaluations only to promising candidates. This way, the total compute budget gets reduced.
+The other branch relies on ditching the numerical scoring and comparing outputs directly in a pairwise manner with a LLM judge\cite{xiang2025selfsupervisedpromptoptimization}.
+
+\subsection{Multi-stage and reference-free methods}
+
+Common critique of the methods is that they are unpractical and not applicable to real-world LLM use cases.
+Most methods depend heavily on external references for evaluation which are often unavailable or 
+unpractical to define especially for open-ended tasks \cite{xiang2025selfsupervisedpromptoptimization}.
+Xiang et al.\cite{xiang2025selfsupervisedpromptoptimization} tackle this problem by using pairwise LLM-based evaluation
+and Zhang et al.\cite{zhang2024glapegoldlabelagnosticprompt} develop a gold label-free method method on evaluation based
+on self-consistencies of different answers.
+
+Also, as the complexity of prompt structure increases, many prompt optimization techniques are no longer applicable\cite{schnabel2024symbolicpromptprogramsearch}.
+Schnabel et al.\cite{schnabel2024symbolicpromptprogramsearch} define Symbolic Prompt Programs, representable
+as directed acyclic graphs. In these graphs, nodes are functions, such as \texttt{RenderText}, \texttt{GenerateResponse} or \texttt{ParseOutput} 
+and edged are dependencies between these nodes. This representation allows for effective search with node mutators
+and a multitude of search algorithms.
+
+Furthermore, modern LLM workflows interconnect various LLM and prompt instances into complex prompt programs.
+Most prompt optimizer approaches do not apply to these multi-stage LLM programs\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
+as a whole. Optimizing each component separately is possible but this approach ignores their mutual influence.
+
+DSPy\cite{khattab2023dspycompilingdeclarativelanguage} is a Python library aiming to simplify LLM program composition with 
+an intuitive interface. Most importantly, it allows for optimizing the whole pipeline, including EO, IO and weight fine-tuning
+with the promise of declarative LLM program design without extensive prompt engineering. DSPy offers several pipeline optimization
+methods, like MiPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage} and BetterTogether\cite{soylu2024finetuningpromptoptimizationgreat}.
+MiPROv2 generalizes OPRO\cite{yang2024largelanguagemodelsoptimizers} to multi-stage joint example and instruction optimization
+utilizing a surrogate Bayesian model to find the optimal configuration. With BetterTogether, Soylu et al. show that IO/EO and fine-tuning
+complement each other, achieving superior performance.
 
-\subsubsection{Other approaches}
-
-
-
-
-Meta-prompts are flexible but studies lack principled guidelines about their design. \cite{tang2024unleashingpotentiallargelanguage}
-
-Analogical momentum forms inspired by the momentum method involve including the optimization trajectory in the meta-prompt. 
-To fit into the context limit and reduce noise, trajectory can be summarized or k most recent/relevant/important gradients can be retrieved. \cite{tang2024unleashingpotentiallargelanguage}
-
-To mimic effects or learning rate, prompt variation can be limited by edit distance (maximum words to be changed). 
-Warm-up and decay strategies can be applied to this constraint. \cite{tang2024unleashingpotentiallargelanguage}
-
-New prompt can be created by editing a previous prompt or generate a new one by following a demonstration. \cite{tang2024unleashingpotentiallargelanguage}
-
-In an experiment on BBH, authors found that optimization without reflection performs better and the best momentum method being relevance. 
-For prompt variation control, the best combination was cosine decay and no warm-up.  \cite{tang2024unleashingpotentiallargelanguage}
-
-Summarization-based trajectory is less helpful because it tends to only capture common elements. \cite{tang2024unleashingpotentiallargelanguage}
-
-Task input-output examples are beneficial in the meta-prompt to provide additional context to the LLM to understand the task. \cite{tang2024unleashingpotentiallargelanguage}
-
-GPT-4 can consistently find better task prompts than GPT-3.5-turbo, which suggests the need for a capable model as the prompt optimizer \cite{tang2024unleashingpotentiallargelanguage}
-
-Trajectory-based methods perform very well possible because trajectory 
-helps the prompt optimizer pay more attention to the important information instead of the noise in the current step. \cite{tang2024unleashingpotentiallargelanguage}
-
-
-
-Prompt to the LLM optimizer is called the meta-prompt and includes previous prompts with their 
-training accuracies sorted in ascending order along with the task description and training set samples. \cite{yang2024largelanguagemodelsoptimizers}
-
-The main advantage of LLMs for optimization is their ability of understanding natural language, 
-which allows people to describe their optimization tasks without formal specifications. \cite{yang2024largelanguagemodelsoptimizers}
-
-Motivated by linear regression and TSP and on small-scale traveling salesman problems, OPRO performs on par with some hand-crafted heuristic algorithms. \cite{yang2024largelanguagemodelsoptimizers}
-
-Optimization stability can be improved by generating multiple solutions when relying on random ICL samples. \cite{yang2024largelanguagemodelsoptimizers}
-
-To balance between exploration and exploitation, LLM sampling temperature can be tuned. Lower temperature encourages exploitation in the local solution space and higher temperature allows more aggressive exploration of different solutions. \cite{yang2024largelanguagemodelsoptimizers}
-
-Only the top instructions are kept in the meta-prompt to fit in the LLM context limit. \cite{yang2024largelanguagemodelsoptimizers}
-
-New outstanding solution is usually found only all the prompts are of similar quality: first all the worse prompts are purged and substituted by a prompt similar to the current best. \cite{yang2024largelanguagemodelsoptimizers}
-
-
-
-
-
-
-\textbf{Symbolic search}
-With increasing complexity of prompt structure, many prompt optimization techniques are no longer applicable. \cite{schnabel2024symbolicpromptprogramsearch}
-Symbolic prompt programs (SPPs) can be represented as directed acyclic graphs where nodes are functions (subprograms) and edges indicate call dependencies. \cite{schnabel2024symbolicpromptprogramsearch}
-
-Search space can be defined in two ways, as an enumerative search, where a small number of options is known beforehand, 
-and iterative search, where a large search space is explored with iterative search strategies. \cite{schnabel2024symbolicpromptprogramsearch}
-
-
-
-\subsubsection{Textual gradients}
-Naturally there are no gradients in the text space but some researchers try to emulate them using reflection-based operators.
-
-APO mirrors the steps of gradient descent within a text-based Socratic dialogue substituting differentiation with LLM feedback and backpropagation with LLM editing \cite{pryzant2023automaticpromptoptimizationgradient}
-
-Beam search is an iterative optimization process where in current prompt is expanded into many more candidates in each iteration and a selection process decides which will be used in the next iteration. \cite{pryzant2023automaticpromptoptimizationgradient}
-
-Expansion first uses gradients to edit the current prompt and then explores the local monte-carlo search space by paraphrasing the editions \cite{pryzant2023automaticpromptoptimizationgradient}
-
-To limit the computation used on evaluating prompts, an approach inspired by best arm identification in bandit optimization is utilized. \cite{pryzant2023automaticpromptoptimizationgradient}
-
-
-Applying previous iterative prompt optimization methods, based on prompt+score pairs, to text generation tasks is challenging due to the lack of effective optimization signals. \cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-
-Critiques and suggestions, written in natural language, are more helpful for prompt improvement than a single score.\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-
-CriSPO uses prompt+score+critique triples for next candidate generation. \cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-Unlike APE \cite{pryzant2023automaticpromptoptimizationgradient} prompt generation is decoupled from suggestions and a history of critiques and suggestions as packed into the optimizer for a more stable optimization. \cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-
-CoT is applied in optimization by first asking to compare high-score prompts to low-score ones and draft general ideas. \cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-
-Critique-based optimization explores a larger space, which is indicated by lower similarity of the prompts in lexicons and semantics.\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-
-CriSPO outperforms OPRO \cite{yang2024largelanguagemodelsoptimizers} both on summarization and QA tasks and metaprompt allows for creating ICL and RAG template prompts. \cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-
-\textbf{DSPy optimizers}
-
-Most prompt optimizer approaches do not apply to multi-stage LLM programs where we lack gold labels or evaluation metrics for individual LLM calls. \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
-
-
-Uses a surrogate Bayesian optimization model, which is updated periodically by evaluating the program on batches, to sample instructions and demonstrations for each stage of the LLM program \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
-
-Optimizing demonstrations alone usually yields better performance than just optimizing instructions, but optimizing both yield the best performance. \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
-
-Optimizing instructions is most valuable for tasks with subtle conditional rules not expressible by a few examples.  \cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
-
-For LLM programs, it is beneficial to alternate between optimizing weights (fine-tuning) and optimizing prompts. \cite{soylu2024finetuningpromptoptimizationgreat}
-
-\subsubsection{Evolutionary optimization}
-There is considerable synergy potential between the fields of evolutionary computation and deep learning. \cite{lehman2022evolutionlargemodels}
-
-\textbf{LLM-based variation operator}
-
-LLMs trained on code can suggest intelligent mutations and thus sidestepping many of the challenges in evolving programs. \cite{lehman2022evolutionlargemodels}
-
-Genetic programming still offers an advantage when the programming task is far from the training distribution of the LLM. \cite{lehman2022evolutionlargemodels}
-
-Genetic programming can in principle evolve in any space. \cite{lehman2022evolutionlargemodels}
-
-\todo{this can be connected with the idea that prompts=programs}
-
-Topic of mutation is guided by previously chosen "commit message" \todo{this is like a pseudogradient}. \cite{lehman2022evolutionlargemodels}
-
-Evolution with language models can be used as a way of generating domain data for downstream deep learning where it did not previously exist. \cite{lehman2022evolutionlargemodels}
-
-
-The pattern-completion ability of few-shot prompting can be leveraged to create a form of intelligent evolutionary crossover. \cite{meyerson2024languagemodelcrossovervariation}
-
-Performance at in-context learning improves with model scale, implying that methods relying upon this capability will benefit from continuing progress in LLM training. \cite{meyerson2024languagemodelcrossovervariation}
-
-Advent of large, pretrained foundation models marked a significant step in the paradigm of evolutionary 
-recombination with deep generative models, where these new models can be directly leveraged without additional training and allow for searching more abstract spaces. \cite{meyerson2024languagemodelcrossovervariation}
-
-Next-token prediction naturally lends itself to creating an evolutionary variation operator. \cite{meyerson2024languagemodelcrossovervariation}
-
-LLM variation operator should be capable of generating meaningful variation for any text representation that has moderate support in the training set, meaning it is basically domain-independent. \cite{meyerson2024languagemodelcrossovervariation}
-
-LLM crossover acts like an EDA in that it builds a probabilistic model of parents from which the children are sampled. \cite{meyerson2024languagemodelcrossovervariation}
-
-LLM crossover becomes more similar to an EDA as the number of parents increases. \cite{meyerson2024languagemodelcrossovervariation}
-
-LLM crossover can express any genetic operator even with small parent sets by fine-tuning or through effective prompting schemes. \cite{meyerson2024languagemodelcrossovervariation}
-
-Simultaneously evolving the solution $\mathit{x}$ along with the LLM and the prompting mechanism could be a powerful paradigm for more open-ended systems. \cite{meyerson2024languagemodelcrossovervariation}
-
-Input arranged in ascending fitness order prompts the model to generate output that follows an ascending fitness trend. \cite{meyerson2024languagemodelcrossovervariation}
-
-Evolutionary algorithms have been shown to be effective in search spaces with millions and billions of variables, which are inaccessible to LLM crossover due to the size of the LLM context window. \cite{meyerson2024languagemodelcrossovervariation}
-
-The level of stochasticity in LMX can be controlled by the softmax temperature parameter, which can be seen as analogous to a mutation rate parameter in a traditional EA \cite{meyerson2024languagemodelcrossovervariation}
-
-
-\textbf{Frameworks}
-Building upon the inherent ability of LLMs to paraphrase (mutation) and 
-combine (crossover) text, an interesting intersection of traditional evolutionary algorithms and modern LLMs has formed. 
-
-
-Sequences of phrases can be regarded as gene sequences in 
-typical Evolutionary algorithms. \cite{guo2024connectinglargelanguagemodels}
-
-
-Considers two widely used EAs: Genetic Algorithm and 
-Differential Evolution with DE outperforming GA on most tasks \cite{guo2024connectinglargelanguagemodels}
-
-ELM uses a MAP-elites Quality Diversity algorithm. \cite{lehman2022evolutionlargemodels}
-
-Initial population consists of manually-written prompts to leverage human knowledge as well as some prompts generated by LLMs to reflect the fact that EAs start from random solutions to avoid local optima. \cite{guo2024connectinglargelanguagemodels}
-
-DE-inspired approached builds on the idea that the common elements of the current best prompts need to be preserved \cite{guo2024connectinglargelanguagemodels}
-
-Evoprompt performs best with roulette selection when compared with tournament and random selection. \cite{guo2024connectinglargelanguagemodels}
-
-Similar results are achieved when population is initialized with the best and with random prompts, hinting that the crafted design of initial prompts is not essential. \cite{guo2024connectinglargelanguagemodels}
-
-
-Previous research optimized zero-shot instructions and examples separately, overlooking their interplay and resulting in sub-optimal performance. \cite{cui2024phaseevounifiedincontextprompt}
-
-There is a prevailing notion that prompt engineering sacrifices efficiency for performance due to the lengthening of prompts, but PhaseEvo actively shortens the prompts \cite{cui2024phaseevounifiedincontextprompt}
-
-Current EA applications to prompt optimization suffer from extremely high computational cost and slow convergence speed due to the complexity of the high-dimensional search space. \cite{cui2024phaseevounifiedincontextprompt}
-
-PhaseEvo alternates between two phases: exploration with evolution operators and exploitation using a feedback "gradient". \cite{cui2024phaseevounifiedincontextprompt}
-
-TABLE 1 \todo{recreate} compares all 5 operators.  \cite{cui2024phaseevounifiedincontextprompt}
-
-4 phases: initialization - lamarck or manual, local feedback mutation, global evolution with EDA and CR operators, local semantic mutation (paraphrasing) \cite{cui2024phaseevounifiedincontextprompt}
-
-Candidates for evolution operators are selected based on a "performance vector", combining prompts that do not make the same mistakes.  \cite{cui2024phaseevounifiedincontextprompt}
-
-When the performance improvement with an operator stagnates up to some operator-specific tolerance, the current phase is terminated. \cite{cui2024phaseevounifiedincontextprompt}
-
-Evolution in phases outperforms random operator selection. \cite{cui2024phaseevounifiedincontextprompt}
-
-PhaseEvo is the most cost-effective but still needs around 12 iterations and 4000 API calls. \cite{cui2024phaseevounifiedincontextprompt}
-
-
-APE \cite{zhou2023largelanguagemodelshumanlevel} ran into problems with diminishing returns and abandoning the iterative approach entirely, Promptbreeder aims to solve this with a diversity-maintaining evolutionary algorithm for self-referential self-improvement of prompts \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-Prompt optimization techniques utilize the fact that LLMs are effective at generating mutations from examples and can encode human notions of interestingness and can be used to quantify novelty. \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-Self-referential system should improve the way it is improving, thus Promptbreeder used a "hyper-prompt" to optimize its meta-prompt \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-Uses a binary tournament genetic algorithm. \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-Uses a random uniformly sampled mutation operators out of 9 total from 5 broad categories for each replication event. \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-Zero-order mutation (creating a prompt from task description) generates new task prompts more aligned with the task description in the event the evolution diverges.  \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-LLMs tend to be biased to examples found later in EDA mutation lists. Lying to the LLM and telling it that the prompts are sorted by performance in a descending order improves diversity.  \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-Removing any self-referential operator in ablation is harmful under nearly all circumstances \cite{fernando2023promptbreederselfreferentialselfimprovementprompt}
-
-
-Prior works do not provide sufficient guidance in the meta-prompt. \cite{ye2024promptengineeringpromptengineer}
-
-PE2 improves on APE and APO with a back-tracking search procedure and a more complete metaprompt with a two-step task description, prompt layout specification and a step-by-step reflection template. \cite{ye2024promptengineeringpromptengineer}
-
-Experiments with step size and momentum and also a prompt engineering tutorial in the metaprompt to mixed results. \cite{ye2024promptengineeringpromptengineer}
-
-Optimized prompts do not seem to be generalizable across different models.  \cite{ye2024promptengineeringpromptengineer}
-
-
-\textbf{Gold-agnostic methods}
-
-Current prompt optimization methods often depend heavily on external references for evaluation which are often unavailable or unpractical to define in many applications, especially for open-ended tasks \cite{xiang2025selfsupervisedpromptoptimization}
-Gold-agnostic evaluation is important because we ultimately expect LLMs to solve problems for which answers are not already known \cite{zhang2024glapegoldlabelagnosticprompt}
-
-Two primary sources can be used for evaluation: LLM-generated outputs and task-specific truths. These can then be evaluated using either a predefined metric, LLM-as-a-judge or by a human judge to produce an optimization signal based on a numeric score or a textual feedback.  \cite{xiang2025selfsupervisedpromptoptimization}
-
-In each iteration, SPO generates new prompts, executes them, and performs pair-wise evaluations of outputs to assess their adherence \cite{xiang2025selfsupervisedpromptoptimization}
-
-SPO achieves high efficiency, requiring only 8 LLM calls per iteration with three samples, significantly lower than existing methods \cite{xiang2025selfsupervisedpromptoptimization}
-
-Outputs of LLMs inherently contain rich quality information that directly reflects prompt effectiveness \cite{xiang2025selfsupervisedpromptoptimization}
-
-LLMs exhibit human-like task comprehension \cite{xiang2025selfsupervisedpromptoptimization}
-
-With score-based feedback a large sample size is needed to ensure scoring stability, which can be avoided by pairwise comparison of outputs \cite{xiang2025selfsupervisedpromptoptimization}
-
-LLM-as-a-judge biases do not affect the overall optimization trend because eval’s feedback merely serves as a reference for the next round of optimization \cite{xiang2025selfsupervisedpromptoptimization}
-
-While maintaining comparable performance with other ground truth-dependent prompt optimization methods, SPO requires only 1.1\% to 5.6\% of their optimization costs \cite{xiang2025selfsupervisedpromptoptimization}
-
-
-
-Self-consistency can by used as a metric instead of accuracy as correct answers generally exhibit greater self-consistency than incorrect ones. However it can overestimate prompts that produce consistent incorrect answers. \cite{zhang2024glapegoldlabelagnosticprompt}
-
-Mutual-consistency refinement refines self-consistency scores based on the self-consistency scores of other prompts \cite{zhang2024glapegoldlabelagnosticprompt}
-
-Gold-agnostic evaluation methods like GLaPE are robust metrics akin to accuracy and are able to produce effective prompts similarly to gold-label-based methods like OPRO\cite{yang2024largelanguagemodelsoptimizers}. \cite{zhang2024glapegoldlabelagnosticprompt}
-
-If all prompts produce consistent but incorrect answers it is challenging to discern the error without external resources. This happens in some datasets, leading to diminished correlation between GLaPE and accuracy. \cite{zhang2024glapegoldlabelagnosticprompt}
-
-
-\subsubsection{Metaprompting}
-Metaprompting or "prompting to create prompts"
-
-Meta-prompts are task-agnostic, meaning they will return the relevant outputs for an arbitrary task, provided a task description is provided as an input.  \cite{dewynter2024metaprompting}.
-
-It is possible to construct a general-purpose meta-prompt. \cite{dewynter2024metaprompting}.
-
-Meta-prompts will perform better than standard prompts at executing a wide range of tasks.  \cite{dewynter2024metaprompting}.
-
-In tests meta-generated prompts were ranked as more useful than the baselines as well as producing content that was rated more suitable.  \cite{dewynter2024metaprompting}.
-
-\subsection{General LLM-based optimization}
