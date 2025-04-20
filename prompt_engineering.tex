@@ -34,54 +34,54 @@ We can dissect a prompt into several components\cite{schulhoff2024promptreportsy
     \item \textbf{Output specifications:} Style and format instructions, e.g., \textit{"Respond with three paragraphs in formal style with tasteful emojis."}
 \end{itemize}
 
-Although flexible and sometimes blended together, high-performing prompts often follow this structure and order. 
+Although flexible and sometimes blended together, high-performing prompts \\often follow this structure and order. 
 In more technical applications, it is beneficial to use tags or delimiters to explicitly separate components.
 Models often reward prompts with a more code-like structure\cite{10.1145/3544548.3581388}. 
+
 We now discuss each component in detail.
 
 \subsubsection{Directive}
-The directive should be a clear and objective description of the task. 
+The directive should be a clear and objective description of the task, assuming that the model
+already knows how to solve it\cite{reynolds2021promptprogramminglargelanguage}. 
 Specific requirements that narrow the scope should be avoided and left for other components.
-A good rule of thumb is to treat the directive as a subject to an email. 
 
 In cases where the prompt serves as a prompt template, meaning it can be reused with various data points,
 the directive can include a placeholder. For example consider this directive
-\begin{verbatim}
-    Write a limerick about {topic}.
-\end{verbatim}
-This directive, and the prompt to which it belongs, could be reused for multiple values of \textit{topic}.
+\begin{promptbox}{Directive with a placeholder}
+    Write a limerick about \texttt{$\{$topic$\}$}.
+\end{promptbox}
+This directive, and the prompt to which it belongs, could be reused for multiple values of \texttt{topic}.
 
 \subsubsection{Context}
 Context should provide all the background information relevant to the task at hand.
 The user can include more information about why they are using the model for the task,
-define the target audience or attach relevant documents. For example, a prompt that asks the LLM to explain a code snippet:
+define the target audience or attach relevant documents. For example, a prompt that asks the LLM to summarize an article:
 
-\begin{verbatim}
-    Explain this Python code snippet.
-    ```python
-        user_info = {'name': 'Alice', 'age': 30, 'city': 'New York'}
-        def greet_user(**kwargs):
-            print(f"Hello, {kwargs['name']} from {kwargs['city']}!")
-        greet_user(**user_info)
-    ```
+\begin{promptbox}[label={box:contextprompt}]{Using context to personalize output}
+    \textbf{Directive:}
     
-    I am a beginner to Python programming. 
-    I understand the function definition 
-    and that user_info is a dictionary, 
-    but I don't know what the double asterisk does. 
-    Can you explain how the double asterisk 
-    works in this context and what it does step by step?
-    \end{verbatim} 
+    \hlbox{ctublue}{
+    Summarize this article on climate change for a high-school debate. \\
+    \texttt{$\{$article$\}$}
+    }
+    
+    \textbf{Context:}
+    
+    \hlbox{ctublue}{
+    I already understand the basic causes of climate change, but I struggle with the economic side. Focus on how it affects economies and give arguments I could use in a policy debate.
+    }
+\end{promptbox}
 
-In this case, the first part is the directive and the second part is the context, which specifies the user's situation.
-Without the context, the model might explain each line of the snippet in too much detail and not explain the dictionary unwrapping operator specifically.
+In this example, the initial instruction serves as the directive, while the second component provides contextual information about the user's prior knowledge and objectives.
+Without this context, the model may produce a generic summary, overlooking the user's interest in economic impacts and failing to surface arguments relevant for a policy-oriented debate.
 
 The context can become the endpoint for retrieval pipelines, which search a data source for 
 relevant documents, or memory mechanisms, which gather personal information about the user from other conversations. 
 
-Another possible feature of the context component is role-assignment. 
-We can instruct the model to adopt an identity or an expertise level.
-For example, we can tell the model something like "You are a experienced business analyst".
+Another possible feature of the context component is the use of a memetic proxy\cite{reynolds2021promptprogramminglargelanguage},
+like role-assignment. Instead of writing a long instruction covering all the requirements and assumptions 
+behind someone being an "experienced business analyst", we can just say "You are an experienced business analyst".
+In this way, we can instruct the model to adopt an identity or an expertise level.
 This primes the model to use a more technical language in its response.
 
 \subsubsection{Examples}\label{sec:icl}
@@ -117,6 +117,11 @@ When adding examples to a prompt, we have to pay attention to several aspects\ci
     \item \textbf{Exemplar similarity}: Effect of exemplar similarity depends on the situation.
 \end{itemize}
 
+Contrary to Brown et al.\cite{brown2020languagemodelsfewshotlearners} who interpret the effectiveness of
+few-shot prompting as the model learning the task by observing examples, later research\cite{reynolds2021promptprogramminglargelanguage}
+suggestes that examples merely allow the LLM to locate the task more precisely in its learned task space.
+Still, the authors argued for the use of examples for redundancy enforcing the desired behavior\cite{reynolds2021promptprogramminglargelanguage}.
+
 \subsubsection{Output specifications}
 With this component, we guide the structure, tone, style and formatting of the LLM's answer. 
 A common technique, discussed in \ref{sec:cot} is inducing reasoning
@@ -128,13 +133,37 @@ request specific formatting, like the use of \LaTeX{} equations, or have it answ
 for a machine-readable response. Users should test multiple configurations as changing the output format
 can influence the final prediction\cite{salinas2024butterflyeffectalteringprompts}.
 
-\subsection{Metaprompting}
-Metaprompting or "prompting to create prompts"
+\subsection{Meta-prompting}
+Before we proceed we first need to overview the terminology discrepencies in contemporary research. 
+Meta-prompts (also meta prompts or metaprompts) were first coined by Reynolds and McDonell\cite{reynolds2021promptprogramminglargelanguage}. 
+Since then, this term was used in multiple contexts.
+\begin{enumerate}
+    \item \textbf{Task-agnostic zero-shot prompt:} In contrast to task-sample specific few-shot prompting, 
+    meta-prompts were used to mean a 'task-agnostic zero-shot prompt', or 'seeds encapsulating a more general intention that will unfold into
+    a specific prompt when combined with the task question'\cite{reynolds2021promptprogramminglargelanguage}. 
+    \item \textbf{Natural language metaprocedure:} Extending 1, Zhang et al.\cite{zhang2025metapromptingaisystems} define meta-prompts as example-agnostic prompts
+    designed to capture the reasoning structure of a specific category of tasks. They do this by employing a typed and structured prompt, 
+    resembling control flow templated and often expressed in JSON-like structures.
+    This is similar to how DSPy\cite{khattab2023dspycompilingdeclarativelanguage} implements LLM calls with function signatures.
+    \item \textbf{Soft prompt optimization method:} In a parallel branch of research, MetaPrompting\cite{hou2023metapromptinglearninglearnbetter} 
+    was used as a name of a soft token prompt optimization method.
+    \item \textbf{Prompt generator:} In automatic prompt engineering and prompt optimization literature, meta-prompt is a prompt that generates prompts\cite{dewynter2024metaprompting}.
+    This can be seen as application of 2 to the task of prompt generation\cite{zhang2025metapromptingaisystems}.
+\end{enumerate}
 
-Meta-prompts are task-agnostic, meaning they will return the relevant outputs for an arbitrary task, provided a task description is provided as an input.  \cite{dewynter2024metaprompting}.
+While both 1 and 2 are of interest to us, in this thesis, we will use definition 4. 
 
-It is possible to construct a general-purpose meta-prompt. \cite{dewynter2024metaprompting}.
+\subsubsection{Meta-prompt as a prompt generator}
+Prompt optimization literature\cite{ramnath2025systematicsurveyautomaticprompt} treats meta-prompts just a prompt which generates prompts.
+As prompt generation is a complex reasoning-intensive language generation task\cite{ye2024promptengineeringpromptengineer}, 
+all the principles regarding prompt design for other hard tasks apply to meta-prompts as well.
 
-Meta-prompts will perform better than standard prompts at executing a wide range of tasks.  \cite{dewynter2024metaprompting}.
+Meta-prompts are usually templates for other data, such as examples of the task for Instruction Induction\cite{honovich2022instructioninductionexamplesnatural},
+past prompt generations along with their scores\cite{yang2024largelanguagemodelsoptimizers} and critiques of prompt outputs\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
+or text description of the task\cite{ye2024promptengineeringpromptengineer}. Some reseach also utilizes professional task advice\cite{ramnath2025systematicsurveyautomaticprompt}
+or a prompt engineering tutorial\cite{ye2024promptengineeringpromptengineer}. Other methods used seed phrases, like a thinking 
+style\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}, to steer the generation.
 
-In tests meta-generated prompts were ranked as more useful than the baselines as well as producing content that was rated more suitable.  \cite{dewynter2024metaprompting}.
+In one of the few theoretically rigorous works on the subject, de Wynter et al.\cite{dewynter2024metaprompting} formalize meta-prompts
+using category theory. Showing the possibility of creating a general purpose meta-prompt as well as suggesting that such meta-prompt
+will perform better than task-specific prompts in a wide range of applications.
