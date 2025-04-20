@@ -166,11 +166,6 @@ The simplest gradient form is a series of prompts and their scores in a meta-pro
 to create a new prompt in the sequence. The hope is for the model to extrapolate beyond the sequence of prompts
 and apply the observed pattern to acquire a better performing prompt. 
 
-Ablations in OPRO\cite{yang2024largelanguagemodelsoptimizers} show that both the ascending order of the prompts
-as well showing scores in beneficial to the optimization process. Furthermore, another crucial part
-of the meta-prompt according to \cite{yang2024largelanguagemodelsoptimizers} and \cite{tang2024unleashingpotentiallargelanguage} are examples of the task similar to the
-Instruction Induction meta-prompt. This helps the LLM better understand the task at hand. An alternative would be to include a description of the task\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}.
-
 \begin{promptbox}
     [label={box:oprometa}]{Prompt+Score Meta-prompt}
     \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
@@ -185,7 +180,11 @@ Instruction Induction meta-prompt. This helps the LLM better understand the task
     \textbf{LLM Output:}
     \hlbox{ctublue}{Plan and solve the challenge while showing your work.}
 \end{promptbox}
-
+\newpage
+Ablations in OPRO\cite{yang2024largelanguagemodelsoptimizers} show that both the ascending order of the prompts
+as well showing scores in beneficial to the optimization process. Furthermore, another crucial part
+of the meta-prompt according to \cite{yang2024largelanguagemodelsoptimizers} and \cite{tang2024unleashingpotentiallargelanguage} are examples of the task similar to the
+Instruction Induction meta-prompt. This helps the LLM better understand the task at hand. An alternative would be to include a description of the task\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}.
 
 Another branch of research, e.g. ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} and CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
 focus on using model feedback as a part of the optimization signal. Outputs of LLMs contain rich quality 
@@ -216,7 +215,7 @@ Feedback-enriched meta-prompts, such as \ref{box:crispometa}, may include prompt
     \textbf{LLM Output:} 
     \hlbox{ctublue}{Yay! Let's solve this math problem with logical thinking! }
 \end{promptbox}
-
+\newpage
 The instructions in \ref{box:oprometa} and \ref{box:crispometa} are rather basic and can be endlessly
 improved via prompt engineering. For example Ye et al.\cite{ye2024promptengineeringpromptengineer} attempt to 
 improve on APE and ProTeGi by designing a more complete meta-prompt. 
@@ -244,8 +243,9 @@ by emulating the processes observed in natural evolution using crossover (sexual
 Although widely successful, EAs have been limited by the challenging nature of operator design.
 Developing them requires extensive manual crafting with domain knowledge\cite{liu2024largelanguagemodelsevolutionary}.
 
-With the advent on LLMs and few-shot prompting, their pattern-completion ability can be leveraged \\to create a form of intelligent 
+With the advent on LLMs and few-shot prompting, their ability to complete patterns can be leveraged to create a form of intelligent 
 evolutionary crossover\cite{meyerson2024languagemodelcrossovervariation}, which can be in theory truly general.
+\newpage
 In principle, LLMs can mutate and combine any text representation that has moderate support in its training dataset
 and perform any genetic operator through fine-tuning or prompt engineering.
 The intersection between LLMs and EAs, among other traditional algorithms, emerges as an exciting branch of research.
@@ -339,7 +339,7 @@ unpractical to define especially for open-ended tasks \cite{xiang2025selfsupervi
 Xiang et al.\cite{xiang2025selfsupervisedpromptoptimization} tackle this problem by using pairwise LLM-based evaluation
 and Zhang et al.\cite{zhang2024glapegoldlabelagnosticprompt} develop a gold label-free method method on evaluation based
 on self-consistencies of different answers.
-
+\newpage
 Also, as the complexity of prompt structure increases, many prompt optimization techniques are no longer applicable\cite{schnabel2024symbolicpromptprogramsearch}.
 Schnabel et al.\cite{schnabel2024symbolicpromptprogramsearch} define Symbolic Prompt Programs, representable
 as directed acyclic graphs. In these graphs, nodes are functions, such as \texttt{RenderText}, \texttt{GenerateResponse} or \texttt{ParseOutput} 

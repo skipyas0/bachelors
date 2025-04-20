@@ -24,7 +24,7 @@ marking a huge leap from the basic text messages of the early LLM days.
 
 In this section, we will briefly cover the most notable prompt engineering techniques, which we will then
 be able to utilize in our study of automatic prompt optimization.
-
+\newpage
 \subsection{Components of a prompt}
 We can dissect a prompt into several components\cite{schulhoff2024promptreportsystematicsurvey}.
 \begin{itemize}
@@ -116,7 +116,7 @@ When adding examples to a prompt, we have to pay attention to several aspects\ci
     \item \textbf{Exemplar format}: Optimal format may vary across tasks.
     \item \textbf{Exemplar similarity}: Effect of exemplar similarity depends on the situation.
 \end{itemize}
-
+\newpage
 Contrary to Brown et al.\cite{brown2020languagemodelsfewshotlearners} who interpret the effectiveness of
 few-shot prompting as the model learning the task by observing examples, later research\cite{reynolds2021promptprogramminglargelanguage}
 suggestes that examples merely allow the LLM to locate the task more precisely in its learned task space.
@@ -140,7 +140,7 @@ Since then, this term was used in multiple contexts.
 \begin{enumerate}
     \item \textbf{Task-agnostic zero-shot prompt:} In contrast to task-sample specific few-shot prompting, 
     meta-prompts were used to mean a 'task-agnostic zero-shot prompt', or 'seeds encapsulating a more general intention that will unfold into
-    a specific prompt when combined with the task question'\cite{reynolds2021promptprogramminglargelanguage}. 
+    a specific prompt when combined with the task question\cite{reynolds2021promptprogramminglargelanguage}. 
     \item \textbf{Natural language metaprocedure:} Extending 1, Zhang et al.\cite{zhang2025metapromptingaisystems} define meta-prompts as example-agnostic prompts
     designed to capture the reasoning structure of a specific category of tasks. They do this by employing a typed and structured prompt, 
     resembling control flow templated and often expressed in JSON-like structures.
@@ -151,7 +151,7 @@ Since then, this term was used in multiple contexts.
     This can be seen as application of 2 to the task of prompt generation\cite{zhang2025metapromptingaisystems}.
 \end{enumerate}
 
-While both 1 and 2 are of interest to us, in this thesis, we will use definition 4. 
+While both 1 and 2 are of interest to us, in this thesis, we will treat meta-prompts as prompt generators. 
 
 \subsubsection{Meta-prompt as a prompt generator}
 Prompt optimization literature\cite{ramnath2025systematicsurveyautomaticprompt} treats meta-prompts just a prompt which generates prompts.
