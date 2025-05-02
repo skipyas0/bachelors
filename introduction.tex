@@ -1,48 +1,91 @@
-\section{Background}\label{sec:notation}
-The central focus of this work is an instance of an LLM, denoted $\mathcal{M}$. 
-When appropriate, we can differentiate between instances with a lower index, specifying its purpose. 
-For example, when using separate LLM instances for optimizing and task-solving, we will denote them $\mathcal{M}_{optim}$ and $\mathcal{M}_{solve}$ respectively.
-This way, we put emphasis on the fact we can choose a different LLM provider and hyperparameters for each instance.
+\section{Formulation}\label{sec:notation}
+\subsection{Supporting notation}
+The central focus of this work is prompt optimization for Large Language Models (LLMs). 
+Let $\mathbb{T}$ be the space of text sequences. Then we will define an LLM as a stochastic mapping
+\begin{equation}
+    \mathcal{M}: \mathbb{T} \rightarrow \mathcal{L}(\mathbb{T}),
+\end{equation}
+where $\mathcal{L}(\mathbb{T})$ is a probabilistic language distribution learned during the LLM's training.
+This distribution is governed by the LLM's hyperparameters $\mathbb{H}$, which affext its behaviour. Of particular interest is
+the sampling temperature $t \in \mathbb{H}$ which interpolates between greedy decoding and uniform sampling.
+In theory, $\mathcal{M}$ is deterministic for $t=0$, but in practice numerical errors still introduce variance.
 
-
-In general, $\mathcal{M}: \mathbb{T} \times \mathbb{T}$ is a stochastic (for a positive sampling temperature) mapping on the space of text sequences $\mathbb{T}$.
-A prompt $P \in \mathbb{T}$ is a text sequence that, when inputted into an LLM, produces an output
+A prompt $P \in \mathbb{T}$ is a text sequence that, when input into an LLM, produces an output
 \begin{equation}
     y \sim \mathcal{M}(P).
-\end{equation} 
+\end{equation}
+In contexts where $P$ serves as a template for an additional query $q$, we will write
+\begin{equation}
+    y \sim \mathcal{M}(P\vsep q),
+\end{equation}
+where $P \vsep q$ denotes the result of inserting query $q$ into a designated placeholder in $P$.
 
 We can use LLMs to solve a general task
 \begin{equation}
-    t \in \mathcal{D} \vsep \mathcal{D} = \{ (q_1, g_1), (q_2, g_2), ... , (q_n, g_n), \},
+    t = (q, g) \in \mathbb{D},
 \end{equation}
-where $\mathbb{D}$ is a dataset consisting of $n$ pairs of queries $q$ and gold-labels $g$. 
-For open-ended tasks, the gold-label does not exist, $g_k = \varnothing \forall k$.
+where $\mathbb{D} \subseteq \mathbb{Q} \times \mathbb{G}$ is a dataset of query-answer pairs, $\mathbb{Q}\subseteq\mathbb{T}$ is the set of queries $q$
+and $\mathbb{G}\subseteq\mathbb{T}$ is the set of gold labels $g$.
+We consider each dataset to have one or more assigned evaluation metrics $\mathcal{F}_{\mathbb{D}}: \mathbb{T} \times \mathbb{G} \rightarrow \mathbb{R}$,
+which scores the LLM output using the corresponding gold label. 
 
-
-We can further define a prompt as
+For open-ended tasks, the gold label does not exist, $G = \varnothing$. To achieve effective evaluation even for such tasks, 
+we formulate a metric based on pairwise comparisons and generalize the definition as
 \begin{equation}
-    P = \mathbf{p}(q),
+    \mathcal{F}_{\mathbb{D}}: \mathbb{T} \times \mathbb{G} \times 2^\mathbb{T} \rightarrow \mathbb{R},
 \end{equation}
-where $\mathbf{p} \in \mathbf{T}$ is a set of text instructions into which a task query $q$ is inserted. 
-We will call the text instructions $p$ a \textit{prompt template}.
+where $2^\mathbb{T}$ denotes the powerset of the set of text sequences. Using this definition, we define the mean perfomance $\mathcal{E}$ of a prompt $P$ on a dataset $\mathbb{D}$ as
+\begin{equation}
+    \mathcal{E}_{\mathbb{D}}(P) = \frac{1}{\Vert \mathbb{D} \Vert}\underset{(q,g)\in \mathbb{D}}{\sum}\mathcal{F}(\mathcal{M}(P\vsep q), g, \mathbb{C}_q),
+\end{equation}
+where $\mathbb{C}_q$ is a set of reference outputs. This set consists of past generations using the same query.
+Let $\mathbb{P} \subseteq \mathbb{T}$ be a population of prompts. Then 
+\begin{equation}
+    \mathbb{C}_q = \{\mathcal{M}(P\vsep q)\vsep P \in \mathbb{P}\}.
+\end{equation}
+For convenience, we will define the scores of the population $\mathbb{P}$ on dataset $\mathbb{D}$ as
+\begin{equation}
+    \mathcal{E}_{\mathbb{D}}(\mathbb{P}) = \{\mathcal{E}_{\mathbb{D}}(P)\vsep P\in \mathbb{P}\}.
+\end{equation}
+
+\subsection{Problem definition}
+We can then formally define the problem of prompt optimization for a task dataset $\mathbb{D}$ as finding the optimal prompt 
+\begin{equation}
+    \label{eq:optimdef}
+    P^{\star} = \underset{P\in\mathbb{T}}{\operatorname{argmax}}\,\mathbb{E}_{(q, g) \sim \mathbb{D}}\left[\mathcal{F}(\mathcal{M}(P \vsep q), g, \mathbb{C}_q)\right].
+\end{equation}
+
+In Algorithm \ref{alg:genoptimloop} we can see the general outline of a population-based optimization method.
+The initialization operator $\mathcal{O}_I$ creates an initial population of individuals $\mathbb{P}$. 
+In each iteration, a selection operator $\mathcal{O}_S$ first selects a portion of the population according to some criteria. 
+These selected individuals are then used by the expansion operator $\mathcal{O}_E$ to create new individuals.
+This process continues until a termination condition $\Phi_{stop}$ is reached.
 
 \begin{algorithm}
     \caption{General optimization loop}
     \label{alg:genoptimloop}
     \KwIn{Initialization Operator $\mathcal{O}_I$, Selection Operator $\mathcal{O}_S$, Expansion Operator $\mathcal{O}_E$, Termination Condition $\Phi_{stop}$}
-    \KwOut{Optimized Population $\mathcal{P}$}
-    \KwData{$\mathcal{P} \gets \mathcal{O}_I$} \tcp{Initialize the population}
-    \While{$\neg \Phi_{stop}(\mathcal{P})$}{
+    \KwOut{Optimized Population $\mathbb{P}$}
+    \KwData{$\mathbb{P} \gets \mathcal{O}_I$} \tcp{Initialize the population}
+    \While{$\neg \Phi_{stop}(\mathbb{P})$}{
         \tcp{Selection and Expansion Steps}
-        $\mathcal{P}_{\text{selected}} \gets \mathcal{O}_S(\mathcal{P})$ \\ 
-        $\mathcal{P}_{\text{expanded}} \gets \mathcal{O}_E(\mathcal{P}_{\text{selected}})$ \\
-        $\mathcal{P} \gets \mathcal{P}_{\text{expanded}}$ \tcp{Update the population} 
+        $\mathbb{P}_{\text{selected}} \gets \mathcal{O}_S(\mathbb{P})$ \\ 
+        $\mathbb{P}_{\text{expanded}} \gets \mathcal{O}_E(\mathbb{P}_{\text{selected}})$ \\
+        $\mathbb{P} \gets \mathbb{P}_{\text{expanded}}$ \tcp{Update the population} 
         }
-        \Return{$\mathcal{P}$} \tcp{Return the optimized population}
+        \Return{$\mathbb{P}$} \tcp{Return the optimized population}
     \end{algorithm}
     
-Next, we move onto the optimization notation. In Algorithm \ref{alg:genoptimloop} we can see the general outline of a population-based optimization method.
-The initialization operator $\mathcal{O}_I$ creates an initial population of individuals $\mathcal{P}$. 
-Then, in each step, a selection operator $\mathcal{O}_S$ selects a portion of the population according to some criteria. 
-These selected individuals are then used by the expansion operator $\mathcal{O}_E$ to create new individuals.
-This process continues until a termination condition $\Phi_{stop}$ is reached.
+We apply this technique to the problem of prompt optimization by defining the aforementioned operators.
+Of particular interest are the initialization operator $\mathcal{O}_I$ and the expansion operator $\mathcal{O}_E$, which
+both need to produce new prompts. For this purpose, we utilize an LLM instance $\mathcal{M}_{\text{optim}}$ and leverage its 
+text generation and reasoning capability. By using the lower index, we specify the purpose of the LLM and differentiate 
+from another instances, which might use different hyperparameters.
+
+Let $M\in\mathbb{T}$ be a \textit{Meta-prompt}, or a prompt-generation prompt. We can now formulate generating a prompt 
+\begin{equation}
+    P = \mathcal{M}_{\text{optim}}(M\vsep \mathcal{R})),
+\end{equation}
+where $\mathcal{R} = \mathcal{R}(\mathbb{P}, \mathbb{C}, \mathbb{D}, \mathcal{E}_{\mathbb{D}}(\mathbb{P}))$ is a retrieval function that selects data
+from the current population, past generations, dataset samples and population scores. 
+

@@ -1,18 +1,122 @@
-\section{Datasets}
-Datasets were chosen according to the following requirements:
+\section{Inference framework}
+Taking inspiration from DSPy\cite{khattab2023dspycompilingdeclarativelanguage}, we first implement a simple LLM-calling framework 
+capable of invoking several selected inference strategies. Motivations for this are twofold:
 \begin{enumerate}
-    \item The task is challenging for modern LLMs using a standard CoT prompt but has non-zero accuracy
-    \item Complex output (no multiple-choice answers)
-    \item Easy to check programmatically to avoid human/AI judges
-\end{enumerate} 
-\subsection{External dataset}
-We found the Livebench datasets to meet our requirements.
-\subsection{Custom dataset design}
-Sequences dataset challenges the pattern recognition and algebraic capabilities of the model 
-\section{Optimization methods}
-\subsection{Optimization operators}
-Metaprompts that define the transition between optimizer generations.
-\section{Experimental setup}
-Language model used for solving is gpt-4o-mini. Prompts for the solver model are optimized by the optimized model, for which we use the gpt-4o.
-To encourage diversity and exploration in the optimization process, a temperature of $0.7$ is used for the optimizer model. The solver model uses
-temperature $0.0$ to keep the outputs deterministic. 
+    \item DSPy is a young and ambitious project aiming at simplifying LLM pipeline design and optimization. 
+    As we focus on single-stage prompt program optimization, this capability is not useful for our work. 
+    Furthermore, due to the framework's infancy, it lacks proper documentation and sometimes exhibits unexpected behavior.
+    \item Implementing the prompting techniques discussed in \ref{sec:inference} provides further insight into their workings and performance.
+\end{enumerate}
+
+\subsection{Structured generation}
+Following current research trends\cite{zhang2025metapromptingaisystems}, we build our inference framework around a structured JSON template,
+or a \texttt{Signature}. The \texttt{Signature} structure consists of input and output fields and additional instructions. 
+These fields are populated by a \texttt{Field} data structure.
+Of particular interest are the output fields, which hold the output name, desired type and optional description. 
+
+When employing good naming practices the model can often deduce the task only by looking at output names and types.
+Consider the following \texttt{Signature}:
+\begin{promptbox}{Simple Signature}
+    \hlspan{ctuorange}{Word: \texttt{str}} $\rightarrow$ \hlspan{ctuorange}{Antonymum: \texttt{str}}
+\end{promptbox}
+\newpage
+For more complex tasks, filling the output descriptions or even adding explicit instructions is necessary.
+In \ref{box:complexsig} notice that it is possible to specify multiple inputs and outputs, which are then generated in the order given.
+\begin{promptbox}[label={box:complexsig}]{Complex Signature}
+    \hlspan{ctuorange}{Text: \texttt{str}, Grading guide: \texttt{str}} 
+    $\rightarrow$ 
+    \hlspan{ctuorange}{Evaluation: \texttt{str}, Grade: \texttt{int}} \hfill
+    \\ \\
+    Instructions:
+    \hlbox{ctublue}{Grade the text.\\ You are an expert text evaluator. \\
+    Use the grading guide to evaluate the test and give a final grade. 
+    Use formal language and markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}
+\end{promptbox}
+
+Sufficiently large instruction-tuned LLMs are usually good at reliably producing JSON output.
+For smaller models or more complex output structures, it might be necessary to use some form of constrained generation as discussed in \ref{sec:inference}.
+A JSON schema could be constructed automatically from the \texttt{Signature} and passed into a parser-based sampler.
+However this is not necessary for our use-case.
+\subsection{Predict method}
+To facilitate \texttt{Signature}-powered generation, we implement a \texttt{predict} method that involves
+\begin{enumerate}
+    \item Prepending a developer prompt to the messages
+    \item Parsing of \texttt{Signature} outputs
+    \item Repeated generation in case of parsing failure.
+\end{enumerate}
+\newpage
+
+\begin{promptbox}[label={box:predictdev}]{Predict method developer prompt}
+    \hlbox{ctuorange}{You are an intelligent function that returns structured JSON outputs matching a given schema.
+    }
+    
+    \hlbox{ctulightblue}{
+    You will receive a JSON object containing: \\
+        - `inputs`: a dictionary of named inputs \\
+        - `outputs`: a dictionary specifying the expected output fields with their types and descriptions\\
+        - `instructions`: a task or question to answer (optional)\\
+
+    Your job is to:\\
+        1. Understand the task from `instructions` or infer it from `inputs` and `outputs`\\
+        2. Use the `inputs` to compute or generate the answer\\
+        3. Respond **only** with keys from the `outputs` dictionary and values matching the described types
+    }
+    \hlbox{ctublue}{Only return a flat JSON object like:\\
+    \{\\
+    "field1": <value matching type and description>,\\
+    "field2": <...>\\
+    \}}
+    
+    \hlbox{ctublue!50!black}{Do not add metadata, explanations, or wrap outputs in additional structures.\\
+    Do not include type names or field descriptions in the output.\\
+    Your output must be strictly valid JSON and fill **all** requested output fields.}
+\end{promptbox}
+The developer prompt has to clearly explain to the LLM how to work with the JSON-based \texttt{Signature}.
+In \ref{box:predictdev} notice the sections of the prompt following principles outline in \ref{sec:preng}.
+First, the directive states the task, then a further context is added about the \texttt{Signature} data structure and the task.
+Next, notice the example showing the proper output, and finally few more clarifying instructions about the output format.
+In experiments, this prompt is successful in incentivizing parseable outputs adhering to the specifications.
+
+Parsing the output presents some challenges as the LLM sometimes wraps the JSON output into a markdown code block
+or uses inconsistent escape sequences. We implement a simple parses based on regular expressions that is able to parse 
+a majority of outputs. In case of model failure, such as getting stuck in a generation loop, we add a repeated generation
+feature.
+\newpage
+\subsection{Inference techniques implementation}
+Leveraging the \texttt{predict} method and the modular \texttt{Signature}-based interface, we implement a suite of inference-time prompting techniques. 
+Each technique is realized through systematic modifications of the \texttt{Signature} fields, changing the developer prompt and the chaining of multiple generation steps 
+and function calls. This design allows for composability and reuse while preserving transparency.
+We implement the following methods.
+\begin{enumerate}
+    \item \textbf{Chain-of-thought}\cite{NEURIPS2022_8bb0d291}: Prepends a reasoning field to the \texttt{Signature} outputs which forms a scratchpad for the LLM.
+    \item \textbf{Chain-of-thought with Self-consistency}\cite{wang2023selfconsistencyimproveschainthought}: Multiple CoT generations with majority-voting.
+    \item \textbf{ReAct}\cite{yao2023reactsynergizingreasoningacting}: Adding tools allows the LLM to interleave thoughts and action steps.
+    \item \textbf{Program-of-thought}\cite{chen2023programthoughtspromptingdisentangling}: Two-stage CoT with Python-code execution
+    \item \textbf{Reflexion}\cite{shinn2023reflexionlanguageagentsverbal}: After an initial generation, the model is prompted to self-critique and revise its output.
+    \item \textbf{Tree of Thoughts}\cite{yao2023treethoughtsdeliberateproblem}: The problem is first decomposed and each step is expanded, forming a thought tree, which is then traversed with BFS or DFS.
+\end{enumerate}
+
+\section{Optimization Framework}
+Although our first implementation attempt utilized an evolutionary algorithm, we will use a basic population-based hill-climber algorithm.
+This design decision has several reasons.
+\begin{enumerate}
+    \item Most PO research uses a hill-climber architecture.
+    \item EAs suffer from slow convergence compared to state-of-the-art hill-climber PO.
+    \item PO is complex as it is and more complicated architectures only introduce more hyperparameters.
+\end{enumerate}
+Therefore, we follow the algorithm outlined in \ref{alg:genoptimloop} and focus on designing the operators, which define
+the optimization process. 
+\subsection{Operator Design}
+
+
+A common issue observed is the loss of generality.
+The model might misunderstand the metaprompt and, instead of generating a general instruction, attempt to
+make a tutorial for solving just the example problems, or even try to directly solve them.
+
+Failure case:
+To solve this type of problem, first calculate how much money Tobias had before purchasing the shoes. Use the given amounts for his allowance and mowing lawns to determine part of his savings. Subtract these earnings from his total savings to find how much he earned from shoveling driveways. Finally, divide the remaining amount by the price per driveway to find the number of driveways shoveled.
+Success case:
+1. Read the problem carefully and identify the key data points. 2. Determine what the problem is asking you to find. 3. Break down the problem into smaller parts if necessary. 4. Use appropriate mathematical operations to solve each part. 5. Combine the results to find the final answer. 6. Double-check your calculations and ensure the solution satisfies all conditions stated in the problem.
+
+
+\section{Datasets}
