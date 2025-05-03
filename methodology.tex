@@ -96,6 +96,8 @@ We implement the following methods.
     \item \textbf{Tree of Thoughts}\cite{yao2023treethoughtsdeliberateproblem}: The problem is first decomposed and each step is expanded, forming a thought tree, which is then traversed with BFS or DFS.
 \end{enumerate}
 
+
+
 \section{Optimization Framework}
 Although our first implementation attempt utilized an evolutionary algorithm, we will use a basic population-based hill-climber algorithm.
 This design decision has several reasons.
@@ -104,10 +106,66 @@ This design decision has several reasons.
     \item EAs suffer from slow convergence compared to state-of-the-art hill-climber PO.
     \item PO is complex as it is and more complicated architectures only introduce more hyperparameters.
 \end{enumerate}
-Therefore, we follow the algorithm outlined in \ref{alg:genoptimloop} and focus on designing the operators, which define
-the optimization process. 
-\subsection{Operator Design}
 
+
+\begin{algorithm}
+    \caption{Prompt Optimization Hill-Climber}
+    \label{alg:promptoptimloop}
+    \KwIn{Dataset $\mathcal{D}$, Population size $S$, Iteration count $I$, Batch size $B$}
+    \KwOut{Optimized Prompts $\mathcal{P}^{\star}$}
+    $\mathcal{D}_{\text{init}}, \mathcal{D}_{\text{dev}}, \mathcal{D}_{\text{test}} \gets \operatorname{Split}(\mathcal{D})$ \tcp{Generate training splits}
+    $\mathcal{P} \gets \operatorname{InstructionInduction}(\mathcal{D}_{\text{init}})$ \tcp{Induce initial prompts}
+    $i \gets 0$ \tcp{Initialize iteration count}
+    $\mathcal{C} \gets \{\}$ \tcp{Initialize solutions} 
+    $\mathcal{E} \gets \{\}$ \tcp{Initialize scores}
+    $\mathcal{A} \gets \mathcal{P}$ \tcp{All prompts}
+    \While{$i<I$}{
+        $Q, G \gets \operatorname{RandomSample}(\mathcal{D}_{\text{dev}}, B)$ \\
+        $\mathcal{C} \gets \{\mathcal{C}_{q}^{\mathcal{P}}\vsep q \in Q\}$ \\
+        $\mathcal{E} \gets \operatorname{Evaluate}(\mathcal{C}, G)$ \\
+        $\mathcal{P} \gets \operatorname{Selection}(\mathcal{P}, \mathcal{E})$ \tcp{Pruning} 
+        $\mathcal{P} \gets \operatorname{Expand}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D}_{\text{init}})$ \\
+        $\mathcal{A} \gets \mathcal{A} \cup \mathcal{P}$ \\
+    }
+    $Q_{\text{test}}, G_{\text{test}} \gets D_{\text{test}}$\\
+    $\mathcal{C}_{\text{test}} \gets \{\mathcal{C}_{q}^{\mathcal{A}}\vsep q \in Q_{\text{test}}\}$\\
+    $\mathcal{E}_{\text{test}} \gets \operatorname{Evaluate}(\mathcal{C}, G_{\text{test}})$\\
+    $P^{\star} \gets \underset{P\in\mathcal{A}}{\operatorname{argmax}}(\mathcal{E}_{\text{test}})$\\
+    \Return{$P^{\star}$}
+\end{algorithm}
+In \ref{alg:promptoptimloop} we iterate on the general algorithm \ref{alg:genoptimloop}. 
+We will discuss the design of functions used in \ref{alg:promptoptimloop} in following sections.
+\begin{itemize}
+    \item \textbf{Expand}: The $\operatorname{Expand}$ function can be with many different expansion operators, of which $\operatorname{InstructionInduction}$
+    is a special case. 
+    \item \textbf{Evaluate}: Evaluating and identifying the most promising prompts is handled by the $\operatorname{Evaluate}$ operator, which uses task-specific automatic evaluation or LLM-feedback.
+    \item \textbf{Selection}: The $\operatorname{Selection}$ operator prunes the population and should maintain only the most promising and diverse prompts for the next expansion.
+\end{itemize}
+
+\section{Expansion Operator Design}
+Expansion operators' job is extending the optimization population with new prompts. Remember notation from \ref{eq:metaprompting}:
+\begin{equation*}
+    P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R}).
+\end{equation*}
+Notice the use of $\mathscr{M}_{\text{optim}}$, which utilizes non-zero sampling temperature. Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{Meta-prompt} $M$ 
+and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}))$.
+The operators' design should address the following challenges:
+\begin{enumerate}
+    \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathcal{M}_{\text{optim}}$ might focus on some $t$ and thus fail to generate general instructions.
+    \item \textbf{Loss of diversity}: Even for  $\mathscr{M}_{\text{optim}}$ with $t>0$, the resulting prompts can be very similar and fail to explore the prompt space $\mathcal{I}$. 
+    This ties into a broader exploration vs. exploitation balance issue.
+    \item \textbf{Lack of optimization signal}: Research\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}\cite{xiang2025selfsupervisedpromptoptimization} suggests that $\mathcal{M}_{\text{optim}}$ 
+    can make use of feedback on prompts' outputs and that these textual signals are more effective than numerical scores.
+    \item \textbf{Out of distribution \textit{Meta-prompt}}: Prompt engineering is a novel research area and does not have a substantial support in the LLM's training corpus.
+    The \textit{Meta-prompt} $M$ thus has to be carefully constructed to help the model output relevant prompts.
+\end{enumerate}
+\subsection{Instruction Induction}
+
+\subsection{Feedback}
+
+\subsection{Sequence Continuation}
+
+\subsection{Paraphrase}
 
 A common issue observed is the loss of generality.
 The model might misunderstand the metaprompt and, instead of generating a general instruction, attempt to
@@ -120,3 +178,4 @@ Success case:
 
 
 \section{Datasets}
+
