@@ -96,14 +96,61 @@ We implement the following methods.
     \item \textbf{Tree of Thoughts}\cite{yao2023treethoughtsdeliberateproblem}: The problem is first decomposed and each step is expanded, forming a thought tree, which is then traversed with BFS or DFS.
 \end{enumerate}
 
+\section{Datasets}
+In this section, we discuss choosing datasets for testing our method and comparing various prompt optimization approaches. 
+While searching available datasets, we focus on the following criteria:
+\begin{enumerate}
+    \item \textbf{Output complexity}: We focus on more complex outputs. Specifically, datasets with multiple-choice or Yes/No answers are omitted. 
+    This disqualifies commonly used datasets as MMLU or BigBenchHard.
+    \item \textbf{Contamination}: Recently, researchers have expressed concern\cite{white2025livebenchchallengingcontaminationlimitedllm} 
+    whether benchmarks are reliable evaluations of models as they might appear in their training data. We omit most common datasets, such as GSM8k\cite{cobbe2021gsm8k}, which has been shown to have enflated scores for some models\cite{testing_language_models_on_a_held_out_high_school_national_finals_exam}.
+    \item \textbf{Output verification}: We prefer to use simple automatic verification rather that using LLM-as-a-judge, which has been shown to be 
+    biased in some circumstances\cite{ye2024justiceprejudicequantifyingbiases}, and human feedback, which defeats the purpose of automatic prompt optimization.
+    \item \textbf{Difficulty}: We omit tasks where models already have near-perfect score. 
+    \item \textbf{Benefit from non-trivial instruction}: We focus on tasks where helpful hints and step-by-step tutorial-like instructions would be helpful.
+\end{enumerate}
+We now list the datasets we will use for evaluation and explain why they were chosen.
+\subsection{Livebench}
+The Livebench\cite{white2025livebenchchallengingcontaminationlimitedllm} dataset is very recent and has been created with the issue of data contamination in mind.
+It also addresses the issues of LLM-as-a-judge verification and all its categories can be verified automatically. It is also very challenging, with top models achieving $65\%$ accuracy\cite{white2025livebenchchallengingcontaminationlimitedllm}.
 
+Out of the tasks available in Livebench, we select the \texttt{Connections} task from the \texttt{Language} subset. 
+This task consists of sorting given words into non-trivial groups of four based on semantics, phonetics and other features. 
+An ideal prompt would attempt to list multiple possible aspects based on which the words can be sorted and also include a helpful example.
+
+\subsection{Code Contests}
+Programming puzzles are a difficult and easily verifiable task. Although CodeContests\cite{li2022competition} is an older dataset, 
+we hope it poses lesser contamination risks than datasets with simpler outputs. With LLM-powered coding assistants on the rise, we
+feel this is a relevant application area for out method. 
+
+\subsection{Sequences}
+We design a small but challenging dataset consisting of predicting the next number in an integer sequence.
+Each sequence is created according to a formula with randomly selected coefficients. The formulas fall into several categories, for example
+\begin{itemize}
+    \item \textbf{Linear with modulo}: $s(i) = \operatorname{mod}_{q}(a_{1} i + b_{1})$
+    \item \textbf{Sum}: $s(i) = \sum_{j=0}^{i-1}a_{1} j + b_{1}$
+    \item \textbf{Alternating}: $s(i) = a_{1}i + a_{2}i(-1)^{i}$.
+\end{itemize}
+This tests the model's ability to 1. detect and understand patterns and 2. systematically perform simple arithmetic. 
+In practice, we will optimize just for a single sequence category and observe, whether the optimizer evolves a prompt with a tutorial for the specific sequence category.
+Experiments revealed that the \texttt{Alternating} class of sequences has a good difficulty balance and we will use it for evaluation.
+\subsection{Creative tasks}
+To test our approach on open-ended tasks, we construct a simple limerick-writing task, where the model is given an animal and is supposed to write a alliterative limerick
+with all words starting with the same letter of the given animal. For example:
+\begin{promptbox}[label={box:limerick}]{Limerick task example}
+    \hlbox{ctuorange}{snake}
+    \hlbox{ctublue}{silly snakes swiftly slide,\\sneaky, slippery, side to side,\\slurping soda,\\singing sonata,\\simply sparkling, super-sized!}
+\end{promptbox}
+With this task, the goal is to manually observe whether our method brings any improvement to creative tasks.
+Although one could design automatic evaluation for this task like checking first letters, syllable counts and rhymes, it would be unrealistic
+to expect such metric to reflect human perception of quality. For this reason, we will use pairwise comparisons of outputs.
 
 \section{Optimization Framework}
 Although our first implementation attempt utilized an evolutionary algorithm, we will use a basic population-based hill-climber algorithm.
 This design decision has several reasons.
 \begin{enumerate}
     \item Most PO research uses a hill-climber architecture.
-    \item EAs suffer from slow convergence compared to state-of-the-art hill-climber PO.
+    \item EAs suffer from slow convergence compared to state-of-the-art hill-climber PO\cite{xiang2025selfsupervisedpromptoptimization}.
     \item PO is complex as it is and more complicated architectures only introduce more hyperparameters.
 \end{enumerate}
 
@@ -148,7 +195,7 @@ Expansion operators' job is extending the optimization population with new promp
     P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R}).
 \end{equation*}
 Notice the use of $\mathscr{M}_{\text{optim}}$, which utilizes non-zero sampling temperature. Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{Meta-prompt} $M$ 
-and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}))$.
+and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E})$.
 The operators' design should address the following challenges:
 \begin{enumerate}
     \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathcal{M}_{\text{optim}}$ might focus on some $t$ and thus fail to generate general instructions.
@@ -159,23 +206,148 @@ The operators' design should address the following challenges:
     \item \textbf{Out of distribution \textit{Meta-prompt}}: Prompt engineering is a novel research area and does not have a substantial support in the LLM's training corpus.
     The \textit{Meta-prompt} $M$ thus has to be carefully constructed to help the model output relevant prompts.
 \end{enumerate}
-\subsection{Instruction Induction}
+
+We now discuss the design of each prompt generation operator and display their signatures and \textit{meta-prompts}. 
+Note that all operators are ultimately used in a CoT context, where a \texttt{reasoning} field is prepended to each signature's outputs.
+\subsection{Lamarckian}
+Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} is used by many PO methods and often refered to as \texttt{Lamarckian Mutation}. 
+We will adopt this terminology from now on and design our \texttt{Lamarckian} operator. 
+In \ref{box:lamarcksig} the reader can find the \texttt{Signature} of the \texttt{Lamarckian} operator.
+Design of its meta-prompt takes into account the design challenges mentioned earlier by 1. warning the LLM to be general and not to focus on a single example, 
+2. clearly states the problem using a directive and formatting specifications. 
+
+The problem with diversity still persists and we consider two approaches to solving it. 
+We can increase the model's creativity by increasing its sampling temperature. Another approach is to use
+some kind of \textit{seed}, for example a \textit{persona}. We experiment with using personas from PersonaHub\cite{ge2024scalingsyntheticdatacreation}.
+Authors of this paper argued that seeding generation with the persona helps with creating novel synthetic data. 
+
+For the data retrieval part, \texttt{Lamarckian} utilizes only examples of the datasets. 
+We randomly sample $N$ examples from a separate training split. So
+\begin{equation}
+    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \mathcal{R}(\mathcal{D}) = \operatorname{RandomSample}(\mathcal{D}_{\text{init}}, N)
+\end{equation}
+
+\begin{promptbox}[label={box:lamarcksig}]{Lamarckian Signature}
+    \hlspan{ctuorange}{Task examples: \texttt{str} (Samples from a problem class)} \\\\
+    \hlspan{ctuorange}{Persona (Optional): \texttt{str} (Assume this persona when writing the prompt)} \\\\
+    $\rightarrow$ \\\\
+    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Instructions for solving the problem)} \hfill
+    \\ \\
+    Instructions:
+    \hlbox{ctublue}{Craft a **general** developer prompt to help an LLM with solving a class of problems.\\
+    \\
+    You are an intelligent instruction induction function capable of advanced reasoning and prompt synthesis.\\
+    Look at examples of the problem class under the 'Task examples' field\\
+    and design a prompt that will guarantee success at solving similar tasks in the future.\\
+    Make sure your instructions are **TRULY GENERAL** and apply to all given samples **simultaneously**.\\
+\\
+    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
+    In the final answer, do not include a title or any additional data, just the prompt.}
+\end{promptbox}
+
+\subsection{Iterative}
+The \texttt{Iterative} operator is one of the most common and simplest operators. 
+It uses a sequence of prompts and their scores often in an ascending order.
+The hope is for the LLM to deduce the optimization direction by looking at the differences in the prompts and incite it to continue the pattern.
+
+Although some research\cite{yang2024largelanguagemodelsoptimizers} only uses the top prompts, we opt for a roulette selection method
+and sort to prompts by score in an ascending order. The number $N$ is a hyperparameter dictating how many prompts to sample.
+We define the retrieval function as
+\begin{equation}
+    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \mathcal{R}(\mathcal{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}, N), \mathcal{E})
+\end{equation}
+Other methods\cite{tang2024unleashingpotentiallargelanguage} also include task examples, like in the \texttt{Lamarckian}.
+
+In the metaprompt (see \ref{box:itersig}), we instruct the LLM to try to follow the sequence. Also, we specifically say to 'craft a new prompt'
+as opposed to 'improve a prompt' to incite more novelty. For formatting, we use the same instruction set as in the \texttt{Lamarckian}.
+
+\begin{promptbox}[label={box:itersig}]{Iterative Signature}
+    \hlspan{ctuorange}{Old prompts: \texttt{list} (List of previous prompts with scores)}\\\\
+    $\rightarrow$ \\\\
+    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Better prompt)} \hfill
+    \\ \\
+    Instructions:
+    \hlbox{ctublue}{Craft a new prompt for an LLM\\\\
+    
+    You are an intelligent pattern continuation function capable of advanced reasoning and prompt synthesis.\\
+    You are given a given a history of past prompts along with their scores.\\
+    They are listed in ascending order of fitness.\\
+    Follow the sequence and design an improved prompt. \\
+    
+    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
+    In the final answer, do not include a title or any additional data, just the prompt.}
+\end{promptbox}
+
+\subsection{Reflective}
+Recent PO literature\cite{xiang2025selfsupervisedpromptoptimization} shifts to using LLM outputs as optimization signals
+and argues that utilizing only numerical signals is ineffective. To address this, we design an exploitative operator, which
+aims to fix faults in the prompt by analyzing its failed attempt at a task sample. 
+
+To achieve this, a more complex \texttt{Signature} (\ref{box:reflexsig}) is utilized. Its outputs guide the LLM to first critique the original prompt
+and then improve it. Instructions are more complete with a step-by-step guide which explains the task clearly.
+Note that 1. now we use "improve" wording, 2. we stress to only alter the prompt \textit{slightly}. This is done due to 
+frequent observation of the model just creating an entirely different prompt only applicable to the example task.
+For formatting, we use the same instructions as in previous \textit{meta-prompts}.
+
+In $\mathcal{R}$, we want to select the worst possible attempt. This means we optimize "from the bottom up" and try to bootstrap the
+worst prompts. The retrieval is
+\begin{equation}
+    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
+\end{equation}
+
+Although the \texttt{Reflective} operator does not strictly need a numerical score for optimization itself,
+we still prefer to use it in supervised settings and reserve the next operator for gold label-free tasks. 
+
+\begin{promptbox}[label={box:reflexsig}]{Reflection Signature}
+    \hlspan{ctuorange}{Original prompt: \texttt{str} (Improve this prompt)} \\
+    \hlspan{ctuorange}{Task question: \texttt{str} (Task on which the prompt was used)} \\
+    \hlspan{ctuorange}{Solution: \texttt{str} (What the original prompt produced)} \\\\
+    $\rightarrow$ \\\\
+    \hlspan{ctuorange}{Original prompt critique: \texttt{str} (Faults in the original prompt)} \\
+    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Improved prompt)} \hfill
+    \\ \\
+    Instructions:
+    \hlbox{ctublue}{Improve a prompt for an LLM.\\\\
+    
+    You are an intelligent reflection function capable of advanced reasoning and prompt synthesis.\\
+    Follow these steps to craft a better prompt:\\
+    - Analyze the original prompt and its suboptimal performance on a task sample.\\
+    - Find failure points in the solution and cross-reference to identify weaknesses in the prompt.\\
+    - Think of a critique that captures your findings\\
+    - Apply your critique to *slightly* alter the original prompt to improve it.\\
+    Your improved prompt should still be **widely applicable and generic**.\\
+
+    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
+    In the final answer, do not include a title or any additional data, just the prompt.}
+\end{promptbox}
 
 \subsection{Feedback}
+As we mentioned earlier, the \texttt{Feedback} operator is meant strictly for use in self-supervised settings.
+It leverages reasoning traces from pairwise LLM-based comparisons. Depending on the population size, the number of comparisons can be
+quite large, requiring a longer context window. Still, for our tasks, modern LLMs provide more than sufficient context limits.
 
-\subsection{Sequence Continuation}
+\todo{popsat comparison a dodelat}
 
-\subsection{Paraphrase}
+\begin{promptbox}[label={box:feedbacksig}]{Feedback Signature}
+    \hlspan{ctuorange}{Base prompt: \texttt{str} (Improve this prompt)} \\
+    \hlspan{ctuorange}{Comparisons: \texttt{str} (Base prompt compared to others)} \\
+    $\rightarrow$ \\\\
+    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Improved prompt)} \hfill
+    \\ \\
+    Instructions:
+    \hlbox{ctublue}{Improve a prompt for an LLM.\\\\
 
-A common issue observed is the loss of generality.
-The model might misunderstand the metaprompt and, instead of generating a general instruction, attempt to
-make a tutorial for solving just the example problems, or even try to directly solve them.
+    You are an intelligent critique synthesis function capable of advanced reasoning. \\
+    You are given a base prompt and a list of comparisons between the base prompt and other prompts.\\
+    Some other prompts are better than the base prompt, some are worse.\\
+    Your task is to analyze the comparisons and synthesize a new prompt that incorporates the feedback.\\\\
+    
+    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
+    In the final answer, do not include a title or any additional data, just the prompt.}
+\end{promptbox}
 
-Failure case:
-To solve this type of problem, first calculate how much money Tobias had before purchasing the shoes. Use the given amounts for his allowance and mowing lawns to determine part of his savings. Subtract these earnings from his total savings to find how much he earned from shoveling driveways. Finally, divide the remaining amount by the price per driveway to find the number of driveways shoveled.
-Success case:
-1. Read the problem carefully and identify the key data points. 2. Determine what the problem is asking you to find. 3. Break down the problem into smaller parts if necessary. 4. Use appropriate mathematical operations to solve each part. 5. Combine the results to find the final answer. 6. Double-check your calculations and ensure the solution satisfies all conditions stated in the problem.
-
-
-\section{Datasets}
 
