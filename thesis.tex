@@ -116,6 +116,11 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \usepackage{xparse}
 \usepackage{expl3}
 
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{geometry}
+\usepackage{caption}
+%\geometry{margin=1in}
 \ExplSyntaxOn
 
 \NewDocumentCommand{\hlboxx}{m m m}
@@ -206,7 +211,7 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \include{methodology}
 
 \chapter{Experiments}
-%\include{experiments}
+\include{experiments}
 
 %\include{future_work}
 

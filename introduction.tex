@@ -21,11 +21,11 @@ where $\mathcal{L}(\mathcal{T})$ is a probabilistic language distribution learne
 This distribution is governed by the LLM's hyperparameters $H$, which affext its behaviour. 
 
 Of particular interest is the sampling temperature $t \in H$ which interpolates between greedy decoding and uniform sampling.
-In theory, $\mathscr{M}$ is deterministic for $t=0$, but in practice numerical errors still introduce variance.
+In theory, $\mathscr{M}$ is deterministic for $\tau=0$, but in practice numerical errors still introduce variance.
 
 We use the lower index to specify the purpose of the LLM instance. This also highlightes
 the fact that each instance can use different hyperparameters. We differentiate between $\mathscr{M}_{\text{solve}}$ using $t=0$ and 
-$\mathscr{M}_{\text{optim}}$ using $t>0$. 
+$\mathscr{M}_{\text{optim}}$ using $\tau>0$. 
 
 We consider a prompt $P \in \mathcal{I}$, where $\mathcal{I} \subseteq \mathcal{T}$ is the prompt space.
 When such prompt is used as an input into the LLM, it produces an output
@@ -52,7 +52,7 @@ We can use LLMs to solve a general task
 \end{equation}
 where $\mathcal{D} \subseteq \mathcal{Q} \times \mathcal{G}$ is a dataset of query-answer pairs, $\mathcal{Q}\subseteq\mathcal{T}$ is the set of queries $q$
 and $\mathcal{G}\subseteq\mathcal{U}$ is the set of gold labels $g$.
-We consider each dataset to have one or more assigned evaluation metrics $\mathscr{F}_{\mathcal{D}}: \mathcal{T} \times \mathcal{G} \rightarrow \mathbb{R}$,
+We consider each dataset to have one or more assigned evaluation metrics $\mathscr{F}_{\mathcal{D}}^{\text{supervised}}: \mathcal{U} \times \mathcal{G} \rightarrow \mathbb{R}$,
 which scores the LLM output using the corresponding gold label. 
 Extending the set of completions for queries from the entire dataset, we define
 \begin{equation}
@@ -60,15 +60,16 @@ Extending the set of completions for queries from the entire dataset, we define
 \end{equation}
 
 For open-ended tasks, the gold label does not exist, $G = \varnothing$. To achieve effective evaluation even for such tasks, 
-we formulate a metric based on pairwise comparisons and generalize the definition as
+we formulate a metric based on pairwise comparisons and define
 \begin{equation}
-    \mathscr{F}_{\mathcal{D}}: \mathcal{T} \times \mathcal{G} \times 2^\mathcal{T} \rightarrow \mathbb{R},
+    \mathscr{F}_{\mathcal{D}}^{\text{pairwise}}: \mathcal{Q} \times 2^\mathcal{U} \rightarrow \mathbb{R},
 \end{equation}
-where $2^\mathcal{T}$ denotes the powerset of the set of text sequences. Using this definition, we define the mean perfomance $\mathcal{E}$ of a prompt $P$ on a dataset $\mathcal{D}$ as
+which maps a query and a set of outputs to a real number. 
+To generalize, we define $\mathscr{F}_{\mathcal{D}}$ which combines both $\mathscr{F}_{\mathcal{D}}^{\text{pairwise}}$ and $\mathscr{F}_{\mathcal{D}}^{\text{supervised}}$
+Using this, we define the mean perfomance $\mathcal{E}$ of a prompt $P$ on a dataset $\mathcal{D}$ as
 \begin{equation}
-    \mathcal{E}_{\mathcal{D}}(P) = \frac{1}{\Vert \mathcal{D} \Vert}\underset{(q,g)\in \mathcal{D}}{\sum}\mathscr{F}(\mathscr{M}(P\vsep q), g, \mathcal{C}_{q}^{\mathcal{P}}).
+    \mathcal{E}_{\mathcal{D}}(P) = \frac{1}{\Vert \mathcal{D} \Vert}\underset{t=(q,g)\in \mathcal{D}}{\sum}\mathscr{F}(\mathscr{M}(P\vsep q), t, \mathcal{C}_{q}^{\mathcal{P}}).
 \end{equation}
-
 
 For convenience, we will define the scores of the population $\mathcal{P}$ on dataset $\mathcal{D}$ as
 \begin{equation}

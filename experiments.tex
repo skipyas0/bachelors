@@ -1,1 +1,68 @@
-\section{Comparative analysis of optimization operators}
+\section{Operators for Supervised Optimization}
+All our experiments were conducted throught the \texttt{OpenRouter API}, which offers many LLMs from different providers.
+We will differentiate between optimizer LLM $\mathcal(M)_{\text{optim}}$ and $\mathcal(M)_{\text{optim}}$.
+For the former, we use a bigger model, namely \texttt{Nvidia Llama 3.1 Nemotron Ultra} with 253 billion parameters and $\tau=0.75$, and a smaller model, \texttt{Gemma3 27B} with $\tau=0$
+for the latter.
+
+We test our method against 3 datasets, \texttt{Connections}, \texttt{CodeContests} and \texttt{Sequences}, which have 30 samples each 
+and will form 3 equal splits $\mathcal{D}_{\text{train}}, \mathcal{D}_{\text{dev}}, \mathcal{D}_{\text{test}}$.
+
+To create a strong baseline, we begin by creating 50 with Instruction Induction through the \texttt{Lamarckian} operator.
+
+\subsection{Connections}
+\begin{table}[htbp]
+    \centering
+    \captionsetup{font=small}
+    \caption{Optimization Progress Across Prompt Dimensions}
+    \renewcommand{\arraystretch}{1.4} % Row padding
+    
+    \begin{tabular}{|c||*{16}{c|}}
+    \hline
+    \rowcolor{ctublue!30}
+    \textbf{Step} &
+    \multicolumn{4}{c|}{\cellcolor{ctublue!20}\textbf{Reflective}} &
+    \multicolumn{4}{c|}{\cellcolor{ctublue!20}\textbf{Iterative}} &
+    \multicolumn{4}{c|}{\cellcolor{ctublue!20}\textbf{Feedback}} &
+    \multicolumn{4}{c|}{\cellcolor{ctublue!20}\textbf{Paraphrase}} \\
+    \hline
+    \rowcolor{ctublue!10}
+    \textbf{} &
+    \multicolumn{1}{c|}{\tiny Top, No-seed} & \multicolumn{1}{c|}{\tiny Mid, No-seed} & \multicolumn{1}{c|}{\tiny Top, Persona} & \multicolumn{1}{c|}{\tiny Mid, Persona} &
+    \multicolumn{1}{c|}{\tiny Top, No-seed} & \multicolumn{1}{c|}{\tiny Mid, No-seed} & \multicolumn{1}{c|}{\tiny Top, Persona} & \multicolumn{1}{c|}{\tiny Mid, Persona} &
+    \multicolumn{1}{c|}{\tiny Top, No-seed} & \multicolumn{1}{c|}{\tiny Mid, No-seed} & \multicolumn{1}{c|}{\tiny Top, Persona} & \multicolumn{1}{c|}{\tiny Mid, Persona} &
+    \multicolumn{1}{c|}{\tiny Top, No-seed} & \multicolumn{1}{c|}{\tiny Mid, No-seed} & \multicolumn{1}{c|}{\tiny Top, Persona} & \multicolumn{1}{c|}{\tiny Mid, Persona} \\
+    \hline
+    
+    \rowcolor{ctuorange!20}
+    Baseline & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+    \hline
+    
+    1 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    2 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    3 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    4 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    5 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    6 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    7 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    8 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    9 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    10 &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+    \hline
+    
+    \end{tabular}
+    \end{table}
+    
+\subsection{Code Contests}
+
+\subsection{Sequences}
+
+\section{Self-Supervised Optimization for Open-Ended Tasks}

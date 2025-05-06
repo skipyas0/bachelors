@@ -119,7 +119,7 @@ This task consists of sorting given words into non-trivial groups of four based 
 An ideal prompt would attempt to list multiple possible aspects based on which the words can be sorted and also include a helpful example.
 
 \subsection{Code Contests}
-Programming puzzles are a difficult and easily verifiable task. Although CodeContests\cite{li2022competition} is an older dataset, 
+Programming puzzles are a difficult and easily verifiable task. Although \texttt{CodeContests}\cite{li2022competition} is an older dataset, 
 we hope it poses lesser contamination risks than datasets with simpler outputs. With LLM-powered coding assistants on the rise, we
 feel this is a relevant application area for out method. 
 
@@ -139,11 +139,36 @@ To test our approach on open-ended tasks, we construct a simple limerick-writing
 with all words starting with the same letter of the given animal. For example:
 \begin{promptbox}[label={box:limerick}]{Limerick task example}
     \hlbox{ctuorange}{snake}
-    \hlbox{ctublue}{silly snakes swiftly slide,\\sneaky, slippery, side to side,\\slurping soda,\\singing sonata,\\simply sparkling, super-sized!}
+    \hlbox{ctublue}{silly snakes swiftly slide,\\sneaky, slippery, side-to-side,\\slurping soda,\\singing sonata,\\simply sparkling, super-sized!}
 \end{promptbox}
 With this task, the goal is to manually observe whether our method brings any improvement to creative tasks.
 Although one could design automatic evaluation for this task like checking first letters, syllable counts and rhymes, it would be unrealistic
 to expect such metric to reflect human perception of quality. For this reason, we will use pairwise comparisons of outputs.
+
+\section{Evaluation Metrics}
+The evaluation metric defines the optimization goal and thus forms its central component. 
+Most evaluation metrics are task-specific and divisible into two categories based on whether they are used in a supervised or self-supervised context.
+\subsection{Metrics for Supervised Optimization}
+Supervised optimization is supported by gold labels and its underlying metrics all perform comparisons between the results and the gold labels.
+These include classification metrics, like accuracy or Hamming Loss, regression metrics, like Mean Squared Error, and many others.
+
+All three main benchmarks that we will use (\texttt{Connections}, \texttt{CodeContests}, \texttt{Sequences}) 
+fall into this category. For each benchmark we use a simple accuracy metric. Given a dataset $\mathcal{D}$ and questions $q$ and gold labels $g$, $(q,g) \in \mathcal{D}$:
+\begin{enumerate}
+    \item \textbf{Connections}:  $\mathcal{F}_{\mathcal{D}}(q, g) = \operatorname{FractionOfMatching}(\operatorname{Groups}(q), \operatorname{Groups}(g))$
+    \item \textbf{CodeContests}: $\mathcal{F}_{\mathcal{D}} = \operatorname{FinishesExecution}(q) + \operatorname{PassesAllCases}(q, g)$
+    \item \textbf{Sequences}: $\mathcal{F}_{\mathcal{D}} = \operatorname{Equals}(q, g)$
+\end{enumerate} 
+
+\subsection{Metrics for Self-Supervised Optimization}\label{sec:ssometrics}
+In self-supervised contexts, metrics are usually based on reward models pretrained on human preference or environment data.
+To allow our method to be applied to gold label-free problems, we turn to LLM-based direct pairwise comparisons.
+Given a dataset $\mathcal{D}$ with questions $q$, output $y$ produced by prompt $P \in \mathcal{P}$ and completions $\mathcal{C}$
+\begin{equation}
+    \mathcal{F}_{\mathcal{D}}^{\text{pairwise}}(q, y, \mathcal{C}) = \operatorname{WinRate}(\{\operatorname{Compare}(q,y,c)\vsep c\in\operatorname{Attempts}(q,\mathcal{C})\}).
+\end{equation}
+In practice, we combine the output comparison with comparing the output's respective prompts.
+These comparisons are then used as optimization signals in the \texttt{Feedback} operator.
 
 \section{Optimization Framework}
 Although our first implementation attempt utilized an evolutionary algorithm, we will use a basic population-based hill-climber algorithm.
@@ -160,8 +185,8 @@ This design decision has several reasons.
     \label{alg:promptoptimloop}
     \KwIn{Dataset $\mathcal{D}$, Population size $S$, Iteration count $I$, Batch size $B$}
     \KwOut{Optimized Prompts $\mathcal{P}^{\star}$}
-    $\mathcal{D}_{\text{init}}, \mathcal{D}_{\text{dev}}, \mathcal{D}_{\text{test}} \gets \operatorname{Split}(\mathcal{D})$ \tcp{Generate training splits}
-    $\mathcal{P} \gets \operatorname{InstructionInduction}(\mathcal{D}_{\text{init}})$ \tcp{Induce initial prompts}
+    $\mathcal{D}_{\text{train}}, \mathcal{D}_{\text{dev}}, \mathcal{D}_{\text{test}} \gets \operatorname{Split}(\mathcal{D})$ \tcp{Generate training splits}
+    $\mathcal{P} \gets \operatorname{InstructionInduction}(\mathcal{D}_{\text{train}})$ \tcp{Induce initial prompts}
     $i \gets 0$ \tcp{Initialize iteration count}
     $\mathcal{C} \gets \{\}$ \tcp{Initialize solutions} 
     $\mathcal{E} \gets \{\}$ \tcp{Initialize scores}
@@ -171,7 +196,7 @@ This design decision has several reasons.
         $\mathcal{C} \gets \{\mathcal{C}_{q}^{\mathcal{P}}\vsep q \in Q\}$ \\
         $\mathcal{E} \gets \operatorname{Evaluate}(\mathcal{C}, G)$ \\
         $\mathcal{P} \gets \operatorname{Selection}(\mathcal{P}, \mathcal{E})$ \tcp{Pruning} 
-        $\mathcal{P} \gets \operatorname{Expand}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D}_{\text{init}})$ \\
+        $\mathcal{P} \gets \operatorname{Expand}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D}_{\text{train}})$ \\
         $\mathcal{A} \gets \mathcal{A} \cup \mathcal{P}$ \\
     }
     $Q_{\text{test}}, G_{\text{test}} \gets D_{\text{test}}$\\
@@ -224,7 +249,7 @@ Authors of this paper argued that seeding generation with the persona helps with
 For the data retrieval part, \texttt{Lamarckian} utilizes only examples of the datasets. 
 We randomly sample $N$ examples from a separate training split. So
 \begin{equation}
-    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \mathcal{R}(\mathcal{D}) = \operatorname{RandomSample}(\mathcal{D}_{\text{init}}, N)
+    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \mathcal{R}(\mathcal{D}) = \operatorname{RandomSample}(\mathcal{D}_{\text{train}}, N)
 \end{equation}
 
 \begin{promptbox}[label={box:lamarcksig}]{Lamarckian Signature}
@@ -292,7 +317,7 @@ frequent observation of the model just creating an entirely different prompt onl
 For formatting, we use the same instructions as in previous \textit{meta-prompts}.
 
 In $\mathcal{R}$, we want to select the worst possible attempt. This means we optimize "from the bottom up" and try to bootstrap the
-worst prompts. The retrieval is
+worst prompts. The retrieval function is
 \begin{equation}
     \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
 \end{equation}
@@ -325,11 +350,22 @@ we still prefer to use it in supervised settings and reserve the next operator f
 \end{promptbox}
 
 \subsection{Feedback}
-As we mentioned earlier, the \texttt{Feedback} operator is meant strictly for use in self-supervised settings.
-It leverages reasoning traces from pairwise LLM-based comparisons. Depending on the population size, the number of comparisons can be
-quite large, requiring a longer context window. Still, for our tasks, modern LLMs provide more than sufficient context limits.
+As we mentioned earlier, the \texttt{Feedback} operator is suitable for use in self-supervised settings.
+It leverages reasoning traces from pairwise LLM-based comparisons, discussed in \ref{sec:ssometrics}. 
+Let $\mathcal{E}_{\text{comp}}$ hold textual comparisons of each prompts and their attempts and
+$P_{\text{base}} = \operatorname{RandomSample}(\mathcal{P})$. Then
+\begin{equation}
+    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}_{\text{comp}}) = \mathcal{R}(\mathcal{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetAllComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
+\end{equation}
+In the \textit{Meta-prompt}, we frame the task as critique synthesis and use the 'improve wording' to guide the LLM to start from the base prompt.
+We also explain that each comparisons has a different verdict and the base prompt might not always be the winner. For the formatting guide, we use the same instructions
+as in the previous operators.
 
-\todo{popsat comparison a dodelat}
+For large populations or tasks producing long prompts, we might run into issues with LLM context window length. 
+However for our purpose, modern LLMs provide more than sufficient context limits. 
+
+
+
 
 \begin{promptbox}[label={box:feedbacksig}]{Feedback Signature}
     \hlspan{ctuorange}{Base prompt: \texttt{str} (Improve this prompt)} \\
