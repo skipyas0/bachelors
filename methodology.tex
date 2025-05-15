@@ -134,16 +134,8 @@ Each sequence is created according to a formula with randomly selected coefficie
 This tests the model's ability to 1. detect and understand patterns and 2. systematically perform simple arithmetic. 
 In practice, we will optimize just for a single sequence category and observe, whether the optimizer evolves a prompt with a tutorial for the specific sequence category.
 Experiments revealed that the \texttt{Alternating} class of sequences has a good difficulty balance and we will use it for evaluation.
-\subsection{Creative tasks}
-To test our approach on open-ended tasks, we construct a simple limerick-writing task, where the model is given an animal and is supposed to write a alliterative limerick
-with all words starting with the same letter of the given animal. For example:
-\begin{promptbox}[label={box:limerick}]{Limerick task example}
-    \hlbox{ctuorange}{snake}
-    \hlbox{ctublue}{silly snakes swiftly slide,\\sneaky, slippery, side-to-side,\\slurping soda,\\singing sonata,\\simply sparkling, super-sized!}
-\end{promptbox}
-With this task, the goal is to manually observe whether our method brings any improvement to creative tasks.
-Although one could design automatic evaluation for this task like checking first letters, syllable counts and rhymes, it would be unrealistic
-to expect such metric to reflect human perception of quality. For this reason, we will use pairwise comparisons of outputs.
+
+
 
 \section{Evaluation Metrics}
 The evaluation metric defines the optimization goal and thus forms its central component. 
@@ -155,9 +147,9 @@ These include classification metrics, like accuracy or Hamming Loss, regression 
 All three main benchmarks that we will use (\texttt{Connections}, \texttt{CodeContests}, \texttt{Sequences}) 
 fall into this category. For each benchmark we use a simple accuracy metric. Given a dataset $\mathcal{D}$ and questions $q$ and gold labels $g$, $(q,g) \in \mathcal{D}$:
 \begin{enumerate}
-    \item \textbf{Connections}:  $\mathcal{F}_{\mathcal{D}}(q, g) = \operatorname{FractionOfMatching}(\operatorname{Groups}(q), \operatorname{Groups}(g))$
-    \item \textbf{CodeContests}: $\mathcal{F}_{\mathcal{D}} = \operatorname{FinishesExecution}(q) + \operatorname{PassesAllCases}(q, g)$
-    \item \textbf{Sequences}: $\mathcal{F}_{\mathcal{D}} = \operatorname{Equals}(q, g)$
+    \item \textbf{Connections}:  $\mathcal{F}_{\mathcal{D}_{\text{Conn}}}(q, g) = \operatorname{Overlap}(\operatorname{Groups}(q), \operatorname{Groups}(g))$
+    \item \textbf{CodeContests}: $\mathcal{F}_{\mathcal{D}_{\text{Code}}} = \operatorname{FinishesExecution}(q) + \operatorname{PassesAllCases}(q, g)$
+    \item \textbf{Sequences}: $\mathcal{F}_{\mathcal{D}_{\text{Seq}}} = \operatorname{Equals}(q, g)$
 \end{enumerate} 
 
 \subsection{Metrics for Self-Supervised Optimization}\label{sec:ssometrics}
@@ -214,7 +206,7 @@ We will discuss the design of functions used in \ref{alg:promptoptimloop} in fol
     \item \textbf{Selection}: The $\operatorname{Selection}$ operator prunes the population and should maintain only the most promising and diverse prompts for the next expansion.
 \end{itemize}
 
-\section{Expansion Operator Design}
+\subsection{Expansion Operator Design}
 Expansion operators' job is extending the optimization population with new prompts. Remember notation from \ref{eq:metaprompting}:
 \begin{equation*}
     P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R}).
@@ -234,10 +226,9 @@ The operators' design should address the following challenges:
 
 We now discuss the design of each prompt generation operator and display their signatures and \textit{meta-prompts}. 
 Note that all operators are ultimately used in a CoT context, where a \texttt{reasoning} field is prepended to each signature's outputs.
-\subsection{Lamarckian}
+\subsubsection{Lamarckian}
 Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} is used by many PO methods and often refered to as \texttt{Lamarckian Mutation}. 
 We will adopt this terminology from now on and design our \texttt{Lamarckian} operator. 
-In \ref{box:lamarcksig} the reader can find the \texttt{Signature} of the \texttt{Lamarckian} operator.
 Design of its meta-prompt takes into account the design challenges mentioned earlier by 1. warning the LLM to be general and not to focus on a single example, 
 2. clearly states the problem using a directive and formatting specifications. 
 
@@ -249,29 +240,11 @@ Authors of this paper argued that seeding generation with the persona helps with
 For the data retrieval part, \texttt{Lamarckian} utilizes only examples of the datasets. 
 We randomly sample $N$ examples from a separate training split. So
 \begin{equation}
-    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \mathcal{R}(\mathcal{D}) = \operatorname{RandomSample}(\mathcal{D}_{\text{train}}, N)
+    \mathcal{R}_{\text{L}}(\mathcal{D}) = \operatorname{RandomSample}(\mathcal{D}_{\text{train}}, N)
 \end{equation}
 
-\begin{promptbox}[label={box:lamarcksig}]{Lamarckian Signature}
-    \hlspan{ctuorange}{Task examples: \texttt{str} (Samples from a problem class)} \\\\
-    \hlspan{ctuorange}{Persona (Optional): \texttt{str} (Assume this persona when writing the prompt)} \\\\
-    $\rightarrow$ \\\\
-    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Instructions for solving the problem)} \hfill
-    \\ \\
-    Instructions:
-    \hlbox{ctublue}{Craft a **general** developer prompt to help an LLM with solving a class of problems.\\
-    \\
-    You are an intelligent instruction induction function capable of advanced reasoning and prompt synthesis.\\
-    Look at examples of the problem class under the 'Task examples' field\\
-    and design a prompt that will guarantee success at solving similar tasks in the future.\\
-    Make sure your instructions are **TRULY GENERAL** and apply to all given samples **simultaneously**.\\
-\\
-    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
-    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
-    In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
 
-\subsection{Iterative}
+\subsubsection{Iterative}
 The \texttt{Iterative} operator is one of the most common and simplest operators. 
 It uses a sequence of prompts and their scores often in an ascending order.
 The hope is for the LLM to deduce the optimization direction by looking at the differences in the prompts and incite it to continue the pattern.
@@ -280,37 +253,19 @@ Although some research\cite{yang2024largelanguagemodelsoptimizers} only uses the
 and sort to prompts by score in an ascending order. The number $N$ is a hyperparameter dictating how many prompts to sample.
 We define the retrieval function as
 \begin{equation}
-    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \mathcal{R}(\mathcal{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}, N), \mathcal{E})
+   \mathcal{R}_{\text{I}}(\mathcal{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}, N), \mathcal{E})
 \end{equation}
 Other methods\cite{tang2024unleashingpotentiallargelanguage} also include task examples, like in the \texttt{Lamarckian}.
 
-In the metaprompt (see \ref{box:itersig}), we instruct the LLM to try to follow the sequence. Also, we specifically say to 'craft a new prompt'
+In the metaprompt, we instruct the LLM to try to follow the sequence. Also, we specifically say to 'craft a new prompt'
 as opposed to 'improve a prompt' to incite more novelty. For formatting, we use the same instruction set as in the \texttt{Lamarckian}.
 
-\begin{promptbox}[label={box:itersig}]{Iterative Signature}
-    \hlspan{ctuorange}{Old prompts: \texttt{list} (List of previous prompts with scores)}\\\\
-    $\rightarrow$ \\\\
-    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Better prompt)} \hfill
-    \\ \\
-    Instructions:
-    \hlbox{ctublue}{Craft a new prompt for an LLM\\\\
-    
-    You are an intelligent pattern continuation function capable of advanced reasoning and prompt synthesis.\\
-    You are given a given a history of past prompts along with their scores.\\
-    They are listed in ascending order of fitness.\\
-    Follow the sequence and design an improved prompt. \\
-    
-    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
-    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
-    In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
-
-\subsection{Reflective}
+\subsubsection{Reflective}
 Recent PO literature\cite{xiang2025selfsupervisedpromptoptimization} shifts to using LLM outputs as optimization signals
 and argues that utilizing only numerical signals is ineffective. To address this, we design an exploitative operator, which
 aims to fix faults in the prompt by analyzing its failed attempt at a task sample. 
 
-To achieve this, a more complex \texttt{Signature} (\ref{box:reflexsig}) is utilized. Its outputs guide the LLM to first critique the original prompt
+To achieve this, a more complex \texttt{Signature} is utilized. Its outputs guide the LLM to first critique the original prompt
 and then improve it. Instructions are more complete with a step-by-step guide which explains the task clearly.
 Note that 1. now we use "improve" wording, 2. we stress to only alter the prompt \textit{slightly}. This is done due to 
 frequent observation of the model just creating an entirely different prompt only applicable to the example task.
@@ -319,71 +274,54 @@ For formatting, we use the same instructions as in previous \textit{meta-prompts
 In $\mathcal{R}$, we want to select the worst possible attempt. This means we optimize "from the bottom up" and try to bootstrap the
 worst prompts. The retrieval function is
 \begin{equation}
-    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
+    \mathcal{R}_{\text{R}}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
 \end{equation}
 
-Although the \texttt{Reflective} operator does not strictly need a numerical score for optimization itself,
-we still prefer to use it in supervised settings and reserve the next operator for gold label-free tasks. 
 
-\begin{promptbox}[label={box:reflexsig}]{Reflection Signature}
-    \hlspan{ctuorange}{Original prompt: \texttt{str} (Improve this prompt)} \\
-    \hlspan{ctuorange}{Task question: \texttt{str} (Task on which the prompt was used)} \\
-    \hlspan{ctuorange}{Solution: \texttt{str} (What the original prompt produced)} \\\\
-    $\rightarrow$ \\\\
-    \hlspan{ctuorange}{Original prompt critique: \texttt{str} (Faults in the original prompt)} \\
-    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Improved prompt)} \hfill
-    \\ \\
-    Instructions:
-    \hlbox{ctublue}{Improve a prompt for an LLM.\\\\
-    
-    You are an intelligent reflection function capable of advanced reasoning and prompt synthesis.\\
-    Follow these steps to craft a better prompt:\\
-    - Analyze the original prompt and its suboptimal performance on a task sample.\\
-    - Find failure points in the solution and cross-reference to identify weaknesses in the prompt.\\
-    - Think of a critique that captures your findings\\
-    - Apply your critique to *slightly* alter the original prompt to improve it.\\
-    Your improved prompt should still be **widely applicable and generic**.\\
-
-    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
-    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
-    In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
-
-\subsection{Feedback}
+\subsubsection{Feedback}
 As we mentioned earlier, the \texttt{Feedback} operator is suitable for use in self-supervised settings.
 It leverages reasoning traces from pairwise LLM-based comparisons, discussed in \ref{sec:ssometrics}. 
 Let $\mathcal{E}_{\text{comp}}$ hold textual comparisons of each prompts and their attempts and
 $P_{\text{base}} = \operatorname{RandomSample}(\mathcal{P})$. Then
 \begin{equation}
-    \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}_{\text{comp}}) = \mathcal{R}(\mathcal{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetAllComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
+    \mathcal{R}_{\text{F}}(\mathcal{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
 \end{equation}
-In the \textit{Meta-prompt}, we frame the task as critique synthesis and use the 'improve wording' to guide the LLM to start from the base prompt.
+In the \textit{Meta-prompt}, we frame the task as critique synthesis and use "improve" wording to guide the LLM to start from the base prompt.
 We also explain that each comparisons has a different verdict and the base prompt might not always be the winner. For the formatting guide, we use the same instructions
 as in the previous operators.
 
 For large populations or tasks producing long prompts, we might run into issues with LLM context window length. 
 However for our purpose, modern LLMs provide more than sufficient context limits. 
 
+\subsubsection{Paraphrase}
+To serve as another baseline for other operators, we implement a simple \texttt{Paraphrase} operator.
+This operator performs random search in the prompt space by changing the wording and structure of a prompt.
+The prompt is selected via the retrieval function
+\begin{equation}
+    \mathcal{R}_{\text{P}}(\mathcal{P}, \mathcal{E}) = \operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}).
+\end{equation}
+This method uses no optimization signal or improvement instructions and relies on pure chance of finding a more potent prompt.
 
 
+\subsection{Selection Operator}
+At the start of each optimization step, we select $n_{\text{continue}}$ prompts to continue in the process and purge the rest. 
+To achieve better prompt diversity, a method based on edit distance is used. This method, outlined in Algorithm \ref{alg:duplicpurge},
+removes the closest prompt for each prompt, starting from the best. This ensures that performant prompts are kept and their worse-performing duplicates are deleted.
+We opt to use edit distance instead of semantic similarity, like BERT embeddings.
 
-\begin{promptbox}[label={box:feedbacksig}]{Feedback Signature}
-    \hlspan{ctuorange}{Base prompt: \texttt{str} (Improve this prompt)} \\
-    \hlspan{ctuorange}{Comparisons: \texttt{str} (Base prompt compared to others)} \\
-    $\rightarrow$ \\\\
-    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Improved prompt)} \hfill
-    \\ \\
-    Instructions:
-    \hlbox{ctublue}{Improve a prompt for an LLM.\\\\
-
-    You are an intelligent critique synthesis function capable of advanced reasoning. \\
-    You are given a base prompt and a list of comparisons between the base prompt and other prompts.\\
-    Some other prompts are better than the base prompt, some are worse.\\
-    Your task is to analyze the comparisons and synthesize a new prompt that incorporates the feedback.\\\\
-    
-    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
-    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
-    In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
-
-
+\begin{algorithm}
+    \caption{Purge Duplicates}
+    \label{alg:duplicpurge}
+    \KwIn{Population $\mathcal{P}$, Pruning factor $f_{\text{prune}}$}
+    \KwOut{Pruned population $\mathcal{P}_{\text{pruned}}$}
+    $\mathcal{P}_{\text{sorted}} \gets \operatorname{SortByScore}(\mathcal{P}, \mathcal{E})$ \\
+    $n_{\text{continue}} \gets \vert\mathcal{P}\vert(1-f_{\text{prune}})$
+    $i \gets 0$
+    \While{$i<n_{\text{continue}}$} {
+        $P_{\text{select}} \gets \operatorname{GetFirst}(\mathcal{P}_{\text{sorted}})$ \\ 
+        $P_{\text{purge}} \gets \underset{P\in\mathcal{P}\mid P \neq P_{\text{select}}}{\operatorname{argmax}} \operatorname{LevenshteinRatio}(P, P_{\text{select}})$ \\
+        $\operatorname{Remove}(\mathcal{P}, P_{\text{purge}})$
+    }
+    $\mathcal{P}_{\text{pruned}} \gets \mathcal{P}$\\
+    \Return{$\mathcal{P}$}
+\end{algorithm}
