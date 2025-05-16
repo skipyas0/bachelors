@@ -3,9 +3,9 @@ In our main experiment, we compare the effectivity of 4 optimization operators o
 We will compare the results and costs of each method against each other and a strong Instruction Induction baseline.
 
 All our experiments were conducted throught the \texttt{OpenRouter API}, which offers many LLMs from different providers.
-We will differentiate between optimizer LLM $\mathcal(M)_{\text{optim}}$ and $\mathcal(M)_{\text{solve}}$.
+We will differentiate between optimizer LLM $\mathcal{M}_{\text{optim}}$ and $\mathcal{M}_{\text{solve}}$.
 Both use the medium model \texttt{Google Gemma 3 27B}\cite{gemmateam2025gemma3technicalreport}. 
-To encourage diversity, $\mathcal(M)_{\text{optim}}$ works with sampling temperature $\tau = 0.75$. 
+To encourage diversity, $\mathcal{M}_{\text{optim}}$ works with sampling temperature $\tau = 0.75$. 
 Bigger sampling temperature was observed to diminish the model's ability to follow structured output specifications.
 To keep prompt testing as deterministic as possible, we initialize $\mathcal(M)_{\text{solve}}$ with $\tau = 0.0$.
 
@@ -27,18 +27,21 @@ We select these parameters to make the optimization process resources \textit{ro
 \subsection{Experiment results}
 In tables \ref{tab:rescodecontests}, \ref{tab:resconnections} and \ref{tab:ressequences} we results of our 
 main experiment on \texttt{CodeContests}, \texttt{Connections} and \texttt{Sequences} respectively.
-In the row \textit{Baseline}, we present the maximum score achieved by prompts $P\in\mathcal{P}_{\text{baseline}}$. 
-This forms the hard baseline. The next row, \textit{Initial}, shows the best score out of the initializing prompts $P\in\mathcal{P}_{\text{init}}$.
-The following rows show the average of each optimization step's $s$ maximum score over all three experiment repetitions $e\in\{1,2,3\}$:
+In the row marked HB, we present the maximum score achieved by prompts $P\in\mathcal{P}_{\text{baseline}}$, forming a hard baseline (HB). 
+This forms the hard baseline. The next row, marked SB, shows the best score out of the initializing prompts $P\in\mathcal{P}_{\text{init}}$, which forms a soft baseline (SB).
+The following rows show the best score of each step $s$, which is calculated as an average over all three experiment repetitions $e\in\{1,2,3\}$:
 \begin{equation}
     \frac{1}{3}\sum_{e=1}^{3}\operatorname{Max}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathcal{P}_{s}^{e})),
 \end{equation}
 where $\mathcal{P}_{s}^{e}$ signifies the population at step $s$ of experiment repetition $e$.
 For each operator, the best step score is marked in \textbf{bold} and the best score overall is also \underline{underlined}.
-We also include the average score in  bracketed smaller script, defined by 
+Cells with values which surpass the soft baseline are shaded in \textcolor{green}{green} and those which fall short are in \textcolor{red}{red}.
+We also include the average step score in bracketed smaller script, defined by 
 \begin{equation}
     \frac{1}{3}\sum_{e=1}^{3}\operatorname{Mean}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathcal{P}_{s}^{e})).
 \end{equation}
+Figures \ref{fig:codecontests}, \ref{fig:connections} and \ref{fig:sequences} show the corresponding graphs with a gray dotted line marking 
+the soft baseline and a orange solid line marking the hard baseline.
 
 \begin{table}[htbp]
     \centering
@@ -58,12 +61,12 @@ We also include the average score in  bracketed smaller script, defined by
     \hline
 
     \rowcolor{ctuorange!15}
-    Baseline & 0.26 & 0.26 & 0.26 & 0.26 \\ \hline
-Initial & 0.16 & 0.16 & 0.16 & 0.16 \\ \hline
+    HB & \textbf{0.26} & 0.26 & \textbf{0.26} & \textbf{0.26} \\ \hline
+SB & 0.16 & 0.16 & 0.16 & 0.16 \\ \hline
 $1$ & \cellcolor{lightgreen}\maxmean{0.23}{0.15} & \cellcolor{lightgreen}\maxmean{0.17}{0.12} & \cellcolor{lightgreen}\maxmean{0.26}{0.15} & \cellcolor{lightgreen}\maxmean{0.22}{0.14} \\ \hline
 $2$ & \cellcolor{lightgreen}\maxmean{0.22}{0.12} & \cellcolor{lightgreen}\maxmean{0.25}{0.16} & \cellcolor{lightred}\maxmean{0.11}{0.06} & \cellcolor{lightgreen}\maxmean{0.22}{0.14} \\ \hline
 $3$ & \cellcolor{lightgreen}\maxmean{0.23}{0.15} & \cellcolor{lightgreen}\maxmean{0.19}{0.12} & \cellcolor{lightred}\maxmean{0.16}{0.07} & \cellcolor{lightgreen}\maxmean{0.19}{0.14} \\ \hline
-$4$ & \cellcolor{lightgreen}\maxmean{0.18}{0.14} & \cellcolor{lightgreen}\maxmean{0.27}{0.15} & \cellcolor{lightred}\maxmean{0.09}{0.05} & \cellcolor{lightgreen}\maxmean{0.19}{0.14} \\ \hline
+$4$ & \cellcolor{lightgreen}\maxmean{0.18}{0.14} & \cellcolor{lightgreen}\maxmean{\underline{\textbf{0.27}}}{0.15} & \cellcolor{lightred}\maxmean{0.09}{0.05} & \cellcolor{lightgreen}\maxmean{0.19}{0.14} \\ \hline
 $5$ & \cellcolor{lightgreen}\maxmean{0.23}{0.17} & \cellcolor{lightred}\maxmean{0.16}{0.11} & \cellcolor{lightred}\maxmean{0.09}{0.05} & \cellcolor{lightgreen}\maxmean{0.22}{0.14} \\ \hline
 $6$ & \cellcolor{lightgreen}\maxmean{0.23}{0.17} & \cellcolor{lightgreen}\maxmean{0.18}{0.11} & \cellcolor{lightred}\maxmean{0.08}{0.04} & \cellcolor{lightgreen}\maxmean{0.23}{0.14} \\ \hline
 $7$ & \cellcolor{lightgreen}\maxmean{0.25}{0.16} & \cellcolor{lightgreen}\maxmean{0.25}{0.13} & \cellcolor{lightred}\maxmean{0.05}{0.04} & \cellcolor{lightgreen}\maxmean{0.19}{0.12} \\ \hline
@@ -72,8 +75,13 @@ $9$ & \cellcolor{lightgreen}\maxmean{0.23}{0.14} & \cellcolor{lightgreen}\maxmea
 $10$ & \cellcolor{lightgreen}\maxmean{0.24}{0.13} & \cellcolor{lightgreen}\maxmean{0.25}{0.13} & \cellcolor{lightred}\maxmean{0.08}{0.04} & \cellcolor{lightgreen}\maxmean{0.23}{0.15} \\ \hline
 
 
-    \end{tabular}
+\end{tabular}
 \end{table}
+\begin{figure}
+    \includegraphics[width=\linewidth]{codecontests.pdf}
+    \caption{Optimization progression for the \texttt{CodeContests} dataset.}
+    \label{fig:codecontests}
+\end{figure}
 
 \begin{table}[htbp]
     \centering
@@ -93,8 +101,8 @@ $10$ & \cellcolor{lightgreen}\maxmean{0.24}{0.13} & \cellcolor{lightgreen}\maxme
     \hline
 
     \rowcolor{ctuorange!15}
-    Baseline & 0.33 & 0.33 & 0.33 & 0.33 \\ \hline
-Initial & 0.20 & 0.20 & 0.20 & 0.20 \\ \hline
+    HB & \textbf{0.33} & \textbf{0.33} & \textbf{0.33} & 0.33 \\ \hline
+SB & 0.20 & 0.20 & 0.20 & 0.20 \\ \hline
 $1$ & \cellcolor{lightgreen}\maxmean{0.29}{0.15} & \cellcolor{lightgreen}\maxmean{0.27}{0.16} & \cellcolor{lightgreen}\maxmean{0.20}{0.15} & \cellcolor{lightgreen}\maxmean{0.31}{0.21} \\ \hline
 $2$ & \cellcolor{lightgreen}\maxmean{0.20}{0.13} & \cellcolor{lightgreen}\maxmean{0.29}{0.18} & \cellcolor{lightgreen}\maxmean{0.24}{0.14} & \cellcolor{lightgreen}\maxmean{0.32}{0.20} \\ \hline
 $3$ & \cellcolor{lightgreen}\maxmean{0.20}{0.14} & \cellcolor{lightgreen}\maxmean{0.27}{0.17} & \cellcolor{lightred}\maxmean{0.19}{0.14} & \cellcolor{lightgreen}\maxmean{0.29}{0.21} \\ \hline
@@ -104,11 +112,17 @@ $6$ & \cellcolor{lightred}\maxmean{0.17}{0.09} & \cellcolor{lightgreen}\maxmean{
 $7$ & \cellcolor{lightred}\maxmean{0.16}{0.08} & \cellcolor{lightgreen}\maxmean{0.29}{0.19} & \cellcolor{lightred}\maxmean{0.10}{0.04} & \cellcolor{lightgreen}\maxmean{0.30}{0.19} \\ \hline
 $8$ & \cellcolor{lightred}\maxmean{0.16}{0.08} & \cellcolor{lightgreen}\maxmean{0.28}{0.19} & \cellcolor{lightred}\maxmean{0.07}{0.04} & \cellcolor{lightgreen}\maxmean{0.33}{0.23} \\ \hline
 $9$ & \cellcolor{lightred}\maxmean{0.16}{0.07} & \cellcolor{lightgreen}\maxmean{0.27}{0.20} & \cellcolor{lightred}\maxmean{0.05}{0.03} & \cellcolor{lightgreen}\maxmean{0.28}{0.22} \\ \hline
-$10$ & \cellcolor{lightred}\maxmean{0.16}{0.07} & \cellcolor{lightgreen}\maxmean{0.26}{0.16} & \cellcolor{lightred}\maxmean{0.07}{0.03} & \cellcolor{lightgreen}\maxmean{0.35}{0.25} \\ \hline
+$10$ & \cellcolor{lightred}\maxmean{0.16}{0.07} & \cellcolor{lightgreen}\maxmean{0.26}{0.16} & \cellcolor{lightred}\maxmean{0.07}{0.03} & \cellcolor{lightgreen}\maxmean{\underline{\textbf{0.35}}}{0.25} \\ \hline
 
 
     \end{tabular}
 \end{table}
+
+\begin{figure}
+    \includegraphics[width=\linewidth]{connections.pdf}
+    \caption{Optimization progression for the \texttt{Connections} dataset.}
+    \label{fig:connections}
+\end{figure}
 
 \begin{table}[htbp]
     \centering
@@ -128,17 +142,17 @@ $10$ & \cellcolor{lightred}\maxmean{0.16}{0.07} & \cellcolor{lightgreen}\maxmean
     \hline
 
     \rowcolor{ctuorange!15}
-    Baseline & 0.70 & 0.70 & 0.70 & 0.70 \\ \hline
-Initial & 0.40 & 0.40 & 0.40 & 0.40 \\ \hline
+    HB & \textbf{0.70} & 0.70 & \textbf{0.70} & 0.70 \\ \hline
+SB & 0.40 & 0.40 & 0.40 & 0.40 \\ \hline
 $1$ & \cellcolor{lightgreen}\maxmean{0.47}{0.23} & \cellcolor{lightgreen}\maxmean{0.63}{0.36} & \cellcolor{lightgreen}\maxmean{0.43}{0.29} & \cellcolor{lightgreen}\maxmean{0.73}{0.38} \\ \hline
 $2$ & \cellcolor{lightgreen}\maxmean{0.53}{0.39} & \cellcolor{lightgreen}\maxmean{0.53}{0.32} & \cellcolor{lightgreen}\maxmean{0.47}{0.32} & \cellcolor{lightgreen}\maxmean{0.60}{0.33} \\ \hline
 $3$ & \cellcolor{lightred}\maxmean{0.27}{0.15} & \cellcolor{lightgreen}\maxmean{0.67}{0.43} & \cellcolor{lightgreen}\maxmean{0.47}{0.33} & \cellcolor{lightgreen}\maxmean{0.63}{0.37} \\ \hline
 $4$ & \cellcolor{lightgreen}\maxmean{0.47}{0.21} & \cellcolor{lightgreen}\maxmean{0.63}{0.42} & \cellcolor{lightgreen}\maxmean{0.47}{0.32} & \cellcolor{lightgreen}\maxmean{0.60}{0.42} \\ \hline
 $5$ & \cellcolor{lightgreen}\maxmean{0.57}{0.33} & \cellcolor{lightgreen}\maxmean{0.63}{0.40} & \cellcolor{lightred}\maxmean{0.40}{0.28} & \cellcolor{lightgreen}\maxmean{0.60}{0.38} \\ \hline
-$6$ & \cellcolor{lightgreen}\maxmean{0.53}{0.35} & \cellcolor{lightgreen}\maxmean{0.57}{0.34} & \cellcolor{lightred}\maxmean{0.27}{0.19} & \cellcolor{lightgreen}\maxmean{0.80}{0.45} \\ \hline
+$6$ & \cellcolor{lightgreen}\maxmean{0.53}{0.35} & \cellcolor{lightgreen}\maxmean{0.57}{0.34} & \cellcolor{lightred}\maxmean{0.27}{0.19} & \cellcolor{lightgreen}\maxmean{\underline{\textbf{0.80}}}{0.45} \\ \hline
 $7$ & \cellcolor{lightgreen}\maxmean{0.57}{0.44} & \cellcolor{lightgreen}\maxmean{0.60}{0.31} & \cellcolor{lightred}\maxmean{0.37}{0.23} & \cellcolor{lightgreen}\maxmean{0.73}{0.37} \\ \hline
 $8$ & \cellcolor{lightgreen}\maxmean{0.63}{0.46} & \cellcolor{lightgreen}\maxmean{0.70}{0.50} & \cellcolor{lightred}\maxmean{0.37}{0.25} & \cellcolor{lightgreen}\maxmean{0.57}{0.29} \\ \hline
-$9$ & \cellcolor{lightgreen}\maxmean{0.50}{0.40} & \cellcolor{lightgreen}\maxmean{0.80}{0.37} & \cellcolor{lightgreen}\maxmean{0.43}{0.27} & \cellcolor{lightgreen}\maxmean{0.63}{0.44} \\ \hline
+$9$ & \cellcolor{lightgreen}\maxmean{0.50}{0.40} & \cellcolor{lightgreen}\maxmean{\underline{\textbf{0.80}}}{0.37} & \cellcolor{lightgreen}\maxmean{0.43}{0.27} & \cellcolor{lightgreen}\maxmean{0.63}{0.44} \\ \hline
 $10$ & \cellcolor{lightgreen}\maxmean{0.57}{0.41} & \cellcolor{lightgreen}\maxmean{0.57}{0.39} & \cellcolor{lightred}\maxmean{0.33}{0.21} & \cellcolor{lightgreen}\maxmean{0.60}{0.35} \\ \hline
 
 
@@ -146,140 +160,75 @@ $10$ & \cellcolor{lightgreen}\maxmean{0.57}{0.41} & \cellcolor{lightgreen}\maxme
 \end{table}
 
 
-
-\begin{table}[htbp]
-    \centering
-    \captionsetup{font=small}
-    \caption{Results for codecontests}  
-    \label{tab:rescodecontests}
-    \renewcommand{\arraystretch}{1.4} % row spacing
-
-    \begin{tabular}{|c||c|c|c|c|}
-    \hline
-    \rowcolor{ctulightblue}
-    \textsc{Step} &
-    \cellcolor{ctulightblue}\textsc{Reflective} &
-    \cellcolor{ctulightblue}\textsc{Iterative} &
-    \cellcolor{ctulightblue}\textsc{Feedback} &
-    \cellcolor{ctulightblue}\textsc{Paraphrase} \\
-    \hline
-
-    \rowcolor{ctuorange!15}
-    Baseline & \textbf{0.26} & 0.26 & \textbf{0.26} & \textbf{0.26} \\ \hline
-Initial & 0.16 & 0.16 & 0.16 & 0.16 \\ \hline
-$1$ & \maxmean{0.23}{0.15} & \maxmean{0.17}{0.12} & \maxmean{\textbf{0.26}}{0.15} & \maxmean{0.22}{0.14} \\ \hline
-$2$ & \maxmean{0.22}{0.12} & \maxmean{0.25}{0.16} & \maxmean{0.11}{0.06} & \maxmean{0.22}{0.14} \\ \hline
-$3$ & \maxmean{0.23}{0.15} & \maxmean{0.19}{0.12} & \maxmean{0.16}{0.07} & \maxmean{0.19}{0.14} \\ \hline
-$4$ & \maxmean{0.18}{0.14} & \maxmean{\underline{\textbf{0.27}}}{0.15} & \maxmean{0.09}{0.05} & \maxmean{0.19}{0.14} \\ \hline
-$5$ & \maxmean{0.23}{0.17} & \maxmean{0.16}{0.11} & \maxmean{0.09}{0.05} & \maxmean{0.22}{0.14} \\ \hline
-$6$ & \maxmean{0.23}{0.17} & \maxmean{0.18}{0.11} & \maxmean{0.08}{0.04} & \maxmean{0.23}{0.14} \\ \hline
-$7$ & \maxmean{0.25}{0.16} & \maxmean{0.25}{0.13} & \maxmean{0.05}{0.04} & \maxmean{0.19}{0.12} \\ \hline
-$8$ & \maxmean{0.15}{0.12} & \maxmean{0.23}{0.16} & \maxmean{0.08}{0.05} & \maxmean{0.17}{0.11} \\ \hline
-$9$ & \maxmean{0.23}{0.14} & \maxmean{0.19}{0.11} & \maxmean{0.15}{0.07} & \maxmean{0.17}{0.12} \\ \hline
-$10$ & \maxmean{0.24}{0.13} & \maxmean{0.25}{0.13} & \maxmean{0.08}{0.04} & \maxmean{0.23}{0.15} \\ \hline
-    \end{tabular}
-\end{table}
-
 \begin{figure}
-    \label{fig:codecontests}
-    \includegraphics[width=\linewidth]{codecontests.pdf}
-    \caption{Performance on CodeContests dataset}
-\end{figure}
-\begin{table}[htbp]
-    \centering
-    \captionsetup{font=small}
-    \caption{Results for connections}  
-    \label{tab:resconnections}
-    \renewcommand{\arraystretch}{1.4} % row spacing
-
-    \begin{tabular}{|c||c|c|c|c|}
-    \hline
-    \rowcolor{ctulightblue}
-    \textsc{Step} &
-    \cellcolor{ctulightblue}\textsc{Reflective} &
-    \cellcolor{ctulightblue}\textsc{Iterative} &
-    \cellcolor{ctulightblue}\textsc{Feedback} &
-    \cellcolor{ctulightblue}\textsc{Paraphrase} \\
-    \hline
-
-    \rowcolor{ctuorange!15}
-    Baseline & \textbf{0.33} & \textbf{0.33} & \textbf{0.33} & 0.33 \\ \hline
-Initial & 0.20 & 0.20 & 0.20 & 0.20 \\ \hline
-$1$ & \maxmean{0.29}{0.15} & \maxmean{0.27}{0.16} & \maxmean{0.20}{0.15} & \maxmean{0.31}{0.21} \\ \hline
-$2$ & \maxmean{0.20}{0.13} & \maxmean{0.29}{0.18} & \maxmean{0.24}{0.14} & \maxmean{0.32}{0.20} \\ \hline
-$3$ & \maxmean{0.20}{0.14} & \maxmean{0.27}{0.17} & \maxmean{0.19}{0.14} & \maxmean{0.29}{0.21} \\ \hline
-$4$ & \maxmean{0.18}{0.04} & \maxmean{0.26}{0.17} & \maxmean{0.09}{0.06} & \maxmean{0.28}{0.19} \\ \hline
-$5$ & \maxmean{0.16}{0.08} & \maxmean{0.27}{0.18} & \maxmean{0.14}{0.09} & \maxmean{0.31}{0.20} \\ \hline
-$6$ & \maxmean{0.17}{0.09} & \maxmean{0.27}{0.19} & \maxmean{0.13}{0.08} & \maxmean{0.32}{0.21} \\ \hline
-$7$ & \maxmean{0.16}{0.08} & \maxmean{0.29}{0.19} & \maxmean{0.10}{0.04} & \maxmean{0.30}{0.19} \\ \hline
-$8$ & \maxmean{0.16}{0.08} & \maxmean{0.28}{0.19} & \maxmean{0.07}{0.04} & \maxmean{0.33}{0.23} \\ \hline
-$9$ & \maxmean{0.16}{0.07} & \maxmean{0.27}{0.20} & \maxmean{0.05}{0.03} & \maxmean{0.28}{0.22} \\ \hline
-$10$ & \maxmean{0.16}{0.07} & \maxmean{0.26}{0.16} & \maxmean{0.07}{0.03} & \maxmean{\underline{\textbf{0.35}}}{0.25} \\ \hline
-
-
-    \end{tabular}
-\end{table}
-
-\begin{figure}
-    \label{fig:connections}
-    \includegraphics[width=\linewidth]{connections.pdf}
-    \caption{Performance on connections dataset}
-\end{figure}
-
-\begin{table}[htbp]
-    \centering
-    \captionsetup{font=small}
-    \caption{Results for sequences}  
-    \label{tab:ressequences}
-    \renewcommand{\arraystretch}{1.4} % row spacing
-
-    \begin{tabular}{|c||c|c|c|c|}
-    \hline
-    \rowcolor{ctulightblue}
-    \textsc{Step} &
-    \cellcolor{ctulightblue}\textsc{Reflective} &
-    \cellcolor{ctulightblue}\textsc{Iterative} &
-    \cellcolor{ctulightblue}\textsc{Feedback} &
-    \cellcolor{ctulightblue}\textsc{Paraphrase} \\
-    \hline
-
-    \rowcolor{ctuorange!15}
-    Baseline & \textbf{0.70} & 0.70 & \textbf{0.70} & 0.70 \\ \hline
-Initial & 0.40 & 0.40 & 0.40 & 0.40 \\ \hline
-$1$ & \maxmean{0.47}{0.23} & \maxmean{0.63}{0.36} & \maxmean{0.43}{0.29} & \maxmean{0.73}{0.38} \\ \hline
-$2$ & \maxmean{0.53}{0.39} & \maxmean{0.53}{0.32} & \maxmean{0.47}{0.32} & \maxmean{0.60}{0.33} \\ \hline
-$3$ & \maxmean{0.27}{0.15} & \maxmean{0.67}{0.43} & \maxmean{0.47}{0.33} & \maxmean{0.63}{0.37} \\ \hline
-$4$ & \maxmean{0.47}{0.21} & \maxmean{0.63}{0.42} & \maxmean{0.47}{0.32} & \maxmean{0.60}{0.42} \\ \hline
-$5$ & \maxmean{0.57}{0.33} & \maxmean{0.63}{0.40} & \maxmean{0.40}{0.28} & \maxmean{0.60}{0.38} \\ \hline
-$6$ & \maxmean{0.53}{0.35} & \maxmean{0.57}{0.34} & \maxmean{0.27}{0.19} & \maxmean{\underline{\textbf{0.80}}}{0.45} \\ \hline
-$7$ & \maxmean{0.57}{0.44} & \maxmean{0.60}{0.31} & \maxmean{0.37}{0.23} & \maxmean{0.73}{0.37} \\ \hline
-$8$ & \maxmean{0.63}{0.46} & \maxmean{0.70}{0.50} & \maxmean{0.37}{0.25} & \maxmean{0.57}{0.29} \\ \hline
-$9$ & \maxmean{0.50}{0.40} & \maxmean{\underline{\textbf{0.80}}}{0.37} & \maxmean{0.43}{0.27} & \maxmean{0.63}{0.44} \\ \hline
-$10$ & \maxmean{0.57}{0.41} & \maxmean{0.57}{0.39} & \maxmean{0.33}{0.21} & \maxmean{0.60}{0.35} \\ \hline
-
-
-    \end{tabular}
-\end{table}
-
-\begin{figure}
-    \label{fig:sequences}
     \includegraphics[width=\linewidth]{sequences.pdf}
-    \caption{Performance on sequences dataset}
+    \caption{Optimization progression for the \texttt{Sequences} dataset.}
+    \label{fig:sequences}
 \end{figure}
 
-
 \begin{figure}
-    \label{fig:relative}
     \includegraphics[width=\linewidth]{relative.pdf}
-    \caption{Relative performance}
+    \caption{Average relative improvement of operators.}
+    \label{fig:relative}
 \end{figure}
 
 \begin{figure}
-    \label{fig:usage}
     \includegraphics[width=\linewidth]{usage.pdf}
-    \caption{Token optimization cost per operator}
+    \caption{Token optimization cost per operator. Logarithmic scale.}
+    \label{fig:usage}
 \end{figure}
 
+Somewhat counter-intuitively, we observe that the simpler operators, \texttt{Iterative} and \texttt{Paraphrase},
+consistently outperform the others over all datasets and are the only ones which outperform the hard baseline at any point.
+
+The most complicated operator, \texttt{Feedback}, which draws on binary output and prompt comparisons exhibits the
+worst performance overall and falls under the soft baseline for all tasks later in the optimization process. This also happens to the
+\texttt{Reflective} operator on the \texttt{Connections} task.
+
+Improvements over hard baseline are marginal and we have to conclude that the optimization did not produce 
+prompts that would help the model solve the task consistently. However we observe significant gains 
+over the soft baseline, which was used to initialize the experiment.
+
+In figure \ref{fig:relative} we show the progressive score change relative to the soft baseline
+over all experiments. This graphic again illustrates that the \texttt{Feedback} operator consistently downgrades performance.
+
+We also graph token usage during optimization in \ref{fig:usage}. Due to the immense requirements of
+the \texttt{Feedback} operator, a logarithmic scale is used. While other operators need around 200 thousand tokens for a complete optimizer routine,
+\texttt{Feedback} needs almost 4 million.
+
+
+\subsection{Discussion}
+
+Contrary to expectations, operators utilizing textual feedback signals were outperformed by simpler operators
+both on raw performance and on the ratio of performance to computation resources.
+The most striking is the failure of the \texttt{Feedback} operator. This operator, which needs almost 20x the tokens as the other operators,
+proposes new prompts using a history of comparisons between a base prompt and other prompts and their outputs. 
+
+We now discuss several possible explanations for the failure of the \texttt{Feedback} and \texttt{Reflective} operators.
+\begin{enumerate}
+    \item \textbf{Weak model}: Our optimizer model \texttt{Google Gemma 3 27B} is smaller than most models used in the literature, due to our limited computation budget. It could be the case that generating effective feedback and using it to improve prompts is an emergent capability of larger models.
+    \item \textbf{Structured generation}: We used our custom structured generation framework which allowed us to easily define \textit{Meta-prompts} and use inference techniques such as CoT, but it is possible that it made the already challenging prompt optimization task even harder and more convoluted, favouring simpler operators.
+    \item \textbf{Unclear comparison formulation}: In \texttt{Feedback}, the comparisons are made between \texttt{prompt\_a} and \texttt{prompt\_b}. Although we include information about whether the base prompt won the comparison, we did not state whether it was \texttt{prompt\_a} or \texttt{prompt\_b}. This was done under the assumption that the model could infer this.
+    \item \textbf{Overfitting}: In comparisons using \texttt{Reflective} and \texttt{Feedback}, the model looks at outputs on a single task. For example, in \texttt{Sequences}, many prompts include instructions like ``Output the last negative number''. It would probably be beneficial to compare or score attempts at multiple tasks simultaneously.
+    \item \textbf{Diversity and chance}: Both \texttt{Reflective} and \texttt{Feedback} use the ``improve'' wording as opposed to \texttt{Paraphrase} and \texttt{Iterative}, which use the ``create new'' wording. Although not substantiated in data, the latter operators seem to be generating more diverse prompts. This plays well with our edit-distance-based pruning method.
+    \item \textbf{Comparisons vs. performance}: It begs the question whether our LLM-generated comparisons reflect the actual quality of outputs and prompts, or if they promote the model's biases — which favour length and sounding smart~\cite{ye2024justiceprejudicequantifyingbiases}.
+\end{enumerate}
+
+By trying to establish a strong baseline, we did not utilize the best prompts for initialization. 
+As initial prompts play a crucial role\cite{yang2024dualphaseacceleratedpromptoptimization} in exploring the vast search space,
+this might have hindered our method's performance. We hoped to achieve better initial prompt diversity by seeding the \texttt{Lamarckian} operator using \texttt{Personas}~\cite{ge2024scalingsyntheticdatacreation}.
+However this diversity seems to come at the cost of diminished initial scores. We cannot answer for sure whether this trade-off is worth it. 
+
+Our optimizer hyperparameters were selected arbitrarily and focused on depth rather than breadth by prioritizing iteration count over population size.
+On all tasks except \texttt{Sequences}, the optimization process saturated quite early. This suggests that focusing on depth is misguided 
+and larger population sizes might be beneficial.
+
+On \texttt{Sequences}, most of the best performing prompts include the same two few-shot examples, which have been present since initialization.
+Although examples are no doubt beneficial, for this particular task, they might be giving unfair advantage as some 
+samples in $\mathcal{D}_{\text{test}}$ had the same answers although the sequences were different.  
+
+Contrary to expectations, operators with access to the optimized prompts' outputs on $\mathcal{D}_{\text{dev}}$ did not evolve any new notable examples 
+and did not attempt to augment existing examples. This can be explained by the fact that we do not emphasize few-shot prompting in the \textit{Meta-prompts}.
 \newpage
 
 \section{Self-Supervised Optimization for Open-Ended Tasks}
@@ -301,7 +250,7 @@ All words should start with the starting letter of the animal given, for example
 We provide three such examples without further context and observe the quality of the results. These examples are used to construct the initial population through
 the \texttt{Lamarckian} operator.
 We run the optimizer with population size $S=4$, iteration count $I=3$, batch size $B=1$ and pruning factor $f_{\text{prune}} = 0.5$.
-The LLM of choice is again the \texttt{Google Gemma 3 27B} with $\tau = 0.75$ for $\mathcal{M}_{\text{optim}}$ and $\tau = 0.0$ for $\mathcal{M}_{\text{solve}}$
+The LLM of choice is again the \texttt{Google Gemma 3 27B} with $\tau = 0.75$ for $\mathcal{M}_{\text{optim}}$ and $\tau = 0.0$ for $\mathcal{M}_{\text{solve}}$.
 
 We present the best results from the initial population (generation $0$) and the last generation ($3$), as ranked by $\mathcal{M}_{\text{optim}}$.
 The initial prompts already produce satisfactory results, with the winning result making sense and having only one error in alliteration.
