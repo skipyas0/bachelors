@@ -11,10 +11,10 @@
 	mainlanguage = english,
 	titlelanguage = english,
 	otherlanguages = {czech},
-	title-czech = {abcd},
+	title-czech = {Meta-prompty pro optimalizaci promptu velkého jazykového modelu},
 	title-english = {Meta-prompts for LLM Prompt Optimization},
-	subtitle-czech = {abcd},
-	subtitle-english = {abcd},
+	%subtitle-czech = {abcd},
+	%subtitle-english = {abcd},
 	doctype = B,
 	faculty = F3,
 	department-english = {Artificial Intelligence Center},
@@ -27,8 +27,8 @@
 	subfieldofstudy-english = {Natural Language Processing},
 	fieldofstudy-czech = {Umělá inteligence},
 	subfieldofstudy-czech = {Zpracování přirozeného jazyka},
-	keywords-czech = {jazykový model, optimalizace},
-	keywords-english = {language model, optimization},
+	keywords-czech = {velký jazykový model, optimalizace promptů, metody inference, promptovací techniky, strukturovaná generace},
+	keywords-english = {large language model, prompt optimization, inference methods, prompting techniques, structured generation},
 	day = 10,
 	month = 5,
 	year = 2025,
@@ -82,22 +82,34 @@
 
 % Abstract in Czech
 \begin{abstract-czech}
-	TODO
+	Tvorba promptů pro velké jazykové modely (LLM) představuje významnou překážku v jejich plném využití a je obtížná jak pro odborníky, tak pro běžné uživatele.
+  V této bakalářské práci navrhujeme jednoduchou metodu optimalizace promptů na populační variantě hill-climber algoritmu, postavenou na vlastním frameworku pro strukturovanou generaci.
+  Využíváme principy promptového inženýrství k vytvoření několika \textit{Meta-prompting} technik, které testujeme na různorodých úlohách oproti silnému referenčnímu řešení, vytvořenému pomocí Instruction Induction.
+  Zároveň přinášíme přehled aktuální literatury v rychle se vyvíjejícím oboru optimalizace promptů a zasazujeme tuto úlohu do širšího kontextu training-time a inference-time scalingu.
+  Naše jednodušší \textit{Meta-prompting} techniky dosahují v experimentech nejlepších výsledků a překonávají výchozí řešení i komplikovanější varianty.
+  Naše práce ukazuje možnost využití optimalizace promptů jak v analytických, tak i v kreativních kontextech, ale zdůrazňuje citlivost optimalizace s LLM na návrhu \textit{Meta-promptů}.
 \end{abstract-czech}
 
 % Abstract in English
 \begin{abstract-english}
-	TODO
+  Prompt design for Large Language Models (LLMs) remains a key bottleneck in leveraging their full capabilities, posing challenges for both expert practitioners and everyday users.
+  In this bachelor's thesis, we develop a simple population-based hill-climber prompt optimization method built atop a custom framework for structured generation inference.
+  Specifically, we apply prompt engineering principles to create several \textit{Meta-prompting} approaches and evaluate them across multiple tasks against a strong Instruction Induction baseline.
+  Additionally, we survey current literature in the rapidly evolving field of prompt optimization and frame it in the broader context of training-time and inference-time scaling. 
+  Our simpler \textit{Meta-prompting} approaches perform best in experiments, outperforming both the baseline and more complex variants.
+  Our work showcases the applicability of prompt optimization to both reasoning-intensive and creative tasks, while highlighting the sensitivity to \textit{Meta-prompt} design in LLM-based optimization.
 \end{abstract-english}
 
 % Acknowledgements / Podekovani
 \begin{thanks}
-	= )))
+	Děkuji svému vedoucímu, Janu Drchalovi, za jeho čas a připomínky a skupině RCI za přístup k výpočetnímu clusteru. 
 \end{thanks}
 
 % Declaration / Prohlaseni
 \begin{declaration}
 Prohlašuji, že jsem předloženou práci vypracoval samostatně, a že jsem uvedl veškerou použitou literaturu.
+
+Během práce byly v omezeném rozsahu použity nástroje umělé inteligence, například pro hledání relevantní literatury, návrhy stylistických úprav nebo v roli kódovacího asistenta.
 
 V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \end{declaration}

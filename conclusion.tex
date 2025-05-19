@@ -2,9 +2,18 @@
 Prompt optimization is an exciting and exceptionally active branch of research. 
 Our experiments inspire further work on this topic and we will discuss possible research topics in this section.
 \begin{enumerate}
-    \item \textbf{Statistical methods for evaluation}
-    \item \textbf{Finding optimal \textit{Meta-prompts}}
-    \item \textbf{Improved structured generation}
-    \item \textbf{Prompt representation structures}
+    \item \textbf{Statistical methods for evaluation}: Evaluation uses the majority of computation resources during optimization. This was most pronounced in our naive implementation of the \texttt{Feedback} operator, where we performed pairwise comparisons for every pair of prompts. In literature\cite{pryzant2023automaticpromptoptimizationgradient}\cite{zhang2024sprigimprovinglargelanguage}, researchers utilize more sophisticated evaluation methods, like Upper Confidence Bound algorithms (UCB), which can help with distribution of computational resources to the most promising prompts.
+    \item \textbf{Finding optimal \textit{Meta-prompts}}: The ultimate goal of this research branch is finding the general \textit{Meta-prompt}, which can create optimal prompts for any task. This is theoretically possible\cite{dewynter2024metaprompting}, but exceptionally difficult. Some research\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} experimented with optimizing the \textit{Meta-prompts}, but most methods use hand-craft them. More rigorous experimentation and application of prompt engineering techniques, possible drawing inspiration from system prompts of foundational LLMs, might uncover much better \textit{Meta-prompts}.
+    \item \textbf{Improved structured generation}: Our structured generation method is in no way perfect and could represent a bottleneck, limiting the LLM's capabilities. More work is needed to find the best format for LLM usage in this context. Although modern LLM's are proficient JSON generators, recently leaked system prompts reveal that some top LLM's use XML tags instead. 
+    \item \textbf{Prompt representation structures}: More sophisticated prompt representation, like using acyclic directed graphs\cite{zhang2024sprigimprovinglargelanguage}, could allow us to make more precisely defined changes to the prompts. This could help retain diversity and task relevancy as the optimized prompts grow ever longer for more complicated tasks.
+    \item \textbf{Applying meta-heuristics}: Majority of research made use of basic meta-heuristics, such as hill-climber architectures. Application of evolutionary algorithms\cite{guo2024connectinglargelanguagemodels} and other meta-heuristics\cite{pan2024plumpromptlearningusing} presents an exciting intersection of deep learning and classical optimization.
+    \item \textbf{Inference-time techniques}: For all LLM calls, we used the Chain-of-thought end-point of our inference framework. It is possible to use other inference techniques such as Tree-of-thoughts in its place.
 \end{enumerate}
+
+These topics provide intriguing avenues for future research. Another possibility is increasing the experiment scale, either by making them more efficient
+using clever optimizations or more cost-effective models, or by increasing the computation budget. 
+
 \section{Conclusion}
+We showed that it is possible to apply prompt optimization to a variety of tasks, spanning language understanding, numerical pattern recognition and coding, as well as some creative tasks.
+Although some variants of our method did not meet expectations, we showed that it is possible to surpass a strong Instruction Induction baseline even with weak initialization prompts. 
+Our results show that LLMs' sensitivity to input prompts is just as pronounced in the design of \textit{Meta-prompts}, highlighting the need for their careful design.
