@@ -41,7 +41,7 @@ they treat prompts as sequences of discrete tokens or as soft embedding vectors.
 Both approaches have their pros and cons, summarized in table \ref{tab:disxcont}.
 \begin{table}[htbp]
     \centering
-    \caption{Comparison of Soft vs. Discrete Prompt Optimization}\label{tab:disxcont}
+    \caption{Comparison of Soft vs. Discrete Prompt Optimization. Arrow up $\uparrow$ means ``better'', arrow down $\downarrow$ means ``worse''.}\label{tab:disxcont}
     \begin{tabular}{lcc}
     \toprule
     \textbf{Feature} & \textbf{Soft Optimization} & \textbf{Discrete Optimization} \\
@@ -83,7 +83,7 @@ For a more comprehensive overview of PO methods, we refer the reader to a survey
 \midrule
 
 APE\cite{zhou2023largelanguagemodelshumanlevel} & instruction induction & filter top-k prompts & paraphrasing & iterating does not help \\
-ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} & manual initial prompt & UCB Bandits, Succesive Rejects & critique of a prompt as a "gradient" & state-of-the-art according to\cite{wan2024teachbettersmarterinstructions} \\
+ProTeGi\cite{pryzant2023automaticpromptoptimizationgradient} & manual initial prompt & statistical resource allocation algorithms & critique of a prompt as a "gradient" & state-of-the-art according to\cite{wan2024teachbettersmarterinstructions} \\
 OPRO\cite{yang2024largelanguagemodelsoptimizers} & baseline prompt, instruction induction & filter top-k prompts & meta-prompt with scored prompts and exemplars & high sampling temperature for diversity \\
 Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} & seeded mutation of problem description & binary tournament & random operator out of 9 total & mutates meta-prompt, ICL examples \\
 Evoprompt\cite{guo2024connectinglargelanguagemodels} & manual prompts and instruction induction & roulette and filter based on score & crossover and mutation & two operator variants \\
@@ -91,7 +91,7 @@ PE2\cite{ye2024promptengineeringpromptengineer} & manual or instruction inductio
 PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} & manual or instruction induction & no filtering, success vector Hamming distance & instruction induction, EDA, crossover, feedback, paraphrase & alternates local, global search \\
 PromptWizard\cite{agarwal2024promptwizardtaskawarepromptoptimization} & variations from problem description & selects best prompt & critique + synthesis & improves examples after instructions \\
 CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic} & manual initial prompt & filter top-k prompts & meta-prompt with critique history & self-generates critique aspects \\
-SPRIG\cite{zhang2024sprigimprovinglargelanguage} & blank prompt & filters tens of thousands of candidates with UCB & edit-based enumeration of sentence-level operations & focus is on task-agnostic system prompts \\
+SPRIG\cite{zhang2024sprigimprovinglargelanguage} & blank prompt & large-scale statistical resource allocation algorithms & edit-based enumeration of sentence-level operations & focus is on task-agnostic system prompts \\
 SPO\cite{xiang2025selfsupervisedpromptoptimization} & basic prompt template (e.g. CoT) & winner of pairwise evaluation & metaprompt utilizing feedback from evaluation & focus is on reference-free optimization\\
 \bottomrule
 \end{tabularx}
@@ -99,19 +99,19 @@ SPO\cite{xiang2025selfsupervisedpromptoptimization} & basic prompt template (e.g
 \end{landscape}
 
 We can further divide the discrete PO research into two branches, depending on whether 
-the method optimizes instructions (IO) or examples (EO). While some methods jointly optimize both, most
+the method optimizes instructions or examples. While some methods jointly optimize both, most
 research focuses on optimizing either one or optimizes them independently. 
 
 \subsection{Exemplar optimization}
 
-Exemplar optimization (EO) focuses on selecting the most effective demonstrations for ICL, a powerful technique we discussed in \ref{sec:icl},
+Exemplar optimization focuses on selecting the most effective demonstrations for ICL, a powerful technique we discussed in \ref{sec:icl},
 where the LLM learns the task implicitly from labeled input-output pairs. Although underrepresented in literature\cite{wan2024teachbettersmarterinstructions},
 recent work\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}\cite{wan2024teachbettersmarterinstructions} shows that intelligently selected
 exemplars often outperform optimized instructions alone and even simple optimization methods like random search can lead to significant gains across diverse tasks.
-This effect is further amplified when EO is used together with IO, suggesting that the two should be co-optimized rather than treated separately\cite{wan2024teachbettersmarterinstructions}
+This effect is further amplified when exemplar optimization is used together with instruction optimization, suggesting that the two should be co-optimized rather than treated separately\cite{wan2024teachbettersmarterinstructions}
 
-EO is useful even for tasks without available examples with techniques like Bootstrapping\cite{khattab2023dspycompilingdeclarativelanguage},
-which utilizes inputs solved during optimization. By indentifying useful and informative solutions, it allows for EO without hand-crafted input-output pairs.
+Exemplar optimization is useful even for tasks without available examples with techniques like Bootstrapping\cite{khattab2023dspycompilingdeclarativelanguage},
+which utilizes inputs solved during optimization. By indentifying useful and informative solutions, it allows for exemplar optimization without hand-crafted input-output pairs.
 
 
 \subsection{Instruction optimization}
@@ -132,8 +132,7 @@ relied on Monte Carlo search, based on the idea of Instruction Induction\cite{ho
 This concept works by reverse-engineering instructions from a few task samples with a meta-prompt template like in \ref{box:insinductexample}. 
 
 
-\begin{promptbox}
-    [label={box:insinductexample}]{Instruction Induction}
+\begin{figurebox}{Instruction Induction}{box:insinductexample}
     \textbf{LLM Input:} \hlbox{ctublue}{Below are a few examples of a task. \newline Write a set of instructions that would help me solve other examples of the task. 
     \hlbox{ctulightblue}{\textbf{Q:} Jim earns 10 dollars per hour as a waiter. How much does he earn for 5 hours and 45 minutes of work? \\
     \textbf{A:} Jim earns $5*10=50$ dollars for the full 5 hours and $10*\frac{3}{4}=7.5$ dollars for the 45 minutes. That makes $50+7.5=57.5$ dollars in total. \#\#\#\# 57.5 \\
@@ -141,7 +140,7 @@ This concept works by reverse-engineering instructions from a few task samples w
     \textbf{LLM Output:}
     \hlbox{ctublue}{Use step-by-step logical thinking to solve this mathematical word problem. Show your work and write your numerical answer separated by '\#\#\#\#'.}
     
-\end{promptbox}
+\end{figurebox}
 
 By repeating this process with a non-zero sampling temperature while varying the example set,
 the LLM produces a diverse set of prompts. APE then scores them on a validation set and selects the instructions with the best performance.
@@ -166,8 +165,7 @@ The simplest gradient form is a series of prompts and their scores in a meta-pro
 to create a new prompt in the sequence. The hope is for the model to extrapolate beyond the sequence of prompts
 and apply the observed pattern to acquire a better performing prompt. 
 
-\begin{promptbox}
-    [label={box:oprometa}]{Prompt+Score Meta-prompt}
+\begin{figurebox}{Prompt+Score Meta-prompt}{box:oprometa}
     \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
     Below is a sequence of past prompts and their scores.\\
     Design a new prompt in the sequence so that it achieves a better score. 
@@ -179,7 +177,7 @@ and apply the observed pattern to acquire a better performing prompt.
     }
     \textbf{LLM Output:}
     \hlbox{ctublue}{Plan and solve the challenge while showing your work.}
-\end{promptbox}
+\end{figurebox}
 \newpage
 Ablations in OPRO\cite{yang2024largelanguagemodelsoptimizers} show that both the ascending order of the prompts
 as well showing scores in beneficial to the optimization process. Furthermore, another crucial part
@@ -200,8 +198,7 @@ perform a sort of gradient descent by fixing the issues found by the critique. T
 This is, as we discussed in \ref{sec:inference}, crucial for the LLM's ability to self-refine. 
 Feedback-enriched meta-prompts, such as \ref{box:crispometa}, may include prompt scores as well.
 
-\begin{promptbox}
-    [label={box:crispometa}]{Prompt+Feedback+Score Meta-prompt}
+\begin{figurebox}{Prompt+Feedback+Score Meta-prompt}{box:crispometa}
     \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
     Below is a sequence of past prompts and their critiques and scores.\\
     Design a new prompt in the sequence so that it achieves a better score. 
@@ -214,7 +211,7 @@ Feedback-enriched meta-prompts, such as \ref{box:crispometa}, may include prompt
     }
     \textbf{LLM Output:} 
     \hlbox{ctublue}{Yay! Let's solve this math problem with logical thinking! }
-\end{promptbox}
+\end{figurebox}
 \newpage
 The instructions in \ref{box:oprometa} and \ref{box:crispometa} are rather basic and can be endlessly
 improved via prompt engineering. For example Ye et al.\cite{ye2024promptengineeringpromptengineer} attempt to 
@@ -276,8 +273,7 @@ All three discussed EA-based methods utilize Instruction Induction\cite{honovich
 using calling it "Lamarckian mutation". Besides initialization, Lamarckian mutation can be useful for adding task-relevant prompts
 to the population in case the optimization diverges\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}. 
 
-\begin{promptbox}
-    [label={box:mutate}]{Mutation Meta-prompt}
+\begin{figurebox}{Mutation Meta-prompt}{box:mutate}
     \textbf{LLM Input:} \hlbox{ctublue}{Rewrite the prompt below in a semantically equivalent but novel way.
     \hlbox{ctulightblue}{
      \textbf{Prompt:} ''Let's think step-by-step.'' 
@@ -285,10 +281,9 @@ to the population in case the optimization diverges\cite{fernando2023promptbreed
     }
     \textbf{LLM Output:} 
     \hlbox{ctublue}{We will solve this in logical increments.}
-\end{promptbox}
+\end{figurebox}
 
-\begin{promptbox}
-    [label={box:crossover}]{Crossover/EDA Meta-prompt}
+\begin{figurebox}{Crossover/EDA Meta-prompt}{box:crossover}
     \textbf{LLM Input:} \hlbox{ctublue}{Combine the following prompts into a novel prompt. 
     \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.''\\
      ...\\
@@ -297,7 +292,7 @@ to the population in case the optimization diverges\cite{fernando2023promptbreed
     }
     \textbf{LLM Output:}
     \hlbox{ctublue}{Do the step-by-step thinking and solve the math problem.}
-\end{promptbox}
+\end{figurebox}
 
 In \ref{box:mutate} and \ref{box:crossover} the reader can find possible meta-prompts for a mutation and a crossover operater, respectively.
 By changing the meta-instructions in \ref{box:crossover} and increasing $n$, we can shift the crossover operator into a Estimation-of-distribution (EDA)
@@ -339,7 +334,7 @@ unpractical to define especially for open-ended tasks \cite{xiang2025selfsupervi
 Xiang et al.\cite{xiang2025selfsupervisedpromptoptimization} tackle this problem by using pairwise LLM-based evaluation
 and Zhang et al.\cite{zhang2024glapegoldlabelagnosticprompt} develop a gold label-free method method on evaluation based
 on self-consistencies of different answers.
-\newpage
+
 Also, as the complexity of prompt structure increases, many prompt optimization techniques are no longer applicable\cite{schnabel2024symbolicpromptprogramsearch}.
 Schnabel et al.\cite{schnabel2024symbolicpromptprogramsearch} define Symbolic Prompt Programs, representable
 as directed acyclic graphs. In these graphs, nodes are functions, such as \texttt{RenderText}, \texttt{GenerateResponse} or \texttt{ParseOutput} 
@@ -351,7 +346,7 @@ Most prompt optimizer approaches do not apply to these multi-stage LLM programs\
 as a whole. Optimizing each component separately is possible but this approach ignores their mutual influence.
 
 DSPy\cite{khattab2023dspycompilingdeclarativelanguage} is a Python library aiming to simplify LLM program composition with 
-an intuitive interface. Most importantly, it allows for optimizing the whole pipeline, including EO, IO and weight fine-tuning
+an intuitive interface. Most importantly, it allows for optimizing the whole pipeline, including exemplar optimization, instruction optimization and weight fine-tuning
 with the promise of declarative LLM program design without extensive prompt engineering. DSPy offers several pipeline optimization
 methods, like MiPROv2\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage} and BetterTogether\cite{soylu2024finetuningpromptoptimizationgreat}.
 MiPROv2 generalizes OPRO\cite{yang2024largelanguagemodelsoptimizers} to multi-stage joint example and instruction optimization

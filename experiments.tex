@@ -174,7 +174,7 @@ $10$ & \cellcolor{lightgreen}\maxmean{0.57}{0.41} & \cellcolor{lightgreen}\maxme
 
 \begin{figure}
     \includegraphics[width=\linewidth]{usage.pdf}
-    \caption{Token optimization cost per operator. Logarithmic scale.}
+    \caption{Total optimization token cost per operator. Logarithmic scale.}
     \label{fig:usage}
 \end{figure}
 
@@ -240,12 +240,12 @@ operator which performs direct output and prompt comparisons.
 Limerick is a short humorous poem. We design a simple task, where the LLM has to write an alliterative limerick about an animal. 
 All words should start with the starting letter of the animal given, for example:
 
-\begin{promptbox}[label={box:limerick}]{Limerick task example}
+\begin{figurebox}{Limerick task example}{box:limerick}
     \textbf{Input}:
     \hlbox{ctuorange}{snake}
     \textbf{Output}:
     \hlbox{ctublue}{silly snakes swiftly slide,\\sneaky, slippery, side-to-side,\\slurping soda,\\singing sonata,\\simply sparkling, super-sized!}
-\end{promptbox}
+\end{figurebox}
 
 We provide three such examples without further context and observe the quality of the results. These examples are used to construct the initial population through
 the \texttt{Lamarckian} operator.
@@ -258,7 +258,7 @@ However during the optimization, it seems that the comparison function started f
 This problem originated in the first optimization step, where the \texttt{Feedback} operator created a prompt that instructed to "provide 3 different poem options".
 Comparisons show that multiple options are preferred by the comparison function as they "showcase more variety and exploration of the theme".
 
-\begin{promptbox}[label={box:limerickresult}]{Limerick optimization result}
+\begin{figurebox}{Limerick optimization result}{box:limerickresult}
 \textbf{Initial}:
     \hlbox{ctulightblue}{
         daring dogs delightfully dash,\\
@@ -287,7 +287,7 @@ Comparisons show that multiple options are preferred by the comparison function 
         dancing steeply,\\
         daringly doing, to thrive and strive.
     }
-\end{promptbox}
+\end{figurebox}
 
 We conclude that our method failed to improve poem-generating prompts in this experiment, probably due to the 
 ambiguous task definition, small population and batch sizes. Performance could be improved by designing 

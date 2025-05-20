@@ -1,0 +1,21 @@
+\section{Basics of Large Language Models}
+In Natural Language Processing (NLP), language models are machine learning models that model statistical dependencies in language.
+Specifically Large Language Models (LLMs) are language models with many layers and a large number of parameters, often numbered in billions, trained on enormous amounts of text.
+Current state-of-the-art use the Transformer\cite{vaswani2023attentionneed} architecture and its derivatives. 
+In its essence, this architecture chains attention mechanisms with fully connected layers. 
+This simple architecture, when applied on massive scale using vast computation and data resources, is at the root of the current LLM revolution in the fields of NLP and artificial intelligence.
+
+LLMs predict the next token in a sequence of tokens. Token can represent a letter or a word, but current models utilize sub-word tokens, similar in length to syllables.
+The meaning of these tokens can be infered from relative position to other tokens in training text and encoded into vector form using an algorithm like Word2Vec\cite{mikolov2013efficientestimationwordrepresentations}.
+
+When we give a sequence of tokens as an input to an LLM, it produces a probability distribution of possible next tokens. 
+This happens both during training, where the probability distribution is used to update the model's weights to minimize training loss, and during \textit{inference}.
+Inference is the process of using a frozen LLM to generate text. 
+
+During inference, a sampling algorithm is employed to pick the next token from the probability distribution.
+Usually a interpolation between greedy and uniform sampling is employed. This process is called temperature sampling and introduces an important hyperparameter - \textit{temperature} $\tau$.
+Temperature influences the randomness of next token prediction and affects the outputs' qualities, like creativity and novelty. 
+For $\tau = 0$, the sampling process is deterministic in theory, but in practice variance remains due to numerical errors.
+
+The input sequence is generally called a \textit{prompt}. The model recursively generates next tokens, forming an output sequence, which we will also call a \textit{completion}.
+Generation continues until a special \texttt{stop} token is generated or until a token limit is reached.

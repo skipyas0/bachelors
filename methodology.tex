@@ -16,22 +16,24 @@ Of particular interest are the output fields, which hold the output name, desire
 
 When employing good naming practices the model can often deduce the task only by looking at output names and types.
 Consider the following \texttt{Signature}:
-\begin{promptbox}{Simple Signature}
-    \hlspan{ctuorange}{Word: \texttt{str}} $\rightarrow$ \hlspan{ctuorange}{Antonymum: \texttt{str}}
-\end{promptbox}
+\begin{figurebox}{Simple Signature}{box:simplesig}
+    \hlbox{ctuorange}{Word: \texttt{str}}  
+    \hlbox{brown}{Antonymum: \texttt{str}}
+\end{figurebox}
 \newpage
 For more complex tasks, filling the output descriptions or even adding explicit instructions is necessary.
 In \ref{box:complexsig} notice that it is possible to specify multiple inputs and outputs, which are then generated in the order given.
-\begin{promptbox}[label={box:complexsig}]{Complex Signature}
-    \hlspan{ctuorange}{Text: \texttt{str}, Grading guide: \texttt{str}} 
-    $\rightarrow$ 
-    \hlspan{ctuorange}{Evaluation: \texttt{str}, Grade: \texttt{int}} \hfill
-    \\ \\
-    Instructions:
+\begin{figurebox}{Complex Signature. }{box:complexsig}
+    \hlbox{ctuorange}{Text: \texttt{str} (Student text)\\
+    Grading guide: \texttt{str} (Steps to follow during evaluation)} 
+    \hlbox{brown}{Evaluation: \texttt{str} (Textual feedback)\\
+     Grade: \texttt{int} (Numerical grade 1-10)} 
     \hlbox{ctublue}{Grade the text.\\ You are an expert text evaluator. \\
     Use the grading guide to evaluate the test and give a final grade. 
     Use formal language and markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}
-\end{promptbox}
+\end{figurebox}
+
+We will maintain this formatting style whenever showing a \texttt{Signature} structure in the future: \textcolor{ctuorange}{orange inputs}, \textcolor{brown}{brown outputs} and \textcolor{ctublue}{blue instructions}, which are optional.
 
 Sufficiently large instruction-tuned LLMs are usually good at reliably producing JSON output.
 For smaller models or more complex output structures, it might be necessary to use some form of constrained generation as discussed in \ref{sec:inference}.
@@ -46,8 +48,8 @@ To facilitate \texttt{Signature}-powered generation, we implement a \texttt{pred
 \end{enumerate}
 \newpage
 
-\begin{promptbox}[label={box:predictdev}]{Predict method developer prompt}
-    \hlbox{ctuorange}{You are an intelligent function that returns structured JSON outputs matching a given schema.
+\begin{figurebox}{Predict method developer prompt with highlighted prompt sections: directive, context, examples and format specifications.}{box:predictdev}
+    \hlbox{ctulightblue}{You are an intelligent function that returns structured JSON outputs matching a given schema.
     }
     
     \hlbox{ctulightblue}{
@@ -61,27 +63,28 @@ To facilitate \texttt{Signature}-powered generation, we implement a \texttt{pred
         2. Use the `inputs` to compute or generate the answer\\
         3. Respond **only** with keys from the `outputs` dictionary and values matching the described types
     }
-    \hlbox{ctublue}{Only return a flat JSON object like:\\
+    \hlbox{ctulightblue}{Only return a flat JSON object like:\\
     \{\\
     "field1": <value matching type and description>,\\
     "field2": <...>\\
     \}}
     
-    \hlbox{ctublue!50!black}{Do not add metadata, explanations, or wrap outputs in additional structures.\\
+    \hlbox{ctulightblue}{Do not add metadata, explanations, or wrap outputs in additional structures.\\
     Do not include type names or field descriptions in the output.\\
     Your output must be strictly valid JSON and fill **all** requested output fields.}
-\end{promptbox}
+\end{figurebox}
 The developer prompt has to clearly explain to the LLM how to work with the JSON-based \texttt{Signature}.
-In \ref{box:predictdev} notice the sections of the prompt following principles outline in \ref{sec:preng}.
-First, the directive states the task, then a further context is added about the \texttt{Signature} data structure and the task.
+In \ref{box:predictdev} notice the sections of the prompt following prompt engineering principles outlined in \ref{sec:preng}.
+
+First, the directive states the task, then further context is added about the \texttt{Signature} data structure and the task.
 Next, notice the example showing the proper output, and finally few more clarifying instructions about the output format.
 In experiments, this prompt is successful in incentivizing parseable outputs adhering to the specifications.
 
 Parsing the output presents some challenges as the LLM sometimes wraps the JSON output into a markdown code block
-or uses inconsistent escape sequences. We implement a simple parses based on regular expressions that is able to parse 
-a majority of outputs. In case of model failure, such as getting stuck in a generation loop, we add a repeated generation
+or uses inconsistent escape sequences. We implement a simple parser based on regular expressions that is able to parse 
+the majority of outputs. In case of model failure, such as getting stuck in a generation loop, we add a repeated generation
 feature.
-\newpage
+
 \subsection{Inference techniques implementation}
 Leveraging the \texttt{predict} method and the modular \texttt{Signature}-based interface, we implement a suite of inference-time prompting techniques. 
 Each technique is realized through systematic modifications of the \texttt{Signature} fields, changing the developer prompt and the chaining of multiple generation steps 
@@ -242,8 +245,18 @@ We randomly sample $N$ examples from a separate training split. So
 \begin{equation}
     \mathcal{R}_{\text{L}}(\mathcal{D}) = \operatorname{RandomSample}(\mathcal{D}_{\text{train}}, N)
 \end{equation}
-
-
+\begin{figurebox}{Lamarckian Signature. Formatting specifications trimmed.}{box:lamarcksig}
+    \hlbox{ctuorange}{Task examples: \texttt{str} (Samples from a problem class) \\
+    Persona (Optional): \texttt{str} (Assume this persona when writing the prompt)} 
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Instructions for solving the problem)} 
+    \hlbox{ctublue}{Craft a \textbf{general} developer prompt to help an LLM with solving a class of problems.\\
+    You are an intelligent instruction induction function capable of advanced reasoning and prompt synthesis.\\
+    Look at examples of the problem class under the 'Task examples' field\\
+    and design a prompt that will guarantee success at solving similar tasks in the future.\\
+    Make sure your instructions are \textbf{TRULY GENERAL} and apply to all given samples \textbf{simultaneously}.
+}
+\end{figurebox}
+\newpage
 \subsubsection{Iterative}
 The \texttt{Iterative} operator is one of the most common and simplest operators. 
 It uses a sequence of prompts and their scores often in an ascending order.
@@ -255,10 +268,21 @@ We define the retrieval function as
 \begin{equation}
    \mathcal{R}_{\text{I}}(\mathcal{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}, N), \mathcal{E})
 \end{equation}
-Other methods\cite{tang2024unleashingpotentiallargelanguage} also include task examples, like in the \texttt{Lamarckian}.
+Other methods\cite{tang2024unleashingpotentiallargelanguage} additionally augment the \textit{meta-prompt} with task samples, similar to the \texttt{Lamarckian} operator.
 
-In the metaprompt, we instruct the LLM to try to follow the sequence. Also, we specifically say to 'craft a new prompt'
+In the \textit{meta-prompt}, we instruct the LLM to try to follow the sequence. Also, we specifically say to 'craft a new prompt'
 as opposed to 'improve a prompt' to incite more novelty. For formatting, we use the same instruction set as in the \texttt{Lamarckian}.
+\begin{figurebox}{Iterative Signature. Formatting specifications trimmed.}{box:itersig}
+    \hlbox{ctuorange}{Old prompts: \texttt{list} (List of previous prompts with scores)}
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Better prompt)} 
+    \hlbox{ctublue}{Craft a new prompt for an LLM.
+    
+    You are an intelligent pattern continuation function capable of advanced reasoning and prompt synthesis.\\
+    You are given a given a history of past prompts along with their scores.\\
+    They are listed in ascending order of fitness.\\
+    Follow the sequence and design an improved prompt. \\
+}
+\end{figurebox}
 
 \subsubsection{Reflective}
 Recent PO literature\cite{xiang2025selfsupervisedpromptoptimization} shifts to using LLM outputs as optimization signals
@@ -277,6 +301,24 @@ worst prompts. The retrieval function is
     \mathcal{R}_{\text{R}}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
 \end{equation}
 
+\begin{figurebox}{Reflective Signature. Formatting specifications trimmed.}{box:reflexsig}
+    \hlbox{ctuorange}{Original prompt: \texttt{str} (Improve this prompt) \\
+    Task question: \texttt{str} (Task on which the prompt was used) \\
+    Solution: \texttt{str} (What the original prompt produced)}
+    \hlbox{brown}{Original prompt critique: \texttt{str} (Faults in the original prompt) \\
+    Prompt proposal: \texttt{str} (Improved prompt)} 
+
+    \hlbox{ctublue}{Improve a prompt for an LLM.
+    
+    You are an intelligent reflection function capable of advanced reasoning and prompt synthesis.\\
+    Follow these steps to craft a better prompt:\\
+    - Analyze the original prompt and its suboptimal performance on a task sample.\\
+    - Find failure points in the solution and cross-reference to identify weaknesses in the prompt.\\
+    - Think of a critique that captures your findings\\
+    - Apply your critique to \textit{slightly} alter the original prompt to improve it.\\
+    Your improved prompt should still be \textbf{widely applicable and generic}.}
+\end{figurebox}
+
 
 \subsubsection{Feedback}
 As we mentioned earlier, the \texttt{Feedback} operator is suitable for use in self-supervised settings.
@@ -292,6 +334,19 @@ as in the previous operators.
 
 For large populations or tasks producing long prompts, we might run into issues with LLM context window length. 
 However for our purpose, modern LLMs provide more than sufficient context limits. 
+\begin{figurebox}{Feedback Signature. Formatting specifications trimmed.}{box:feedbacksig}
+    \hlbox{ctuorange}{
+        Base prompt: \texttt{str} (Improve this prompt) \\
+        Comparisons: \texttt{str} (Base prompt compared to others)
+    }
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Improved prompt)} 
+    \hlbox{ctublue}{Improve a prompt for an LLM.
+
+    You are an intelligent critique synthesis function capable of advanced reasoning. \\
+    You are given a base prompt and a list of comparisons between the base prompt and other prompts.\\
+    Some other prompts are better than the base prompt, some are worse.\\
+    Your task is to analyze the comparisons and synthesize a new prompt that incorporates the feedback.}
+\end{figurebox}
 
 \subsubsection{Paraphrase}
 To serve as another baseline for other operators, we implement a simple \texttt{Paraphrase} operator.
@@ -302,6 +357,23 @@ The prompt is selected via the retrieval function
 \end{equation}
 This method uses no optimization signal or improvement instructions and relies on pure chance of finding a more potent prompt.
 
+
+\begin{figurebox}{Paraphrase Signature. Formatting specifications trimmed.}{box:parasig}
+    \hlbox{ctuorange}{Original prompt: \texttt{str} (Prompt to paraphrase)}
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Paraphrased prompt)} 
+    \hlbox{ctublue}{Paraphrase a prompt for an LLM.
+                    
+    You are an intelligent paraphrasing function capable of advanced reasoning and prompt synthesis.\\
+    You are given a prompt and your task is to paraphrase it. \\
+    Use synonyms and change the structure of the prompt but keep it semantically equivalent.}
+\end{figurebox}
+
+
+\begin{figurebox}{Formatting specifications, which are the same for all operators}{box:formatting}
+    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
+    In the final answer, do not include a title or any additional data, just the prompt.
+\end{figurebox}
 
 \subsection{Selection Operator}
 At the start of each optimization step, we select $n_{\text{continue}}$ prompts to continue in the process and purge the rest. 

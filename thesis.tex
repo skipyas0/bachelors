@@ -83,11 +83,12 @@
 % Abstract in Czech
 \begin{abstract-czech}
 	Tvorba promptů pro velké jazykové modely (LLM) představuje významnou překážku v jejich plném využití a je obtížná jak pro odborníky, tak pro běžné uživatele.
-  V této bakalářské práci navrhujeme jednoduchou metodu optimalizace promptů na populační variantě hill-climber algoritmu, postavenou na vlastním frameworku pro strukturovanou generaci.
+  V této bakalářské práci navrhujeme jednoduchou metodu optimalizace promptů na základě populační varianty hill-climber algoritmu, postavenou na vlastním frameworku pro strukturovanou generaci.
   Využíváme principy promptového inženýrství k vytvoření několika \textit{Meta-prompting} technik, které testujeme na různorodých úlohách oproti silnému referenčnímu řešení, vytvořenému pomocí Instruction Induction.
   Zároveň přinášíme přehled aktuální literatury v rychle se vyvíjejícím oboru optimalizace promptů a zasazujeme tuto úlohu do širšího kontextu training-time a inference-time scalingu.
   Naše jednodušší \textit{Meta-prompting} techniky dosahují v experimentech nejlepších výsledků a překonávají výchozí řešení i komplikovanější varianty.
-  Naše práce ukazuje možnost využití optimalizace promptů jak v analytických, tak i v kreativních kontextech, ale zdůrazňuje citlivost optimalizace s LLM na návrhu \textit{Meta-promptů}.
+  Naše práce ukazuje možnost využití optimalizace promptů jak v analytických, tak i v kreativních kontextech, ale zdůrazňuje citlivost optimalizace s LLM na návrh \textit{Meta-promptů}.
+  Kód je dostupný na \url{https://github.com/skipyas0/prompt_optimizer}.
 \end{abstract-czech}
 
 % Abstract in English
@@ -98,20 +99,23 @@
   Additionally, we survey current literature in the rapidly evolving field of prompt optimization and frame it in the broader context of training-time and inference-time scaling. 
   Our simpler \textit{Meta-prompting} approaches perform best in experiments, outperforming both the baseline and more complex variants.
   Our work showcases the applicability of prompt optimization to both reasoning-intensive and creative tasks, while highlighting the sensitivity to \textit{Meta-prompt} design in LLM-based optimization.
+  Code is available at \url{https://github.com/skipyas0/prompt_optimizer}.
 \end{abstract-english}
 
 % Acknowledgements / Podekovani
 \begin{thanks}
-	Děkuji svému vedoucímu, Janu Drchalovi, za jeho čas a připomínky a skupině RCI za přístup k výpočetnímu clusteru. 
+  I would like to thank my supervisor Jan Drchal for his time and helpful notes. 
+  
+  Additionally, I would like to thank the RCI group for access to their computation cluster.
 \end{thanks}
 
 % Declaration / Prohlaseni
 \begin{declaration}
-Prohlašuji, že jsem předloženou práci vypracoval samostatně, a že jsem uvedl veškerou použitou literaturu.
+I declare that I have completed the submitted work independently and that I have cited all sources used.
 
-Během práce byly v omezeném rozsahu použity nástroje umělé inteligence, například pro hledání relevantní literatury, návrhy stylistických úprav nebo v roli kódovacího asistenta.
+Artificial intelligence tools were used to a limited extent during the work, for example for searching relevant literature, suggesting stylistic edits, or as a coding assistant.
 
-V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
+In Prague, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \end{declaration}
 
 % Only for testing purposes
@@ -132,44 +136,10 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \usepackage{multirow}
 \usepackage{geometry}
 \usepackage{caption}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usetikzlibrary{positioning, arrows.meta, shapes, decorations.pathreplacing, calc}
 %\geometry{margin=1in}
-\ExplSyntaxOn
-
-\NewDocumentCommand{\hlboxx}{m m m}
- {
-  \hlboxx_inner:nnn { #1 } { #2 } { #3 }
- }
-
-\cs_new_protected:Nn \hlboxx_inner:nnn
- {
-  % store and transform the title
-  \tl_set:Nn \l_tmpa_tl { #2 }
-  \tl_lower_case:N \l_tmpa_tl
-  \tl_remove_all:Nn \l_tmpa_tl { ~ }
-
-  % generate label string manually
-  \tl_set:Nx \l_tmpb_tl { box:\l_tmpa_tl }
-
-  % now insert into tcolorbox
-  \begin{tcolorbox}[
-    colback=#1!10!white,
-    colframe=#1!80!black,
-    boxrule=0.8pt,
-    arc=4pt,
-    left=6pt,
-    right=6pt,
-    top=4pt,
-    bottom=4pt,
-    enhanced,
-    breakable,
-    label={\tl_use:N \l_tmpb_tl},
-    title={#2}
-  ]
-  #3
-  \end{tcolorbox}
- }
-
-\ExplSyntaxOff
 
 \newcommand{\hlbox}[2]{%
   \begin{tcolorbox}[colback=#1!10!white,
@@ -204,8 +174,42 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
   breakable,
   #1
 }
+
+\newtcolorbox{figureboxinner}{
+  colback=gray!5!white,
+  colframe=ctublue,
+  fonttitle=\bfseries,
+  toprule=4pt,
+  leftrule=2pt,
+  rightrule=2pt,
+  bottomrule=1.5pt,       
+  fontupper=\small,  
+  rounded corners, arc=8pt,        
+  enhanced
+}
+
+% Define the figurebox environment
+\NewDocumentEnvironment{figurebox}{m m}{%
+  \begin{figure}[htbp]
+    \centering
+    \begin{figureboxinner}
+}{%
+    \end{figureboxinner}
+    \caption{#1}
+    \label{#2}
+  \end{figure}
+}
+
+
 \definecolor{lightgreen}{HTML}{E2FEEA}
 \definecolor{lightred}{HTML}{FDE3E2}
+
+
+\makeatletter
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{\clearpage}{}{}
+\makeatother
+
+
 \begin{document}
 
 \maketitle
@@ -215,13 +219,14 @@ V Praze, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 
 \chapter{Literature}
 
-
+\include{models}
 \include{inference_time}
 \include{prompt_engineering}
 
 \include{prompt_optimization}
 
 \chapter{Implementation}
+\include{problem_formulation}
 \include{methodology}
 
 \chapter{Experiments}

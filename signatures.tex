@@ -1,4 +1,4 @@
-\begin{promptbox}[label={box:feedbacksig}]{Feedback Signature}
+\begin{figurebox}{Feedback Signature}{box:feedbacksig}
     \hlspan{ctuorange}{Base prompt: \texttt{str} (Improve this prompt)} \\
     \hlspan{ctuorange}{Comparisons: \texttt{str} (Base prompt compared to others)} \\
     $\rightarrow$ \\\\
@@ -15,11 +15,11 @@
     Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
     As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
     In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
+\end{figurebox}
 
 
 
-\begin{promptbox}[label={box:reflexsig}]{Reflection Signature}
+\begin{figurebox}{Reflection Signature}{box:reflexsig}
     \hlspan{ctuorange}{Original prompt: \texttt{str} (Improve this prompt)} \\
     \hlspan{ctuorange}{Task question: \texttt{str} (Task on which the prompt was used)} \\
     \hlspan{ctuorange}{Solution: \texttt{str} (What the original prompt produced)} \\\\
@@ -41,10 +41,10 @@
     Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
     As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
     In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
+\end{figurebox}
 
 
-\begin{promptbox}[label={box:lamarcksig}]{Lamarckian Signature}
+\begin{figurebox}{Lamarckian Signature}{box:lamarcksig}
     \hlspan{ctuorange}{Task examples: \texttt{str} (Samples from a problem class)} \\\\
     \hlspan{ctuorange}{Persona (Optional): \texttt{str} (Assume this persona when writing the prompt)} \\\\
     $\rightarrow$ \\\\
@@ -61,10 +61,10 @@
     Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
     As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
     In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
+\end{figurebox}
 
 
-\begin{promptbox}[label={box:itersig}]{Iterative Signature}
+\begin{figurebox}{Iterative Signature}{box:itersig}
     \hlspan{ctuorange}{Old prompts: \texttt{list} (List of previous prompts with scores)}\\\\
     $\rightarrow$ \\\\
     \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Better prompt)} \hfill
@@ -80,4 +80,21 @@
     Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
     As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
     In the final answer, do not include a title or any additional data, just the prompt.}
-\end{promptbox}
+\end{figurebox}
+
+\begin{figurebox}{Paraphrase Signature}{box:parasig}
+    \hlspan{ctuorange}{Original prompt: \texttt{str} (Prompt to paraphrase)}\\\\
+    $\rightarrow$ \\\\
+    \hlspan{ctuorange}{Prompt proposal: \texttt{str} (Paraphrased prompt)} \hfill
+    \\ \\
+    Instructions:
+    \hlbox{ctublue}{Paraphrase a prompt for an LLM.\\\\
+                    
+    You are an intelligent paraphrasing function capable of advanced reasoning and prompt synthesis.\\
+    You are given a prompt and your task is to paraphrase it. \\
+    Use synonyms and change the structure of the prompt but keep it semantically equivalent.\\
+
+    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
+    In the final answer, do not include a title or any additional data, just the prompt.}\\
+\end{figurebox}

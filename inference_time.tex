@@ -22,13 +22,31 @@ Another class of generation algorithms are those which interpolate between more 
 Temperature sampling, which outperforms other adapters in input-output tasks like code generation and translation,
 is an interpolation between greedy sampling and uniform sampling. 
 Interpolating between ancestral sampling and simple greedy sampling gave rise to decoding algorithms such as
-nucleus, top-k and $\eta$- and $\epsilon$-sampling. When we require a structured output, for example a JSON data 
+nucleus, top-k and $\eta$- and $\epsilon$-sampling\cite{welleck2024decodingmetagenerationinferencetimealgorithms}. When we require a structured output, for example a JSON data 
 structure following a JSON schema, we can utilize parser-based decoding, which enforces a structural requirement.
 This can however come at worsened performance when using inflexible templates.
-\newpage
+
 These low-level generator can be interconnected into more complex technique, which Welleck et al. call meta-generators\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
 We will stick to their terminology and discuss different sequence-level meta-generation algorithms. We will omit further discussion of token-level methods as
 they are irrelevant to the main topic of this thesis. These strategies can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators.
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.7cm and 0.7cm,
+        every node/.style={font=\sffamily\normalsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=2cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (input) {User\\Input};
+    \node[funcnode, right=of input] (llm) {LLM};
+    \node[textnode, right=of llm] (output) {Model\\Output};
+    \draw[arrow] (input) -- (llm);
+    \draw[arrow] (llm) -- (output);
+    \end{tikzpicture}
+    \caption{Single-stage LLM generation: the input is processed in a single forward pass.}
+    \label{fig:single_stage}
+\end{figure}
 
 \subsection{Chained meta-generation}
 
@@ -48,6 +66,29 @@ Another reason for the effectiveness of chained generation is that in LLM traini
 some concepts and variables are observed more frequently than others\cite{prystawski2023thinkstepstepreasoning}. 
 This discrepancy hurts performance in direct-QA scenarios where the relevant
 variables are rarely seen together in training. With CoT, models can incrementally chain known dependencies and bridge conceptional gaps.
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.7cm and 0.7cm,
+        every node/.style={font=\sffamily\normalsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=2cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (input) {User\\Input};
+    \node[funcnode, right=of input] (llm1) {Plan \\LLM};
+    \node[textnode, right=of llm1] (out1) {Partial \\Output};
+    \node[funcnode, right=of out1] (finish) {Finish \\LLM};
+    \node[textnode, right=of finish] (final) {Final\\Output};
+
+    \draw[arrow] (input) -- (llm1);
+    \draw[arrow] (llm1) -- (out1);
+    \draw[arrow] (out1) -- (finish);
+    \draw[arrow] (finish) -- (final);
+    \end{tikzpicture}
+    \caption{Chain-of-thought or two-stage generation: planning followed by execution.}
+    \label{fig:chain_generation}
+\end{figure}
 
 \subsubsection{Chain-of-thought}\label{sec:cot}
 Chain-of-Thought\cite{wei2023chainofthoughtpromptingelicitsreasoning} (CoT) is a LLM prompting technique that works by inducing a coherent series of intermediate 
@@ -85,7 +126,7 @@ Self-revision ability is thus a key factor in the effectiveness of sequential sc
 Longer reasoning chains mean more computing power spent at inference. How far can we take this sequential scaling?
 In their study, Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} argue that longer CoTs do not consistently improve accuracy of reasoning models.
 Furthermore, they find that the average length of correct solutions is shorter than that of incorrect ones. 
-\newpage
+
 Because self-revision accounts for most of the CoT length, the effectiveness of the method relies on the model's ability to self-revise.
 Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
 during self-revision. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
@@ -100,6 +141,35 @@ This phenomenon was observed on tasks like facial recognition, implicit statisti
 Parallel meta-generation involves multiple generations concurrently. 
 The final answer can then be chosen - with a reward model or with 
 voting - or constructed from the ensemble of generations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.7cm and 0.7cm,
+        every node/.style={font=\sffamily\normalsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=2cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (input) {User\\Input};
+    \node[funcnode, right=of input] (llm) {LLM};
+    \node[textnode, right=1cm of llm] (out2) {Output\\2};
+    \node[textnode, above=1cm of out2] (out1) {Output\\1};
+    \node[textnode, below=1cm of out2] (out3) {Output\\3};
+    \node[funcnode, right=1cm of out2] (select) {Aggregate};
+    \node[textnode, right=1cm of select] (final) {Final\\Output};
+
+    \draw[arrow] (input) -- (llm);
+    \draw[arrow] (llm) -- (out1);
+    \draw[arrow] (llm) -- (out2);
+    \draw[arrow] (llm) -- (out3);
+    \draw[arrow] (out1) -- (select);
+    \draw[arrow] (out2) -- (select);
+    \draw[arrow] (out3) -- (select);
+    \draw[arrow] (select) -- (final);
+    \end{tikzpicture}
+    \caption{Parallel generation: multiple outputs are generated simultaneously. Final output is then selected based on voting or aggregated by another LLM.}
+    \label{fig:parallel_generation}
+\end{figure}
 
 Parallel meta-generation allows weaker models to outperform bigger and more expensive models\cite{brown2024largelanguagemonkeysscaling}.
 This can sometimes reduce cost as multiple samples with a smaller model are cheaper than a single sample with a more capable model.
@@ -112,7 +182,7 @@ chains and selects the best one based on majority voting.
 It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks 
 at the cost of increased computation expenditure\cite{wang2023selfconsistencyimproveschainthought}.
 The effectiveness of SC with majority-voting comes from the fact that, for tasks with objective answers, there are often more ways to be wrong than to be right.
-\newpage
+
 For our next discussion of SC and related methods we will compare the 
 terms \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ for a dataset ${\mathbb{D}}$.
 Given a language model $\mathcal{M}$, a task query $q_k \in {\mathbb{D}}$ and a task 
@@ -153,7 +223,7 @@ if the correct samples in a collection can be identified\cite{brown2024largelang
 The accuracy gain of SC tends to saturate quickly as we increase the number of paths\cite{wang2023selfconsistencyimproveschainthought}.
 Although coverage rises, it diverges\cite{brown2024largelanguagemonkeysscaling} from accuracy as the algorithm is unable to select the correct answer from the collection.
 This highlight the necessity to develop better answer selection mechanisms than simple majority voting and automatic answer verification methods.
-\newpage
+
 Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} make use of the fact that
 correct solutions have shorter CoT on average and develop a length-weighted majority vote that outperforms simple majority voting on 
 the challenging math benchmarks. GLaPE\cite{zhang2024glapegoldlabelagnosticprompt} is a method for gold label-agnostic evaluation which makes use
@@ -163,6 +233,42 @@ of the fact that incorrect answers tend to be inconsistent.
 Maintaining the terminology of Welleck et al.\cite{welleck2024decodingmetagenerationinferencetimealgorithms}, step-level meta-generation
 algorithms implement search on the generation state-space. This can be done on the token level or on the level of longer sequences,
 but in this section we will focus on the latter.
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.7cm and 0.7cm,
+        every node/.style={font=\sffamily\normalsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=2cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (input) {User\\Input};
+    \node[funcnode, right=of input] (llm) {LLM};
+    \node[funcnode, below=of input] (append) {Append};
+
+    \node[textnode, right=1cm of llm] (out2) {Output\\2};
+    \node[textnode, above=1cm of out2] (out1) {Output\\1};
+    \node[textnode, below=1cm of out2] (out3) {Output\\3};
+    \node[funcnode, right=1cm of out2] (heur) {Heuristic};
+    \node[textnode, right=1cm of heur] (final) {Final\\Output};
+
+    \draw[arrow] (input) -- (llm);
+    \draw[arrow] (append) -- (input);
+    \draw[arrow] (llm) -- (out1);
+    \draw[arrow] (llm) -- (out2);
+    \draw[arrow] (llm) -- (out3);
+    \draw[arrow] (out1) -- (heur);
+    \draw[arrow] (out2) -- (heur);
+    \draw[arrow] (out3) -- (heur);
+    \draw[arrow] (heur) -- (final);
+
+    \coordinate (belowheur) at ($(heur)+(0,-3.75)$);
+    \coordinate (belowappend) at ($(append)+(0,-1.5)$);
+    \draw[arrow] (heur) -- (belowheur) -- (belowappend) -- (append);
+    \end{tikzpicture}
+    \caption{Step-wise generation with heuristic control and memory: heuristic decisions loop back to modify inputs. Past outputs can form complex thought structures in input.}
+    \label{fig:heuristic_generation}
+\end{figure}
 
 Previously discussed inference-time scaling techniques all relied on sequential or parallel linear thought processes. 
 They do not explore different continuations within a thought process and do not make use of 
@@ -179,7 +285,7 @@ where the number of possible actions at each node is finite, each call to LLM ca
 the same input, making each node's branching factor theoretically infinite\cite{misaki2025widerdeeperscalingllm}.
 Misaki et al.\cite{misaki2025widerdeeperscalingllm} argue that fixed-width multi-turn methods exhibit diminishing gains 
 and develop a tree search method with an adaptive branching factor, leading to a more balanced exploration and exploitation capability. 
-\newpage
+
 Although ToT allows for planning and backtracking from unpromising thought chains, its structure is still too rigid\cite{Besta_2024}.
 For example, it is not possible to combine thoughts from independent branches from the tree. Graph of Thoughts\cite{Besta_2024} (GoT) is 
 a framework that models the reasoning process as a heterogenous directed graph where each vertex is a thought containing a (partial) solution
@@ -203,5 +309,37 @@ One example of a refinement-based framework, Reflexion\cite{shinn2023reflexionla
 of a textual summary. This feedback is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. 
 Reflexion improves performance over strong baselines on sequential decision making, reasoning and programming tasks\cite{shinn2023reflexionlanguageagentsverbal}.
 
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.7cm and 0.7cm,
+        every node/.style={font=\sffamily\normalsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=2cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (input) {User\\Input};
+    \node[funcnode, right=of input] (comb) {Combine};
+    \node[funcnode, right=of comb] (solve) {Solve\\LLM};
+    \node[textnode, right=of solve] (output) {Output\\Candidate};
+    \node[textnode, right=of output] (final) {Final\\Output};
+    \node[funcnode, below=of output] (feedback) {Evaluator\\LLM};
+    \node[textnode, left=of feedback] (fb) {Feedback};
+    \coordinate (aboveout) at ($(output)+(0,1.5)$);
+    \coordinate (belowcomb) at ($(comb)+(0,-2.25)$);
+    \coordinate (abovecomb) at ($(comb)+(0,1.5)$);
+    \coordinate (belowfinal) at ($(final)+(0,-2.25)$);
 
+    \draw[arrow] (input) -- (comb);
+    \draw[arrow] (comb) -- (solve);
+    \draw[arrow] (solve) -- (output);
+    \draw[arrow] (output) -- (feedback);
+    \draw[arrow] (feedback) -- (belowfinal) -- (final);
+    \draw[arrow] (output) -- (aboveout) -- (abovecomb) -- (comb);
+    \draw[arrow] (feedback) -- (fb);
+    \draw[arrow] (fb) -- (belowcomb) -- (comb);
+    \end{tikzpicture}
+    \caption{Refinement-based generation: feedback and output history influence future model inputs. Output is iteratively improved until it is good enough or a stop condition is reached.}
+    \label{fig:refinement_generation}
+\end{figure}
 

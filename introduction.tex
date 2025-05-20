@@ -1,14 +1,109 @@
 \section{Background}
 In recent years, Large Language Models (LLMs) have permeated the Natural Language Processing research landscape as well as into the general public. 
 Already achieving human-like performance at a wide variety of tasks\cite{bubeck2023sparksartificialgeneralintelligence}, 
-they are bound by scaling laws\cite{kaplan2020scalinglawsneurallanguage} which predict performance gained with adding compute, fueling
-massive investments into computation capacity by industry players. 
+they are bound by scaling laws\cite{kaplan2020scalinglawsneurallanguage} which predict performance gained with increased computation expenditure.
+This is currently fueling massive investments into computation capacity by industry players. 
 
 With costs of training new state-of-the-art foundational LLMs rising rapidly, research has turned to inference-time scaling\cite{welleck2024decodingmetagenerationinferencetimealgorithms}, 
 based on post-training\cite{openai2024openaio1card}\cite{deepseekai2025deepseekr1incentivizingreasoningcapability} utilizing reinforcement learning and supervised fine-tuning, and 
 prompting techniques\cite{schulhoff2024promptreportsystematicsurvey}. 
 
-Another research branch gaining substantial attention recently is compile-time scaling\cite{schnabel2024symbolicpromptprogramsearch} represented by prompt optimization\cite{ramnath2025systematicsurveyautomaticprompt}.
-Optimization using LLMs\cite{meyerson2024languagemodelcrossovervariation}\cite{liu2024largelanguagemodelsevolutionary} and particularly prompt optimization\cite{yang2024largelanguagemodelsoptimizers}\cite{zhou2023largelanguagemodelshumanlevel}\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic} 
+LLMs are notoriously sensitive to prompt inputs\cite{zhuo2024prosaassessingunderstandingprompt}\cite{salinas2024butterflyeffectalteringprompts} and manually creating
+performant prompts is very difficult\cite{10.1145/3544548.3581388} for expert users and members of the general public. These problems inspired research into how
+prompt design could be automated, either by generating prompts from task examples\cite{honovich2022instructioninductionexamplesnatural} or by 
+further optimizing them by establishing a LLM-powered feedback loop\cite{yang2024largelanguagemodelsoptimizers}\cite{zhou2023largelanguagemodelshumanlevel}\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}. This forms the basis of a novel research branch dubbed compile-time scaling\cite{schnabel2024symbolicpromptprogramsearch},
+representing a middle ground between the training-time and inference-time scaling paradigms.
+
+Optimization using LLMs\cite{meyerson2024languagemodelcrossovervariation}\cite{liu2024largelanguagemodelsevolutionary} and particularly prompt optimization
 presents an exciting intersection between deep learning and traditional optimization algorithms, like evolutionary algorithms\cite{guo2024connectinglargelanguagemodels}\cite{cui2024phaseevounifiedincontextprompt}\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} and other metaheuristics\cite{pan2024plumpromptlearningusing}.
 
+To better illustrate the concept of prompt optimization, in figure \ref{box:promptcomp} we show two example prompts for a word categorization task from the Livebench\cite{white2025livebenchchallengingcontaminationlimitedllm} benchmark. In this task, the LLM has to sort 8, 12 or 16 words into groups of 4 based on non-trivial characteristics. 
+
+Notice the unoptimized prompts fails to reflect the variability in the number of input words and does not enforce the necessary formatting. Furthermore, it only instructs the LLM to sort the words by meaning, possibly overlooking other aspects. The goal of the optimization process is to alleviate all these issues and produce a more complete optimized prompt.
+
+\begin{figurebox}{Comparison of two prompts for a word sorting task, showcasing the goal of prompt optimization.}{box:promptcomp}
+    \textbf{Input}: \hlspan{ctuorange}{sewer, window, pipe, drain, duct, smile, egg, knuckles} \\
+    \textbf{Gold}: \,\,\hlspan{ctuorange}{drain, duct, pipe, sewer ; egg, knuckles, smile, window} \\\\
+    \textbf{Unoptimized prompt}:
+    \hlbox{ctugray}{Sort the words into 2 categories by meaning.}
+    \textbf{Optimized prompt}:
+    \hlbox{ctulightblue}{
+    You are given several words that can be sorted into groups of 4 based on several characteristics, for example: \\
+    meaning, common usage, number of syllables, rhyming etc. \\
+    Output the words sorted into categories of 4. Separate words with commas ``,'' and groups with semicolons ``;''.
+    }
+\end{figurebox}
+\newpage
+During the optimization process, LLMs improve prompts or generate new ones using \textit{meta-prompts}, or prompts that generate other prompts. In this bachelor's thesis, we investigate the design of \textit{meta-prompts} and their effect on optimization efficiency.
+
+\section{Approach}
+The main goal of this bachelor's thesis is to gain hands-on experience with automatic prompt optimization by designing a modular optimizer framework.
+With a simple underlying architecture, a population-based hill-climber algorithm, we focus our attention on the design of \textit{meta-prompts}.
+Using these \textit{meta-prompts}, we design a lineup of different population expansion operators. 
+
+In figure \ref{fig:methoddiagram} we show our optimization architecture, including the different expansion operators and initialization using instruction induction from task samples\cite{honovich2022instructioninductionexamplesnatural}.
+In each optimization step, the population is pruned by removing duplicates. These are found using relative edit distance.
+Evaluation is done using task-specific gold label-based metrics or in a self-supervised setting using pairwise comparisons.
+Optimization loop continues for a specified number of iterations.
+
+\begin{figure}[ht]
+    \centering
+\begin{tikzpicture}[
+    textnode/.style={
+        draw, rectangle, rounded corners=5pt,
+        fill=ctulightblue, text=ctublue,
+        minimum width=3cm, minimum height=1cm, align=center
+    },
+    funcnode/.style={
+        draw, circle, fill=ctuorange, text=white,
+        minimum size=1.75cm, align=center
+    },
+    every node/.style={font=\sffamily\scriptsize},
+    arrow/.style={-Stealth, thick},
+    node distance=1cm and 1cm,
+]
+
+\node[textnode, minimum width=9cm, minimum height=2.5cm] (container) at (0,0) {};
+\node[draw=white, rectangle,rounded corners = 5pt, minimum width=12.5cm, minimum height=3cm, fill=ctugray!30] (optimization) at (1.5,-3.3) {};
+% Inner nodes positioned relative to container center
+\node[funcnode] (iter) at ($ (container.center) + (-3cm,0cm) $) {Iterative};
+\node[funcnode] (fb) at ($ (container.center) + (-1cm,0cm) $) {Feedback};
+\node[funcnode] (para) at ($ (container.center) + (1cm,0cm) $) {Paraphrase};
+\node[funcnode] (refl) at ($ (container.center) + (3cm,0cm) $) {Reflective};
+\node[above=0.1cm of container, font=\large\sffamily, text=ctublue] {Expansion Operators};
+
+\node[textnode, below=2cm of iter, font=\large\sffamily] (pop) {Prompt\\Population};
+
+\node[funcnode, right=of pop, font=\large\sffamily] (eval) {Evaluate};
+\node[funcnode, right=of eval, font=\large\sffamily] (prune) {Prune};
+\node[draw, diamond, fill=ctublue, below=of eval, font=\large\sffamily, text=white] (data) {Dataset};
+\node[funcnode, right=of prune, font=\large\sffamily] (expand) {Expand};
+\node[funcnode, left=1.15cm of data, font=\large\sffamily] (init) {Instruction\\Induction};
+\node[above right=0.5cm and 1cm of data, font=\large\sffamily, text=ctugray] {Optimization Loop Until Stop};
+\node[above right =0.25cm and -0.7cm of init, font=\normalsize\sffamily, text=ctugray] {Initialize};
+
+\draw[arrow] (data) -- (init);
+\draw[arrow] (data) -- (eval);
+\coordinate (rightcontainer) at ($(container)+(7.275,0)$);
+\coordinate (rightexpand) at ($(expand)+(1.3,0)$);
+\coordinate (aboveexpand) at ($(expand)+(0,1.3)$);
+\coordinate (abovepop) at ($(pop)+(0,1.3)$);
+\draw[->, thick, densely dashed] (container) -- (rightcontainer) -- (rightexpand) -- (expand);
+\draw[arrow] (expand) -- (aboveexpand) -- (abovepop) -- (pop);
+\draw[arrow] (init) -- (pop);
+\draw[arrow] (pop) -- (eval);
+\draw[arrow] (eval) -- (prune);
+\draw[arrow] (prune) -- (expand);
+\end{tikzpicture}
+    \caption{Diagram of our prompt optimization method.}
+    \label{fig:methoddiagram}
+\end{figure}
+
+
+\section{Contributions}
+In this section, we will briefly list the main contributions of this bachelor's thesis, which include the following. 
+\begin{enumerate}
+    \item \textbf{Literature survey}: We provide an extensive overview of current literature on prompt optimization and frame it in the broader context of inference-time scaling algorithms.
+    \item \textbf{Structured generation}: We explicitly design our optimization framework around a structured generation framework that also implements several inference-time techniques.
+    \item \textbf{Comprehensive evaluation}: All 4 variants of our method are evaluated on 3 diverse tasks, including a custom numerical pattern recognition task. Evaluation is conducted using both gold label-pased metrics and in a self-supervised setting based on pairwise comparisons. The latter is also applied to creative tasks, including image generation.
+\end{enumerate}

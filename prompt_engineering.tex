@@ -44,9 +44,9 @@ Specific requirements that narrow the scope should be avoided and left for other
 
 In cases where the prompt serves as a prompt template, meaning it can be reused with various data points,
 the directive can include a placeholder. For example consider this directive
-\begin{promptbox}{Directive with a placeholder}
+\begin{figurebox}{Directive with a placeholder}{box:limerickexample}
     Write a limerick about \texttt{$\{$topic$\}$}.
-\end{promptbox}
+\end{figurebox}
 This directive, and the prompt to which it belongs, could be reused for multiple values of \texttt{topic}.
 
 \subsubsection{Context}
@@ -54,7 +54,7 @@ Context should provide all the background information relevant to the task at ha
 The user can include more information about why they are using the model for the task,
 define the target audience or attach relevant documents. For example, a prompt that asks the LLM to summarize an article:
 
-\begin{promptbox}[label={box:contextprompt}]{Using context to personalize output}
+\begin{figurebox}{Using context to personalize output}{box:contextprompt}
     \textbf{Directive:}
     
     \hlbox{ctublue}{
@@ -67,7 +67,7 @@ define the target audience or attach relevant documents. For example, a prompt t
     \hlbox{ctublue}{
     I already understand the basic causes of climate change, but I struggle with the economic side. Focus on how it affects economies and give arguments I could use in a policy debate.
     }
-\end{promptbox}
+\end{figurebox}
 
 In this example, the initial instruction serves as the directive, while the second component provides contextual information about the user's prior knowledge and objectives.
 Without this context, the model may produce a generic summary, overlooking the user's interest in economic impacts and failing to surface arguments relevant for a policy-oriented debate.
@@ -143,7 +143,8 @@ Since then, this term was used in multiple contexts.
     resembling control flow templated and often expressed in JSON-like structures.
     This is similar to how DSPy\cite{khattab2023dspycompilingdeclarativelanguage} implements LLM calls with function signatures.
     \item \textbf{Soft prompt optimization method:} In a parallel branch of research, MetaPrompting\cite{hou2023metapromptinglearninglearnbetter} 
-    was used as a name of a soft token prompt optimization method.
+    was used as a name of a soft token prompt optimization method. Soft token prompts are, in contrast to human-readable textual discrete token prompts, 
+    raw floating-point vector inputs to the first layer of a language model. This makes soft token prompt optimization amenable to gradient optimization.
     \item \textbf{Prompt generator:} In automatic prompt engineering and prompt optimization literature, meta-prompt is a prompt that generates prompts\cite{dewynter2024metaprompting}.
     This can be seen as application of 2 to the task of prompt generation\cite{zhang2025metapromptingaisystems}.
 \end{enumerate}
