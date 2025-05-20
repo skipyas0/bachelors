@@ -1,0 +1,107 @@
+
+\section{Problem Formulation}\label{sec:notation}
+Let $\mathcal{T}$ be the space of character sequences. Then we will define an LLM as a stochastic mapping
+\begin{equation}
+    \mathscr{M}: \mathcal{T} \rightarrow \mathcal{L}(\mathcal{T}),
+\end{equation}
+where $\mathcal{L}(\mathcal{T})$ is a probabilistic language distribution learned during the LLM's training.
+This distribution is governed by the LLM's hyperparameters $H$, which affext its behaviour. 
+
+Of particular interest is the sampling temperature $t \in H$ which interpolates between greedy decoding and uniform sampling.
+In theory, $\mathscr{M}$ is deterministic for $\tau=0$, but in practice numerical errors still introduce variance.
+
+We use the lower index to specify the purpose of the LLM instance. This also highlightes
+the fact that each instance can use different hyperparameters. We differentiate between $\mathscr{M}_{\text{solve}}$ using $t=0$ and 
+$\mathscr{M}_{\text{optim}}$ using $\tau>0$. 
+
+We consider a prompt $P \in \mathcal{I}$, where $\mathcal{I} \subseteq \mathcal{T}$ is the prompt space.
+When such prompt is used as an input into the LLM, it produces an output
+\begin{equation}
+    y \sim \mathscr{M}(P)
+\end{equation}
+and $y \in \mathcal{U}$, where
+$\mathcal{U} \subseteq \mathcal{T}$ is the output space.
+In contexts where $P$ serves as a template for an additional query $q$, we will write
+\begin{equation}
+    y \sim \mathscr{M}(P\vsep q),
+\end{equation}
+where $P \vsep q$ denotes the result of inserting query $q$ into a designated placeholder in $P$.
+
+Let $\mathcal{P} \subseteq \mathcal{I}$ be a population of prompts. Then for a query $q$ we define the set of completions 
+\begin{equation}
+    \mathcal{C}_{q}^{\mathcal{P}} = \{\mathscr{M}_{\text{solve}}(P\vsep q)\vsep P \in \mathcal{P}\}.
+\end{equation}
+For convenience, we will omit the upper index and only use $\mathcal{C}_{q}$
+
+We can use LLMs to solve a general task
+\begin{equation}
+    t = (q, g) \in \mathcal{D},
+\end{equation}
+where $\mathcal{D} \subseteq \mathcal{Q} \times \mathcal{G}$ is a dataset of query-answer pairs, $\mathcal{Q}\subseteq\mathcal{T}$ is the set of queries $q$
+and $\mathcal{G}\subseteq\mathcal{U}$ is the set of gold labels $g$.
+We consider each dataset to have one or more assigned evaluation metrics $\mathscr{F}_{\mathcal{D}}^{\text{supervised}}: \mathcal{U} \times \mathcal{G} \rightarrow \mathbb{R}$,
+which scores the LLM output using the corresponding gold label. 
+Extending the set of completions for queries from the entire dataset, we define
+\begin{equation}
+    \mathcal{C} = {\mathcal{C}_{q}\vsep q \in \mathcal{D}}
+\end{equation}
+
+For open-ended tasks, the gold label does not exist, $G = \varnothing$. To achieve effective evaluation even for such tasks, 
+we formulate a metric based on pairwise comparisons and define
+\begin{equation}
+    \mathscr{F}_{\mathcal{D}}^{\text{pairwise}}: \mathcal{Q} \times 2^\mathcal{U} \rightarrow \mathbb{R},
+\end{equation}
+which maps a query and a set of outputs to a real number. 
+To generalize, we define $\mathscr{F}_{\mathcal{D}}$ which combines both $\mathscr{F}_{\mathcal{D}}^{\text{pairwise}}$ and $\mathscr{F}_{\mathcal{D}}^{\text{supervised}}$
+Using this, we define the mean perfomance $\mathcal{E}$ of a prompt $P$ on a dataset $\mathcal{D}$ as
+\begin{equation}
+    \mathcal{E}_{\mathcal{D}}(P) = \frac{1}{\Vert \mathcal{D} \Vert}\underset{t=(q,g)\in \mathcal{D}}{\sum}\mathscr{F}(\mathscr{M}(P\vsep q), t, \mathcal{C}_{q}^{\mathcal{P}}).
+\end{equation}
+
+For convenience, we will define the scores of the population $\mathcal{P}$ on dataset $\mathcal{D}$ as
+\begin{equation}
+    \mathcal{E}_{\mathcal{D}}(\mathcal{P}) = \{\mathcal{E}_{\mathcal{D}}(P)\vsep P\in \mathcal{P}\} = \{\mathscr{F}(y, g, \mathcal{C}_{q}^{\mathcal{P}})\vsep y \in \}.
+\end{equation}
+
+We can then formally define the problem of prompt optimization for a task dataset $\mathcal{D}$ as finding the optimal prompt 
+\begin{equation}
+    \label{eq:optimdef}
+    P^{\star} = \underset{P\in\mathcal{I}}{\operatorname{argmax}}\,\mathbb{E}_{(q, g) \sim \mathcal{D}}\left[\mathscr{F}(\mathscr{M}_{\text{solve}}(P \vsep q), g, \mathcal{C}_{q}^{\mathcal{P}})\right].
+\end{equation}
+
+In Algorithm \ref{alg:genoptimloop} we can see the general outline of a population-based optimization method.
+The initialization operator $\mathscr{O}_I$ creates an initial population of individuals $\mathcal{P}$. 
+In each iteration, a selection operator $\mathscr{O}_S$ first selects a portion of the population according to some criteria. 
+These selected individuals are then used by the expansion operator $\mathscr{O}_E$ to create new individuals.
+This process continues until a termination condition $\Phi_{stop}$ is reached.
+
+\begin{algorithm}
+    \caption{General optimization loop}
+    \label{alg:genoptimloop}
+    \KwIn{Initialization Operator $\mathscr{O}_I$, Selection Operator $\mathscr{O}_S$, Expansion Operator $\mathscr{O}_E$, Termination Condition $\Phi_{stop}$}
+    \KwOut{Optimized Population $\mathcal{P}$}
+    \KwData{$\mathcal{P} \gets \mathscr{O}_I$} \tcp{Initialize the population}
+    \While{$\neg \Phi_{stop}(\mathcal{P})$}{
+        \tcp{Selection and Expansion Steps}
+        $\mathcal{P}_{\text{selected}} \gets \mathscr{O}_S(\mathcal{P})$ \\ 
+        $\mathcal{P}_{\text{expanded}} \gets \mathscr{O}_E(\mathcal{P}_{\text{selected}})$ \\
+        $\mathcal{P} \gets \mathcal{P}_{\text{expanded}}$ \tcp{Update the population} 
+        }
+        \Return{$\mathcal{P}$} \tcp{Return the optimized population}
+    \end{algorithm}
+    
+We apply this technique to the problem of prompt optimization by defining the aforementioned operators.
+Of particular interest are the initialization operator $\mathscr{O}_I$ and the expansion operator $\mathscr{O}_E$, which
+both need to produce new prompts. For this purpose, we utilize an LLM instance $\mathscr{M}_{\text{optim}}$ and leverage its 
+text generation and reasoning capability. By using the lower index, we specify the purpose of the LLM and differentiate 
+from another instances, which might use different hyperparameters.
+
+Let $M\in\mathcal{I}$ be a \textit{Meta-prompt}, or a prompt-generation prompt. We can now formulate generating a prompt 
+\begin{equation}
+    \label{eq:metaprompting}
+    P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R})),
+\end{equation}
+where $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}_{\mathcal{D}}(\mathcal{P}))$ is a retrieval function that selects data
+from the current population, past generations, dataset samples and population scores. 
+By changing the \textit{Meta-prompt} and the retrieval function $\mathcal{R}$, a variety of possible operators $\mathscr{O}_I$ and $\mathscr{O}_E$
+can be defined, thus shaping the prompt optimization process.  
