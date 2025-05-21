@@ -1,29 +1,102 @@
 \section{Prompt engineering}\label{sec:preng}
-By prompt engineering we mean crafting a instruction set which 
-transforms the query into a result according to our task requirements.
-Our task requirements can for example be
-\begin{itemize}
-    \item obtaining the correct answer for a mathematical problem
-    \item fixing a bug in a code base
-    \item explaining the contents of an image.
-\end{itemize}
-Each of these tasks needs a separate instruction set $\mathbf{i}$ which can then be used with multiple queries,
-representing specific task instances. This signifies a shift from the training and fine-tuning paradigm, where 
-a base model is first trained on a large corpus of data and then adapted for a specific task with supervised fine-tuning.
+By prompt engineering we mean crafting a suitable instruction which, when combined with a query, incites a LLM response that matches our requirements.
+Our task requirements can for example be: a) obtaining the correct answer for a mathematical problem, b) fixing a bug in a code base, or c) explaining the contents of an image.
+Each of these tasks needs a separate instructional prompt $P$ which can then be used with multiple queries, representing specific task instances. 
+
+\begin{figure}[htbp]
+    \centering
+    % Subfigure 1
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}[
+        node distance=0.3cm and 0.3cm,
+        every node/.style={font=\sffamily\scriptsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=0.7cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (taska) {Task\\A};
+    \node[textnode,below=of taska] (taskb) {Task\\B};
+    \node[textnode,below=of taskb] (taskc) {Task\\C};
+
+    \node[funcnode, right=of taska] (llma) {LLM\\A};
+    \node[funcnode, right=of taskb] (llmb) {LLM\\B};
+    \node[funcnode, right=of taskc] (llmc) {LLM\\C};
+
+    \node[textnode, right=of llma] (outa) {Output\\A};
+    \node[textnode, right=of llmb] (outb) {Output\\B};
+    \node[textnode, right=of llmc] (outc) {Output\\C};
+
+    \draw[arrow] (taska) -- (llma);
+    \draw[arrow] (taskb) -- (llmb);
+    \draw[arrow] (taskc) -- (llmc);
+
+    \draw[arrow] (llma) -- (outa);
+    \draw[arrow] (llmb) -- (outb);
+    \draw[arrow] (llmc) -- (outc);
+    \end{tikzpicture}
+
+        \caption{Pre-train + Fine-tine}
+        \label{fig:finetune}
+    \end{subfigure}
+    \hfill
+    % Subfigure 2
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}[
+        node distance=0.3cm and 0.3cm,
+        every node/.style={font=\sffamily\scriptsize},
+        textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
+        funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=1cm, align=center},
+        arrow/.style={-Stealth, thick}
+    ]
+    \node[textnode] (taska) {Task\\A};
+    \node[textnode,below=of taska] (taskb) {Task\\B};
+    \node[textnode,below=of taskb] (taskc) {Task\\C};
+    
+    \node[textnode, right=of taska] (prompta) {Prompt\\A};
+    \node[textnode, right=of taskb] (promptb) {Prompt\\B};
+    \node[textnode, right=of taskc] (promptc) {Prompt\\C};
+
+    \node[funcnode, right=1.8cm of taskb] (llm) {LLM};
+
+    \node[textnode, right=3.1cm of taska] (outa) {Output\\A};
+    \node[textnode, right=3.1cm of taskb] (outb) {Output\\B};
+    \node[textnode, right=3.1cm of taskc] (outc) {Output\\C};
+
+    \node[font=\large] at ($(taska)!0.5!(prompta)+(-0.05,0)$) {$+$};
+    \node[font=\large] at ($(taskb)!0.5!(promptb)+(-0.05,0)$) {$+$};
+    \node[font=\large] at ($(taskc)!0.5!(promptc)+(-0.05,0)$) {$+$};
+
+    \draw[arrow] (prompta) -- (llm);
+    \draw[arrow] (promptb) -- (llm);
+    \draw[arrow] (promptc) -- (llm);
+
+    \draw[arrow] (llm) -- (outa);
+    \draw[arrow] (llm) -- (outb);
+    \draw[arrow] (llm) -- (outc);
+    \end{tikzpicture}
+        \caption{Train + Prompt}
+        \label{fig:trainprompt}
+    \end{subfigure}
+    \caption{Comparison between pre-train+fine-tune and train+prompt paradigms.}
+    \label{fig:prompttraincomp}
+\end{figure}
+This signifies a shift from the training and fine-tuning paradigm, where 
+a base model is first trained on a large corpus of data and then adapted for a specific task with supervised fine-tuning. 
 This process requires a substantial amount of training data and computation power, making specialized LLMs unsuitable
 for many users and for applications, where extensive data collection is infeasible.
 
+We illustrate this shift in figure \ref{fig:prompttraincomp}. Although prompt design is difficult, it is much less resource-intensive than fine-tuning.
 
 Since the inception of modern LLMs, prompt engineering has evolved into a field of its own. Current LLM systems, often containing
 multiple chained and interlinked models, require robust and well thought-out prompts at each step. 
-Indeed, in many modern LLM applications, prompts have become programs themselves\cite{schnabel2024symbolicpromptprogramsearch}, 
-marking a huge leap from the basic text messages of the early LLM days.
+Indeed, in many modern LLM applications, prompts have become programs themselves\cite{schnabel2024symbolicpromptprogramsearch}.
 
 In this section, we will briefly cover the most notable prompt engineering techniques, which we will then
 be able to utilize in our study of automatic prompt optimization.
-\newpage
 \subsection{Components of a prompt}
-We can dissect a prompt into several components\cite{schulhoff2024promptreportsystematicsurvey}.
+We can roughly dissect a prompt into 4 different components\cite{schulhoff2024promptreportsystematicsurvey}. 
 \begin{itemize}
     \item \textbf{Directive:} The main task of the prompt, e.g., \textit{"Write an email to a coworker."}
     \item \textbf{Context:} Everything necessary or beneficial to completing the directive, e.g., \textit{"I was supposed to send a report to my boss, but I forgot."}
@@ -31,28 +104,29 @@ We can dissect a prompt into several components\cite{schulhoff2024promptreportsy
     \item \textbf{Output specifications:} Style and format instructions, e.g., \textit{"Respond with three paragraphs in formal style with tasteful emojis."}
 \end{itemize}
 
-Although flexible and sometimes blended together, high-performing prompts \\often follow this structure and order. 
-In more technical applications, it is beneficial to use tags or delimiters to explicitly separate components.
-Models often reward prompts with a more code-like structure\cite{10.1145/3544548.3581388}. 
-
-We now discuss each component in detail.
+Although flexible and sometimes blended together, prompts often follow this structure and order. 
+In more technical applications where prompts might become more convoluted, it might be beneficial to use tags or delimiters to explicitly separate components.
+Models often reward prompts with a more code-like structure\cite{10.1145/3544548.3581388}. We now discuss each component in detail.
 
 \subsubsection{Directive}
 The directive should be a clear and objective description of the task, assuming that the model
 already knows how to solve it\cite{reynolds2021promptprogramminglargelanguage}. 
 Specific requirements that narrow the scope should be avoided and left for other components.
-
-In cases where the prompt serves as a prompt template, meaning it can be reused with various data points,
-the directive can include a placeholder. For example consider this directive
 \begin{figurebox}{Directive with a placeholder}{box:limerickexample}
     Write a limerick about \texttt{$\{$topic$\}$}.
 \end{figurebox}
-This directive, and the prompt to which it belongs, could be reused for multiple values of \texttt{topic}.
+
+In cases where the prompt serves as a prompt template, meaning it can be reused with various data points,
+the directive can include a placeholder. For example consider the directive in figure \ref{box:limerickexample}, 
+which could be reused for multiple values of \texttt{topic}.
 
 \subsubsection{Context}
 Context should provide all the background information relevant to the task at hand.
-The user can include more information about why they are using the model for the task,
-define the target audience or attach relevant documents. For example, a prompt that asks the LLM to summarize an article:
+The user can include more information about barriers which prevent them from solving the problem on their own,
+define the target audience or attach relevant documents. 
+
+In figure \ref{box:contextprompt}, we show a 
+prompt which asks the model to summarize an article, with the context component providing further specifications.
 
 \begin{figurebox}{Using context to personalize output}{box:contextprompt}
     \textbf{Directive:}
@@ -70,21 +144,22 @@ define the target audience or attach relevant documents. For example, a prompt t
 \end{figurebox}
 
 In this example, the initial instruction serves as the directive, while the second component provides contextual information about the user's prior knowledge and objectives.
-Without this context, the model may produce a generic summary, overlooking the user's interest in economic impacts and failing to surface arguments relevant for a policy-oriented debate.
+Without this context, the model may produce a generic summary, overlooking the user's interest in economic impacts and failing to discuss arguments relevant for a policy-oriented debate.
 
 The context can become the endpoint for retrieval pipelines, which search a data source for 
 relevant documents, or memory mechanisms, which gather personal information about the user from other conversations. 
 
-Another possible feature of the context component is the use of a memetic proxy\cite{reynolds2021promptprogramminglargelanguage},
+Another possible feature often used in the context component is a memetic proxy\cite{reynolds2021promptprogramminglargelanguage},
 like role-assignment. Instead of writing a long instruction covering all the requirements and assumptions 
 behind someone being an "experienced business analyst", we can just say "You are an experienced business analyst".
 In this way, we can instruct the model to adopt an identity or an expertise level.
-This primes the model to use a more technical language in its response.
+This primes the model to consistently use more technical language in its response.
 
 \subsubsection{Examples}\label{sec:icl}
 By providing examples of solutions to similar tasks, we can condition the LLM to generate
 further examples from that distribution\cite{meyerson2024languagemodelcrossovervariation}, increasing the 
 chance of a suitable completion. Furthermore, examples make the decoding more robust and decrease prompt sensitivity\cite{zhuo2024prosaassessingunderstandingprompt}.
+
 \begin{table}[ht!]
     \centering
     
@@ -101,6 +176,7 @@ chance of a suitable completion. Furthermore, examples make the decoding more ro
     \end{tabular}
     \caption{Comparison of Zero-shot, One-shot, and Few-shot Prompting}\label{tab:nshot}
 \end{table}        
+
 Table \ref{tab:nshot} shows the agreed-upon terminology for prompts with examples. 
 The concept of adding examples to the prompt is also called In-Context Learning (ICL).
 In some cases, Few-shot prompting can be effective even without the use of other instructions\cite{brown2020languagemodelsfewshotlearners}.
@@ -113,55 +189,57 @@ When adding examples to a prompt, we have to pay attention to several aspects\ci
     \item \textbf{Exemplar format}: Optimal format may vary across tasks.
     \item \textbf{Exemplar similarity}: Effect of exemplar similarity depends on the situation.
 \end{itemize}
-\newpage
+
 Contrary to Brown et al.\cite{brown2020languagemodelsfewshotlearners} who interpret the effectiveness of
 few-shot prompting as the model learning the task by observing examples, later research\cite{reynolds2021promptprogramminglargelanguage}
-suggestes that examples merely allow the LLM to locate the task more precisely in its learned task space.
+suggests that examples merely allow the LLM to more precisely locate the task in its learned task space.
 Still, the authors argued for the use of examples for redundancy enforcing the desired behavior\cite{reynolds2021promptprogramminglargelanguage}.
 
 \subsubsection{Output specifications}
-With this component, we guide the structure, tone, style and formatting of the LLM's answer. 
+Using this component, we guide the structure, tone, style and formatting of the LLM's answer. 
 A common technique, discussed in \ref{sec:cot} is inducing reasoning
 with a CoT prompt, like "Let's think step-by-step", or instructing the LLM to 
 first plan the solution and then execute it. 
 
 We can influence the length of the answer, ask the model to be formal or humorous,
 request specific formatting, like the use of \LaTeX{} equations, or have it answer in a JSON format
-for a machine-readable response. Users should test multiple configurations as changing the output format
-can influence the final prediction\cite{salinas2024butterflyeffectalteringprompts}.
+for a machine-readable response. 
 
-\subsection{Meta-prompting}
-Before we proceed we first need to overview the terminology discrepencies in contemporary research. 
-Meta-prompts (also meta prompts or metaprompts) were first coined by Reynolds and McDonell\cite{reynolds2021promptprogramminglargelanguage}. 
+With innumerable options for output specification, users should test multiple configurations as changing the output format
+can heavily influence the final prediction accuracy\cite{salinas2024butterflyeffectalteringprompts}.
+
+\subsection{\textit{Meta-prompting}}
+Before we proceed, we first need to overview the terminology discrepencies in contemporary research. 
+\textit{Meta-prompts} (also meta prompts or metaprompts) were first coined as a term by Reynolds and McDonell\cite{reynolds2021promptprogramminglargelanguage}. 
 Since then, this term was used in multiple contexts.
 \begin{enumerate}
     \item \textbf{Task-agnostic zero-shot prompt:} In contrast to task-sample specific few-shot prompting, 
-    meta-prompts were used to mean a 'task-agnostic zero-shot prompt', or 'seeds encapsulating a more general intention that will unfold into
-    a specific prompt when combined with the task question\cite{reynolds2021promptprogramminglargelanguage}. 
-    \item \textbf{Natural language metaprocedure:} Extending 1, Zhang et al.\cite{zhang2025metapromptingaisystems} define meta-prompts as example-agnostic prompts
+    \textit{meta-prompts} were used to mean a ``task-agnostic zero-shot prompt'', or ``seeds encapsulating a more general intention that will unfold into
+    a specific prompt when combined with the task question''\cite{reynolds2021promptprogramminglargelanguage}. 
+    \item \textbf{Natural language metaprocedure:} Extending 1, Zhang et al.\cite{zhang2025metapromptingaisystems} define \textit{meta-prompts} as example-agnostic prompts
     designed to capture the reasoning structure of a specific category of tasks. They do this by employing a typed and structured prompt, 
-    resembling control flow templated and often expressed in JSON-like structures.
+    resembling control flow templates and often expressed in JSON-like structures.
     This is similar to how DSPy\cite{khattab2023dspycompilingdeclarativelanguage} implements LLM calls with function signatures.
     \item \textbf{Soft prompt optimization method:} In a parallel branch of research, MetaPrompting\cite{hou2023metapromptinglearninglearnbetter} 
     was used as a name of a soft token prompt optimization method. Soft token prompts are, in contrast to human-readable textual discrete token prompts, 
     raw floating-point vector inputs to the first layer of a language model. This makes soft token prompt optimization amenable to gradient optimization.
-    \item \textbf{Prompt generator:} In automatic prompt engineering and prompt optimization literature, meta-prompt is a prompt that generates prompts\cite{dewynter2024metaprompting}.
-    This can be seen as application of 2 to the task of prompt generation\cite{zhang2025metapromptingaisystems}.
+    \item \textbf{Prompt generator:} In automatic prompt engineering and prompt optimization literature, \textit{meta-prompt} is a prompt that generates prompts\cite{dewynter2024metaprompting}.
+    This can be seen as an application of 2 to the task of prompt generation\cite{zhang2025metapromptingaisystems}.
 \end{enumerate}
 
-While both 1 and 2 are of interest to us, in this thesis, we will treat meta-prompts as prompt generators. 
+While both 1 and 2 are of interest to us, in this thesis, we will treat \textit{meta-prompts} as prompt generators. 
 
-\subsubsection{Meta-prompt as a prompt generator}
-Prompt optimization literature\cite{ramnath2025systematicsurveyautomaticprompt} treats meta-prompts just a prompt which generates prompts.
+\subsubsection{\textit{Meta-prompt} as a prompt generator}
+Prompt optimization literature\cite{ramnath2025systematicsurveyautomaticprompt} treats \textit{meta-prompts} simply as a prompt which generates other prompts.
 As prompt generation is a complex reasoning-intensive language generation task\cite{ye2024promptengineeringpromptengineer}, 
-all the principles regarding prompt design for other hard tasks apply to meta-prompts as well.
+all the principles regarding prompt design for other difficult tasks apply to \textit{meta-prompts} as well.
 
-Meta-prompts are usually templates for other data, such as examples of the task for Instruction Induction\cite{honovich2022instructioninductionexamplesnatural},
+\textit{Meta-prompts} are usually templates for other data, such as examples of the task for Instruction Induction\cite{honovich2022instructioninductionexamplesnatural},
 past prompt generations along with their scores\cite{yang2024largelanguagemodelsoptimizers} and critiques of prompt outputs\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-or text description of the task\cite{ye2024promptengineeringpromptengineer}. Some reseach also utilizes professional task advice\cite{ramnath2025systematicsurveyautomaticprompt}
+or text descriptions of the task\cite{ye2024promptengineeringpromptengineer}. Some reseach also utilizes professional task advice\cite{ramnath2025systematicsurveyautomaticprompt}
 or a prompt engineering tutorial\cite{ye2024promptengineeringpromptengineer}. Other methods used seed phrases, like a thinking 
 style\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}, to steer the generation.
 
 In one of the few theoretically rigorous works on the subject, de Wynter et al.\cite{dewynter2024metaprompting} formalize meta-prompts
-using category theory. Showing the possibility of creating a general purpose meta-prompt as well as suggesting that such meta-prompt
+using category theory. Using this formalism, they show the possibility of creating a general purpose meta-prompt as well as suggesting that such meta-prompt
 will perform better than task-specific prompts in a wide range of applications.

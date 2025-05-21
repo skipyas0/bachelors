@@ -14,15 +14,21 @@ or a \texttt{Signature}. The \texttt{Signature} structure consists of input and 
 These fields are populated by a \texttt{Field} data structure.
 Of particular interest are the output fields, which hold the output name, desired type and optional description. 
 
+Interactions with LLMs in a structured format benefit from better predictability. By implementing the \texttt{Signature} structure,
+we can use LLMs as we would a function in any programming language. Functions in programming languages also have functions signatures which
+specify input and output names and types.
+
 When employing good naming practices the model can often deduce the task only by looking at output names and types.
-Consider the following \texttt{Signature}:
+Consider the simple \texttt{Signature} in figure \ref{box:simplesig}, which implicitly instructs the LLM to return a word with a meaning opposite to the provided input.
+
 \begin{figurebox}{Simple Signature}{box:simplesig}
     \hlbox{ctuorange}{Word: \texttt{str}}  
     \hlbox{brown}{Antonymum: \texttt{str}}
 \end{figurebox}
-\newpage
+
 For more complex tasks, filling the output descriptions or even adding explicit instructions is necessary.
-In \ref{box:complexsig} notice that it is possible to specify multiple inputs and outputs, which are then generated in the order given.
+In figure \ref{box:complexsig}, notice that it is possible to specify multiple inputs and outputs, which are then generated in the order given.
+
 \begin{figurebox}{Complex Signature. }{box:complexsig}
     \hlbox{ctuorange}{Text: \texttt{str} (Student text)\\
     Grading guide: \texttt{str} (Steps to follow during evaluation)} 
@@ -33,20 +39,16 @@ In \ref{box:complexsig} notice that it is possible to specify multiple inputs an
     Use formal language and markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}
 \end{figurebox}
 
-We will maintain this formatting style whenever showing a \texttt{Signature} structure in the future: \textcolor{ctuorange}{orange inputs}, \textcolor{brown}{brown outputs} and \textcolor{ctublue}{blue instructions}, which are optional.
+We will maintain this formatting style whenever showing a \texttt{Signature} structure in the future: \textcolor{ctuorange}{orange inputs}, \textcolor{brown}{brown outputs} and the optional \textcolor{ctublue}{blue instructions}.
 
 Sufficiently large instruction-tuned LLMs are usually good at reliably producing JSON output.
 For smaller models or more complex output structures, it might be necessary to use some form of constrained generation as discussed in \ref{sec:inference}.
 A JSON schema could be constructed automatically from the \texttt{Signature} and passed into a parser-based sampler.
-However this is not necessary for our use-case.
+However this is not necessary for our use-case and the only safe-guard we implement is repeated generation in case of a parsing error.
+
 \subsection{Predict method}
-To facilitate \texttt{Signature}-powered generation, we implement a \texttt{predict} method that involves
-\begin{enumerate}
-    \item Prepending a developer prompt to the messages
-    \item Parsing of \texttt{Signature} outputs
-    \item Repeated generation in case of parsing failure.
-\end{enumerate}
-\newpage
+To facilitate \texttt{Signature}-powered generation, we implement a \texttt{predict} method that 
+involves 1) prepending a developer prompt to the messages, and 2) parsing of \texttt{Signature} outputs.
 
 \begin{figurebox}{Predict method developer prompt with highlighted prompt sections: directive, context, examples and format specifications.}{box:predictdev}
     \hlbox{ctulightblue}{You are an intelligent function that returns structured JSON outputs matching a given schema.
@@ -64,25 +66,26 @@ To facilitate \texttt{Signature}-powered generation, we implement a \texttt{pred
         3. Respond **only** with keys from the `outputs` dictionary and values matching the described types
     }
     \hlbox{ctulightblue}{Only return a flat JSON object like:\\
-    \{\\
+    \{
     "field1": <value matching type and description>,\\
-    "field2": <...>\\
+    "field2": <...>
     \}}
     
     \hlbox{ctulightblue}{Do not add metadata, explanations, or wrap outputs in additional structures.\\
     Do not include type names or field descriptions in the output.\\
     Your output must be strictly valid JSON and fill **all** requested output fields.}
 \end{figurebox}
+
 The developer prompt has to clearly explain to the LLM how to work with the JSON-based \texttt{Signature}.
-In \ref{box:predictdev} notice the sections of the prompt following prompt engineering principles outlined in \ref{sec:preng}.
+In figure \ref{box:predictdev} notice the sections of the prompt following prompt engineering principles outlined in \ref{sec:preng}.
 
 First, the directive states the task, then further context is added about the \texttt{Signature} data structure and the task.
-Next, notice the example showing the proper output, and finally few more clarifying instructions about the output format.
-In experiments, this prompt is successful in incentivizing parseable outputs adhering to the specifications.
+Next, notice the example showing the proper output. Finally, few more clarifying instructions about the output format are added.
+In experiments, this prompt is successful in incentivizing parseable outputs adhering to the \texttt{Signature} specifications.
 
 Parsing the output presents some challenges as the LLM sometimes wraps the JSON output into a markdown code block
 or uses inconsistent escape sequences. We implement a simple parser based on regular expressions that is able to parse 
-the majority of outputs. In case of model failure, such as getting stuck in a generation loop, we add a repeated generation
+the majority of outputs. In case of a parsing issue or model failure, such as getting stuck in a generation loop, we add a repeated generation
 feature.
 
 \subsection{Inference techniques implementation}
@@ -99,6 +102,9 @@ We implement the following methods.
     \item \textbf{Tree of Thoughts}\cite{yao2023treethoughtsdeliberateproblem}: The problem is first decomposed and each step is expanded, forming a thought tree, which is then traversed with BFS or DFS.
 \end{enumerate}
 
+These techniques are however not the main focus of this bachelor's thesis and we proceed without further discussion or evaluation.
+In our prompt optimization method, we will utilize only the basic Chain-of-thought module.
+
 \section{Datasets}
 In this section, we discuss choosing datasets for testing our method and comparing various prompt optimization approaches. 
 While searching available datasets, we focus on the following criteria:
@@ -108,11 +114,11 @@ While searching available datasets, we focus on the following criteria:
     \item \textbf{Contamination}: Recently, researchers have expressed concern\cite{white2025livebenchchallengingcontaminationlimitedllm} 
     whether benchmarks are reliable evaluations of models as they might appear in their training data. We omit most common datasets, such as GSM8k\cite{cobbe2021gsm8k}, which has been shown to have enflated scores for some models\cite{testing_language_models_on_a_held_out_high_school_national_finals_exam}.
     \item \textbf{Output verification}: We prefer to use simple automatic verification rather that using LLM-as-a-judge, which has been shown to be 
-    biased in some circumstances\cite{ye2024justiceprejudicequantifyingbiases}, and human feedback, which defeats the purpose of automatic prompt optimization.
+    biased in some circumstances\cite{ye2024justiceprejudicequantifyingbiases}. Neither do we use human feedback, which defeats the purpose of automatic prompt optimization.
     \item \textbf{Difficulty}: We omit tasks where models already have near-perfect score. 
-    \item \textbf{Benefit from non-trivial instruction}: We focus on tasks where helpful hints and step-by-step tutorial-like instructions would be helpful.
+    \item \textbf{Benefit from non-trivial instruction}: We focus on tasks where helpful hints and step-by-step tutorial-like instructions might increase the probability of successful solution.
 \end{enumerate}
-We now list the datasets we will use for evaluation and explain why they were chosen.
+We now list the datasets that we will use for evaluation and explain why they were chosen.
 \subsection{Livebench}
 The Livebench\cite{white2025livebenchchallengingcontaminationlimitedllm} dataset is very recent and has been created with the issue of data contamination in mind.
 It also addresses the issues of LLM-as-a-judge verification and all its categories can be verified automatically. It is also very challenging, with top models achieving $65\%$ accuracy\cite{white2025livebenchchallengingcontaminationlimitedllm}.
@@ -124,10 +130,10 @@ An ideal prompt would attempt to list multiple possible aspects based on which t
 \subsection{Code Contests}
 Programming puzzles are a difficult and easily verifiable task. Although \texttt{CodeContests}\cite{li2022competition} is an older dataset, 
 we hope it poses lesser contamination risks than datasets with simpler outputs. With LLM-powered coding assistants on the rise, we
-feel this is a relevant application area for out method. 
+feel this is a relevant application area for our method. 
 
 \subsection{Sequences}
-We design a small but challenging dataset consisting of predicting the next number in an integer sequence.
+We design a small but challenging dataset based on predicting the next number in an integer sequence.
 Each sequence is created according to a formula with randomly selected coefficients. The formulas fall into several categories, for example
 \begin{itemize}
     \item \textbf{Linear with modulo}: $s(i) = \operatorname{mod}_{q}(a_{1} i + b_{1})$
@@ -135,32 +141,30 @@ Each sequence is created according to a formula with randomly selected coefficie
     \item \textbf{Alternating}: $s(i) = a_{1}i + a_{2}i(-1)^{i}$.
 \end{itemize}
 This tests the model's ability to 1. detect and understand patterns and 2. systematically perform simple arithmetic. 
-In practice, we will optimize just for a single sequence category and observe, whether the optimizer evolves a prompt with a tutorial for the specific sequence category.
+In practice, we will optimize just for a single sequence category and observe whether the optimizer evolves a prompt with a tutorial for the specific sequence category.
 Experiments revealed that the \texttt{Alternating} class of sequences has a good difficulty balance and we will use it for evaluation.
-
-
 
 \section{Evaluation Metrics}
 The evaluation metric defines the optimization goal and thus forms its central component. 
 Most evaluation metrics are task-specific and divisible into two categories based on whether they are used in a supervised or self-supervised context.
 \subsection{Metrics for Supervised Optimization}
 Supervised optimization is supported by gold labels and its underlying metrics all perform comparisons between the results and the gold labels.
-These include classification metrics, like accuracy or Hamming Loss, regression metrics, like Mean Squared Error, and many others.
+These include classification metrics like accuracy or Hamming Loss, regression metrics like Mean Squared Error, and many others.
 
 All three main benchmarks that we will use (\texttt{Connections}, \texttt{CodeContests}, \texttt{Sequences}) 
 fall into this category. For each benchmark we use a simple accuracy metric. Given a dataset $\mathcal{D}$ and questions $q$ and gold labels $g$, $(q,g) \in \mathcal{D}$:
 \begin{enumerate}
     \item \textbf{Connections}:  $\mathcal{F}_{\mathcal{D}_{\text{Conn}}}(q, g) = \operatorname{Overlap}(\operatorname{Groups}(q), \operatorname{Groups}(g))$
-    \item \textbf{CodeContests}: $\mathcal{F}_{\mathcal{D}_{\text{Code}}} = \operatorname{FinishesExecution}(q) + \operatorname{PassesAllCases}(q, g)$
-    \item \textbf{Sequences}: $\mathcal{F}_{\mathcal{D}_{\text{Seq}}} = \operatorname{Equals}(q, g)$
+    \item \textbf{CodeContests}: $\mathcal{F}_{\mathcal{D}_{\text{Code}}}(q, g) = \operatorname{FinishesExecution}(q) + \operatorname{PassesAllCases}(q, g)$
+    \item \textbf{Sequences}: $\mathcal{F}_{\mathcal{D}_{\text{Seq}}}(q, g) = \operatorname{Equals}(q, g)$
 \end{enumerate} 
 
 \subsection{Metrics for Self-Supervised Optimization}\label{sec:ssometrics}
 In self-supervised contexts, metrics are usually based on reward models pretrained on human preference or environment data.
 To allow our method to be applied to gold label-free problems, we turn to LLM-based direct pairwise comparisons.
-Given a dataset $\mathcal{D}$ with questions $q$, output $y$ produced by prompt $P \in \mathcal{P}$ and completions $\mathcal{C}$
+Given a dataset $\mathcal{D}$ with queries $q$, output $y$ produced by prompt $P \in \mathcal{P}$ and a set completions $\mathcal{C}_{q}$ for each query.
 \begin{equation}
-    \mathcal{F}_{\mathcal{D}}^{\text{pairwise}}(q, y, \mathcal{C}) = \operatorname{WinRate}(\{\operatorname{Compare}(q,y,c)\vsep c\in\operatorname{Attempts}(q,\mathcal{C})\}).
+    \mathcal{F}_{\mathcal{D}}^{\text{pairwise}}(q, y, \mathcal{C}_{q}) = \operatorname{WinRate}(\{\operatorname{Compare}(q,y,c)\vsep c\in \mathcal{C}_{q}\}).
 \end{equation}
 In practice, we combine the output comparison with comparing the output's respective prompts.
 These comparisons are then used as optimization signals in the \texttt{Feedback} operator.
@@ -200,10 +204,12 @@ This design decision has several reasons.
     $P^{\star} \gets \underset{P\in\mathcal{A}}{\operatorname{argmax}}(\mathcal{E}_{\text{test}})$\\
     \Return{$P^{\star}$}
 \end{algorithm}
-In \ref{alg:promptoptimloop} we iterate on the general algorithm \ref{alg:genoptimloop}. 
+
+In Algorithm \ref{alg:promptoptimloop} we iterate on the general algorithm \ref{alg:genoptimloop}. 
 We will discuss the design of functions used in \ref{alg:promptoptimloop} in following sections.
+
 \begin{itemize}
-    \item \textbf{Expand}: The $\operatorname{Expand}$ function can be with many different expansion operators, of which $\operatorname{InstructionInduction}$
+    \item \textbf{Expand}: The $\operatorname{Expand}$ function can be filled with various expansion operators, of which $\operatorname{InstructionInduction}$
     is a special case. 
     \item \textbf{Evaluate}: Evaluating and identifying the most promising prompts is handled by the $\operatorname{Evaluate}$ operator, which uses task-specific automatic evaluation or LLM-feedback.
     \item \textbf{Selection}: The $\operatorname{Selection}$ operator prunes the population and should maintain only the most promising and diverse prompts for the next expansion.
@@ -214,12 +220,13 @@ Expansion operators' job is extending the optimization population with new promp
 \begin{equation*}
     P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R}).
 \end{equation*}
-Notice the use of $\mathscr{M}_{\text{optim}}$, which utilizes non-zero sampling temperature. Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{Meta-prompt} $M$ 
+Notice the use of $\mathscr{M}_{\text{optim}}$, which utilizes non-zero sampling temperature $\tau > 0$ to encourage output diversity. 
+Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{Meta-prompt} $M$ 
 and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E})$.
 The operators' design should address the following challenges:
 \begin{enumerate}
-    \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathcal{M}_{\text{optim}}$ might focus on some $t$ and thus fail to generate general instructions.
-    \item \textbf{Loss of diversity}: Even for  $\mathscr{M}_{\text{optim}}$ with $t>0$, the resulting prompts can be very similar and fail to explore the prompt space $\mathcal{I}$. 
+    \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathcal{M}_{\text{optim}}$ might focus on a single query $q$ and thus fail to generate general instructions.
+    \item \textbf{Loss of diversity}: Even for  $\mathscr{M}_{\text{optim}}$ with $\tau>0$, the resulting prompts can be very similar and fail to explore the prompt space $\mathcal{I}$. 
     This ties into a broader exploration vs. exploitation balance issue.
     \item \textbf{Lack of optimization signal}: Research\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}\cite{xiang2025selfsupervisedpromptoptimization} suggests that $\mathcal{M}_{\text{optim}}$ 
     can make use of feedback on prompts' outputs and that these textual signals are more effective than numerical scores.
@@ -232,7 +239,7 @@ Note that all operators are ultimately used in a CoT context, where a \texttt{re
 \subsubsection{Lamarckian}
 Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} is used by many PO methods and often refered to as \texttt{Lamarckian Mutation}. 
 We will adopt this terminology from now on and design our \texttt{Lamarckian} operator. 
-Design of its meta-prompt takes into account the design challenges mentioned earlier by 1. warning the LLM to be general and not to focus on a single example, 
+Design of its meta-prompt, shown in figure \ref{box:lamarcksig}, takes into account the design challenges mentioned earlier by 1. warning the LLM to be general and not to focus on a single example, 
 2. clearly states the problem using a directive and formatting specifications. 
 
 The problem with diversity still persists and we consider two approaches to solving it. 
@@ -259,7 +266,7 @@ We randomly sample $N$ examples from a separate training split. So
 \newpage
 \subsubsection{Iterative}
 The \texttt{Iterative} operator is one of the most common and simplest operators. 
-It uses a sequence of prompts and their scores often in an ascending order.
+It uses a sequence of prompts and their scores in an ascending order.
 The hope is for the LLM to deduce the optimization direction by looking at the differences in the prompts and incite it to continue the pattern.
 
 Although some research\cite{yang2024largelanguagemodelsoptimizers} only uses the top prompts, we opt for a roulette selection method
@@ -292,7 +299,7 @@ aims to fix faults in the prompt by analyzing its failed attempt at a task sampl
 To achieve this, a more complex \texttt{Signature} is utilized. Its outputs guide the LLM to first critique the original prompt
 and then improve it. Instructions are more complete with a step-by-step guide which explains the task clearly.
 Note that 1. now we use "improve" wording, 2. we stress to only alter the prompt \textit{slightly}. This is done due to 
-frequent observation of the model just creating an entirely different prompt only applicable to the example task.
+frequent observation of the model just creating an entirely different prompt only applicable to the single example task.
 For formatting, we use the same instructions as in previous \textit{meta-prompts}.
 
 In $\mathcal{R}$, we want to select the worst possible attempt. This means we optimize "from the bottom up" and try to bootstrap the
@@ -329,7 +336,7 @@ $P_{\text{base}} = \operatorname{RandomSample}(\mathcal{P})$. Then
     \mathcal{R}_{\text{F}}(\mathcal{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
 \end{equation}
 In the \textit{Meta-prompt}, we frame the task as critique synthesis and use "improve" wording to guide the LLM to start from the base prompt.
-We also explain that each comparisons has a different verdict and the base prompt might not always be the winner. For the formatting guide, we use the same instructions
+We also explain that each comparison has a different verdict and the base prompt might not always be the winner. For the formatting guide, we use the same instructions
 as in the previous operators.
 
 For large populations or tasks producing long prompts, we might run into issues with LLM context window length. 
@@ -367,7 +374,7 @@ This method uses no optimization signal or improvement instructions and relies o
     You are given a prompt and your task is to paraphrase it. \\
     Use synonyms and change the structure of the prompt but keep it semantically equivalent.}
 \end{figurebox}
-
+In figure \ref{box:formatting} we show the formatting specification part, which is identical for all prompt generation \textit{meta-prompts}.
 
 \begin{figurebox}{Formatting specifications, which are the same for all operators}{box:formatting}
     Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
@@ -378,7 +385,7 @@ This method uses no optimization signal or improvement instructions and relies o
 \subsection{Selection Operator}
 At the start of each optimization step, we select $n_{\text{continue}}$ prompts to continue in the process and purge the rest. 
 To achieve better prompt diversity, a method based on edit distance is used. This method, outlined in Algorithm \ref{alg:duplicpurge},
-removes the closest prompt for each prompt, starting from the best. This ensures that performant prompts are kept and their worse-performing duplicates are deleted.
+removes the closest prompt for each prompt, starting from the best prompts. This ensures that performant prompts are kept and their worse-performing duplicates are deleted.
 We opt to use edit distance instead of semantic similarity, like BERT embeddings.
 
 \begin{algorithm}

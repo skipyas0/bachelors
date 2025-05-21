@@ -14,13 +14,6 @@ prompt design could be automated, either by generating prompts from task example
 further optimizing them by establishing a LLM-powered feedback loop\cite{yang2024largelanguagemodelsoptimizers}\cite{zhou2023largelanguagemodelshumanlevel}\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}. This forms the basis of a novel research branch dubbed compile-time scaling\cite{schnabel2024symbolicpromptprogramsearch},
 representing a middle ground between the training-time and inference-time scaling paradigms.
 
-Optimization using LLMs\cite{meyerson2024languagemodelcrossovervariation}\cite{liu2024largelanguagemodelsevolutionary} and particularly prompt optimization
-presents an exciting intersection between deep learning and traditional optimization algorithms, like evolutionary algorithms\cite{guo2024connectinglargelanguagemodels}\cite{cui2024phaseevounifiedincontextprompt}\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} and other metaheuristics\cite{pan2024plumpromptlearningusing}.
-
-To better illustrate the concept of prompt optimization, in figure \ref{box:promptcomp} we show two example prompts for a word categorization task from the Livebench\cite{white2025livebenchchallengingcontaminationlimitedllm} benchmark. In this task, the LLM has to sort 8, 12 or 16 words into groups of 4 based on non-trivial characteristics. 
-
-Notice the unoptimized prompts fails to reflect the variability in the number of input words and does not enforce the necessary formatting. Furthermore, it only instructs the LLM to sort the words by meaning, possibly overlooking other aspects. The goal of the optimization process is to alleviate all these issues and produce a more complete optimized prompt.
-
 \begin{figurebox}{Comparison of two prompts for a word sorting task, showcasing the goal of prompt optimization.}{box:promptcomp}
     \textbf{Input}: \hlspan{ctuorange}{sewer, window, pipe, drain, duct, smile, egg, knuckles} \\
     \textbf{Gold}: \,\,\hlspan{ctuorange}{drain, duct, pipe, sewer ; egg, knuckles, smile, window} \\\\
@@ -28,18 +21,26 @@ Notice the unoptimized prompts fails to reflect the variability in the number of
     \hlbox{ctugray}{Sort the words into 2 categories by meaning.}
     \textbf{Optimized prompt}:
     \hlbox{ctulightblue}{
-    You are given several words that can be sorted into groups of 4 based on several characteristics, for example: \\
-    meaning, common usage, number of syllables, rhyming etc. \\
-    Output the words sorted into categories of 4. Separate words with commas ``,'' and groups with semicolons ``;''.
-    }
+        You are given several words that can be sorted into groups of 4 based on several characteristics, for example: \\
+        meaning, common usage, number of syllables, rhyming etc. \\
+        Output the words sorted into categories of 4. Separate words with commas ``,'' and groups with semicolons ``;''.
+        }
 \end{figurebox}
 \newpage
-During the optimization process, LLMs improve prompts or generate new ones using \textit{meta-prompts}, or prompts that generate other prompts. In this bachelor's thesis, we investigate the design of \textit{meta-prompts} and their effect on optimization efficiency.
+To better illustrate the concept of prompt optimization, in figure \ref{box:promptcomp} we show two example prompts for a word categorization task from the 
+Livebench\cite{white2025livebenchchallengingcontaminationlimitedllm} benchmark. In this task, the LLM has to sort 8, 12 or 16 words into groups of 4 based on non-trivial characteristics. 
+
+Notice the unoptimized prompts fails to reflect the variability in the number of input words and does not enforce the necessary formatting. 
+Furthermore, it only instructs the LLM to sort the words by meaning, possibly overlooking other aspects. The goal of the optimization process is to 
+alleviate all these issues and produce a more complete optimized prompt.
+
+To summarize, optimization using LLMs\cite{meyerson2024languagemodelcrossovervariation}\cite{liu2024largelanguagemodelsevolutionary} and particularly prompt optimization
+presents an exciting intersection between deep learning and traditional optimization algorithms, like evolutionary algorithms\cite{guo2024connectinglargelanguagemodels}\cite{cui2024phaseevounifiedincontextprompt}\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} and other metaheuristics\cite{pan2024plumpromptlearningusing}.
 
 \section{Approach}
 The main goal of this bachelor's thesis is to gain hands-on experience with automatic prompt optimization by designing a modular optimizer framework.
-With a simple underlying architecture, a population-based hill-climber algorithm, we focus our attention on the design of \textit{meta-prompts}.
-Using these \textit{meta-prompts}, we design a lineup of different population expansion operators. 
+With a simple underlying architecture, a population-based hill-climber algorithm, we focus our attention on the design of \textit{meta-prompts}, or prompts that 
+generate other prompts. Using these, we design a lineup of different population expansion operators. 
 
 In figure \ref{fig:methoddiagram} we show our optimization architecture, including the different expansion operators and initialization using instruction induction from task samples\cite{honovich2022instructioninductionexamplesnatural}.
 In each optimization step, the population is pruned by removing duplicates. These are found using relative edit distance.
@@ -99,7 +100,7 @@ Optimization loop continues for a specified number of iterations.
     \label{fig:methoddiagram}
 \end{figure}
 
-
+\newpage
 \section{Contributions}
 In this section, we will briefly list the main contributions of this bachelor's thesis, which include the following. 
 \begin{enumerate}

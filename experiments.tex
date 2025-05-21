@@ -7,7 +7,7 @@ We will differentiate between optimizer LLM $\mathcal{M}_{\text{optim}}$ and $\m
 Both use the medium model \texttt{Google Gemma 3 27B}\cite{gemmateam2025gemma3technicalreport}. 
 To encourage diversity, $\mathcal{M}_{\text{optim}}$ works with sampling temperature $\tau = 0.75$. 
 Bigger sampling temperature was observed to diminish the model's ability to follow structured output specifications.
-To keep prompt testing as deterministic as possible, we initialize $\mathcal(M)_{\text{solve}}$ with $\tau = 0.0$.
+To keep prompt testing as deterministic as possible, we initialize $\mathcal{M}_{\text{solve}}$ with $\tau = 0.0$.
 
 
 \subsection{Experiment setup}
@@ -15,7 +15,7 @@ We test our method against 3 datasets, \texttt{CodeContests}, \texttt{Connection
 and form 3 equal splits $\mathcal{D}_{\text{train}}$, $\mathcal{D}_{\text{dev}}$ and $\mathcal{D}_{\text{test}}$. Each out of the 4 operators - \texttt{Reflective}, \texttt{Iterative}, \texttt{Feedback} and \texttt{Paraphrase} - is tested on all three datasets for 3 repetitions
 to alleviate randomness in the results.
 
-To create a strong baseline, we begin by creating $50$ prompts $\mathcal{P}_{\text{baseline}}$ with Instruction Induction through the \texttt{Lamarckian} operator 
+To create a strong baseline, we begin by creating $50$ prompts with Instruction Induction through the \texttt{Lamarckian} operator 
 using \texttt{Persona}\cite{ge2024scalingsyntheticdatacreation} seeding. These prompts form $\mathcal{P}_{\text{baseline}}$. Examples are sampled from $\mathcal{D}_{\text{train}}$ with the whole 10 sample split being used for \texttt{Connections} and \texttt{Sequences}
 and 3 samples for \texttt{CodeContests}. This is because code input/output pairs are a lot longer and we observed a greater likelihood of failure to follow output structure for more samples.
 
@@ -25,10 +25,10 @@ We select these parameters to make the optimization process resources \textit{ro
 
 
 \subsection{Experiment results}
-In tables \ref{tab:rescodecontests}, \ref{tab:resconnections} and \ref{tab:ressequences} we results of our 
+In tables \ref{tab:rescodecontests}, \ref{tab:resconnections} and \ref{tab:ressequences} we show the results of our 
 main experiment on \texttt{CodeContests}, \texttt{Connections} and \texttt{Sequences} respectively.
 In the row marked HB, we present the maximum score achieved by prompts $P\in\mathcal{P}_{\text{baseline}}$, forming a hard baseline (HB). 
-This forms the hard baseline. The next row, marked SB, shows the best score out of the initializing prompts $P\in\mathcal{P}_{\text{init}}$, which forms a soft baseline (SB).
+The next row, marked SB, shows the best score out of the initializing prompts $P\in\mathcal{P}_{\text{init}}$, which forms a soft baseline (SB).
 The following rows show the best score of each step $s$, which is calculated as an average over all three experiment repetitions $e\in\{1,2,3\}$:
 \begin{equation}
     \frac{1}{3}\sum_{e=1}^{3}\operatorname{Max}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathcal{P}_{s}^{e})),
@@ -181,8 +181,8 @@ $10$ & \cellcolor{lightgreen}\maxmean{0.57}{0.41} & \cellcolor{lightgreen}\maxme
 Somewhat counter-intuitively, we observe that the simpler operators, \texttt{Iterative} and \texttt{Paraphrase},
 consistently outperform the others over all datasets and are the only ones which outperform the hard baseline at any point.
 
-The most complicated operator, \texttt{Feedback}, which draws on binary output and prompt comparisons exhibits the
-worst performance overall and falls under the soft baseline for all tasks later in the optimization process. This also happens to the
+The most complicated operator, \texttt{Feedback}, which uses binary output and prompt comparisons, exhibits the
+worst performance overall and at one point falls under the soft baseline for all tasks. This also happens to the
 \texttt{Reflective} operator on the \texttt{Connections} task.
 
 Improvements over hard baseline are marginal and we have to conclude that the optimization did not produce 
@@ -207,10 +207,10 @@ proposes new prompts using a history of comparisons between a base prompt and ot
 We now discuss several possible explanations for the failure of the \texttt{Feedback} and \texttt{Reflective} operators.
 \begin{enumerate}
     \item \textbf{Weak model}: Our optimizer model \texttt{Google Gemma 3 27B} is smaller than most models used in the literature, due to our limited computation budget. It could be the case that generating effective feedback and using it to improve prompts is an emergent capability of larger models.
-    \item \textbf{Structured generation}: We used our custom structured generation framework which allowed us to easily define \textit{Meta-prompts} and use inference techniques such as CoT, but it is possible that it made the already challenging prompt optimization task even harder and more convoluted, favouring simpler operators.
-    \item \textbf{Unclear comparison formulation}: In \texttt{Feedback}, the comparisons are made between \texttt{prompt\_a} and \texttt{prompt\_b}. Although we include information about whether the base prompt won the comparison, we did not state whether it was \texttt{prompt\_a} or \texttt{prompt\_b}. This was done under the assumption that the model could infer this.
+    \item \textbf{Structured generation}: We used our custom structured generation framework which allowed us to easily define \textit{meta-prompts} and use inference techniques such as CoT, but it is possible that it made the already challenging prompt optimization task even harder and more convoluted, favouring simpler operators.
+    \item \textbf{Unclear comparison formulation}: In \texttt{Feedback}, the comparisons are made between \texttt{prompt\_a} and \texttt{prompt\_b}. Although we include information about whether the base prompt won the comparison, we did not state whether it was \texttt{prompt\_a} or \texttt{prompt\_b}. This was done under the assumption that the model could deduce this.
     \item \textbf{Overfitting}: In comparisons using \texttt{Reflective} and \texttt{Feedback}, the model looks at outputs on a single task. For example, in \texttt{Sequences}, many prompts include instructions like ``Output the last negative number''. It would probably be beneficial to compare or score attempts at multiple tasks simultaneously.
-    \item \textbf{Diversity and chance}: Both \texttt{Reflective} and \texttt{Feedback} use the ``improve'' wording as opposed to \texttt{Paraphrase} and \texttt{Iterative}, which use the ``create new'' wording. Although not substantiated in data, the latter operators seem to be generating more diverse prompts. This plays well with our edit-distance-based pruning method.
+    \item \textbf{Diversity and chance}: Both \texttt{Reflective} and \texttt{Feedback} use the ``improve'' wording as opposed to \texttt{Paraphrase} and \texttt{Iterative}, which use the ``create new'' wording. Although not substantiated in data, the latter operators seem to be generating more diverse prompts. This plays well with our edit distance-based pruning method.
     \item \textbf{Comparisons vs. performance}: It begs the question whether our LLM-generated comparisons reflect the actual quality of outputs and prompts, or if they promote the model's biases — which favour length and sounding smart~\cite{ye2024justiceprejudicequantifyingbiases}.
 \end{enumerate}
 
@@ -225,11 +225,10 @@ and larger population sizes might be beneficial.
 
 On \texttt{Sequences}, most of the best performing prompts include the same two few-shot examples, which have been present since initialization.
 Although examples are no doubt beneficial, for this particular task, they might be giving unfair advantage as some 
-samples in $\mathcal{D}_{\text{test}}$ had the same answers although the sequences were different.  
+samples in $\mathcal{D}_{\text{test}}$ had the same answers although the sequences were different. 
 
 Contrary to expectations, operators with access to the optimized prompts' outputs on $\mathcal{D}_{\text{dev}}$ did not evolve any new notable examples 
 and did not attempt to augment existing examples. This can be explained by the fact that we do not emphasize few-shot prompting in the \textit{Meta-prompts}.
-\newpage
 
 \section{Self-Supervised Optimization for Open-Ended Tasks}
 To showcase the applicability of our method on tasks without available gold labels, we conduct two experiments
@@ -237,7 +236,7 @@ on creative applications. The only designed operator applicable in self-supervis
 operator which performs direct output and prompt comparisons.
 
 \subsection{Limericks}
-Limerick is a short humorous poem. We design a simple task, where the LLM has to write an alliterative limerick about an animal. 
+Limerick is a short humorous poem. We design a simple task where the LLM has to write an alliterative limerick about an animal. 
 All words should start with the starting letter of the animal given, for example:
 
 \begin{figurebox}{Limerick task example}{box:limerick}
@@ -255,8 +254,8 @@ The LLM of choice is again the \texttt{Google Gemma 3 27B} with $\tau = 0.75$ fo
 We present the best results from the initial population (generation $0$) and the last generation ($3$), as ranked by $\mathcal{M}_{\text{optim}}$.
 The initial prompts already produce satisfactory results, with the winning result making sense and having only one error in alliteration.
 However during the optimization, it seems that the comparison function started favoring longer results, consistent with findings of Ye et al.\cite{ye2024justiceprejudicequantifyingbiases}.
-This problem originated in the first optimization step, where the \texttt{Feedback} operator created a prompt that instructed to "provide 3 different poem options".
-Comparisons show that multiple options are preferred by the comparison function as they "showcase more variety and exploration of the theme".
+This problem originated in the first optimization step, where the \texttt{Feedback} operator created a prompt that instructed the LLM to ``provide 3 different poem options''.
+Comparisons show that multiple options are preferred by the comparison function as they ``showcase more variety and exploration of the theme''.
 
 \begin{figurebox}{Limerick optimization result}{box:limerickresult}
 \textbf{Initial}:
@@ -302,7 +301,7 @@ We choose the same hyperparameters as in the Limerick experiment. For the optimi
 $\mathcal{M}_{\text{solve}}$ is a diffusion text-to-image model \texttt{Dall-E 3} with image size $1024\times1024$ and default settings.
 
 We select two triples of emotionally expressive adjectives and frame the optimization as a search for a prompt that creates an image best fitting this description. 
-The first triple is "wistful", "hopeful", "lonely" and the second is "graceful", "furious", "vulnerable". In figures \ref{fig:wistful} and \ref{fig:graceful} the reader can find
+The first triple is ``wistful'', ``hopeful'', ``lonely'' and the second is ``graceful'', ``furious'', ``vulnerable''. In figures \ref{fig:wistful} and \ref{fig:graceful} the reader can find
 highest win rate images from each optimization step.
 
 
@@ -329,7 +328,7 @@ highest win rate images from each optimization step.
         \caption{Step 3}
     \end{subfigure}
 
-    \caption{Best images from each optimization step for the words "wistful", "hopeful" and "lonely".}
+    \caption{Best images from each optimization step for the words ``wistful'', ``hopeful'' and ``lonely''.}
     \label{fig:wistful}
 \end{figure}
 
@@ -356,7 +355,7 @@ highest win rate images from each optimization step.
         \caption{Step 3}
     \end{subfigure}
 
-    \caption{Best images from each optimization step for the words "graceful", "furious" and "vulnerable".}
+    \caption{Best images from each optimization step for the words ``graceful'', ``furious'' and ``vulnerable''.}
     \label{fig:graceful}
 \end{figure}
 

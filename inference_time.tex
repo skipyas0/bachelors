@@ -1,3 +1,30 @@
+\section{Basics of Large Language Models}
+In Natural Language Processing (NLP), language models are machine learning models that model statistical dependencies in language.
+Specifically Large Language Models (LLMs) are language models with many layers and a large number of parameters, often numbered in billions, trained on enormous amounts of text.
+
+Current state-of-the-art models use the Transformer\cite{vaswani2023attentionneed} architecture and its derivatives. 
+In its essence, this architecture chains attention mechanisms with fully connected layers. 
+This simple architecture, when applied on massive scale using vast computation and data resources, is at the root of the current LLM revolution in the fields of NLP and artificial intelligence.
+
+LLMs predict the next token in a sequence of tokens. Tokens can represent a letter or a word, but current models utilize sub-word tokens, similar in length to syllables.
+The meaning of these tokens can be inferred from relative position to other tokens in training text and encoded into vector form using an algorithm like Word2Vec\cite{mikolov2013efficientestimationwordrepresentations}.
+
+When we give a sequence of tokens as an input to an LLM, it produces a probability distribution of possible next tokens. 
+This happens both during training, where the probability distribution is used to update the model's weights to minimize training loss, and during \textit{inference}.
+Inference is the process of using a frozen LLM to generate text. 
+
+During inference, a sampling algorithm is employed to pick the next token from the probability distribution.
+Usually a interpolation between greedy and uniform sampling is employed. This process is called temperature sampling and introduces an important hyperparameter - \textit{temperature} $\tau$.
+Temperature influences the randomness of next token prediction and affects the outputs' qualities, like creativity and novelty. 
+For $\tau = 0$, the sampling process is deterministic in theory, but in practice variance remains due to numerical errors.
+
+The input sequence is generally called a \textit{prompt}. The model recursively generates next tokens, forming an output sequence, which is also referred to as a \textit{completion}.
+Generation continues until a special \texttt{stop} token is generated or until a token limit is reached.
+
+In LLM training, loss has been empirically found to scale with computation resources used\cite{kaplan2020scalinglawsneurallanguage}. This is referred to as training-time scaling.
+With diminishing returns, research has turned to inference-time scaling, characterized by expending more resources during inference, for example by post-training the LLM to begin completions
+with a reasoning chain. This brought impressive results particularly in reasoning-heavy domains. The post-training is done using both reinforcement learning and supervised finetuning.
+
 \section{Inference-time scaling}\label{sec:inference}
 Inference-time scaling or test-time scaling is a paradigm that has gained traction in recent years
 with the advent of dedicated reasoning models\cite{openai2024openaio1card}\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}. 
@@ -8,27 +35,33 @@ inference-time scaling aims to improve performance by dedicating more resources 
 At their heart LLMs are probabilistic models over sequences and to generate a sequence they employ generation algorithms. 
 Welleck et al.\cite{welleck2024decodingmetagenerationinferencetimealgorithms} provide an overview of these generation algorithms
 and then frame more advanced inference-time techniques as meta-generations, or strategies that employ sub-generators.
+
 Most generation algorithms attempt to find either highly probable sequences (MAP algorithms) or sample from the model's distribution.
 The simplest MAP algorithm is greedy decoding, which recursively finds the next token with the highest probability in the distribution.
-An example of algorithms that sample from the model's distribution is the ancestral sampling algorithm.
+An example of algorithms that sample from the model's distribution is the ancestral sampling algorithm\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
 
-A generalization of greedy decoding is the beam search algorithm which maintains a structure of possible prefixes and each step expands them and scores them.
+A generalization of greedy decoding is the beam search algorithm which maintains a data structure of possible prefixes and in each step expands them and scores them.
 An example\cite{wang2024chainofthoughtreasoningprompting} of a beam search algorithm can identify decoding branches where the model 
 employs a reasoning chain to solve a given task. Authors of this algorithm found that answer tokens found in the decoding paths with a reasoning chain 
 have greater token probabilities. This means that the model shows greater confidence in its answer having reasoned about it beforehand.
-In general beam search improves on simple greedy decoding but at a high computational cost\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+In general, beam search improves on simple greedy decoding but at a high computational cost\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
 
-Another class of generation algorithms are those which interpolate between more categories of sampling algorithms.
+Another class of generation algorithms are those which interpolate between multiple categories of sampling algorithms.
 Temperature sampling, which outperforms other adapters in input-output tasks like code generation and translation,
 is an interpolation between greedy sampling and uniform sampling. 
-Interpolating between ancestral sampling and simple greedy sampling gave rise to decoding algorithms such as
-nucleus, top-k and $\eta$- and $\epsilon$-sampling\cite{welleck2024decodingmetagenerationinferencetimealgorithms}. When we require a structured output, for example a JSON data 
-structure following a JSON schema, we can utilize parser-based decoding, which enforces a structural requirement.
-This can however come at worsened performance when using inflexible templates.
 
-These low-level generator can be interconnected into more complex technique, which Welleck et al. call meta-generators\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
-We will stick to their terminology and discuss different sequence-level meta-generation algorithms. We will omit further discussion of token-level methods as
-they are irrelevant to the main topic of this thesis. These strategies can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators.
+Interpolating between ancestral sampling and simple greedy sampling gave rise to decoding algorithms such as
+nucleus, top-k and $\eta$- and $\epsilon$-sampling\cite{welleck2024decodingmetagenerationinferencetimealgorithms}. 
+
+When we require a structured output, for example a JSON data 
+structure following a JSON schema, we can utilize parser-based decoding, which enforces a structural requirement.
+This can however come at worsened performance when using inflexible templates\cite{tam2024letspeakfreelystudy}.
+
+These low-level generators can be interconnected into more complex techniques, which Welleck et al. dub meta-generators\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+We will maintain their terminology and discuss different sequence-level meta-generation algorithms. We will omit further discussion of token-level methods as
+they are irrelevant to the main topic of this thesis. 
+
+These strategies can be divided into the categories of chained, parallel, step-level, and refinement-based meta-generators.
 \begin{figure}[ht]
     \centering
     \begin{tikzpicture}[
@@ -51,21 +84,17 @@ they are irrelevant to the main topic of this thesis. These strategies can be di
 \subsection{Chained meta-generation}
 
 Chained meta-generation is the composition of several subgenerators in sequence. 
-These can be LLM calls or other functions that use previous inputs, such as a code execution function\cite{chen2023programthoughtspromptingdisentangling}
+These can be LLM calls or other functions that use previous completions, such as a code execution function\cite{chen2023programthoughtspromptingdisentangling}
 or a tool for interaction with and arbitrary environment or a data source\cite{yao2023reactsynergizingreasoningacting}.
-The subgenerators can be implemented as several LLM calls or with a single call given sufficient instructions in the prompt. \cite{khattab2023dspycompilingdeclarativelanguage}
-Some examples include Program of Thoughts\cite{chen2023programthoughtspromptingdisentangling}, ReAct\cite{yao2023reactsynergizingreasoningacting} 
-and Chain-of-Thought\cite{NEURIPS2022_8bb0d291}\cite{wei2023chainofthoughtpromptingelicitsreasoning} techniques.
+The subgenerators can be implemented as several LLM calls or with a single call given sufficient instructions in the prompt\cite{khattab2023dspycompilingdeclarativelanguage}.
 
-In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking 
-modes, where it is said that humans have a fast automatic "System 1" mode and a slow and deliberate "System 2" mode\cite{yao2023treethoughtsdeliberateproblem}. 
-In direct-QA mode, the LLM can underestimate the difficulty of the task\cite{wang2024chainofthoughtreasoningprompting} and stay in the "System 1" thinking mode.
-Simple greedy decoding paths mostly do not contain a reasoning chain\cite{wang2024chainofthoughtreasoningprompting}, which means the model tends to make a guess, staying in "System 1".
-By crafting a good prompt that instructs the model to reason we can shift the model from "System 1" to "System 2" thinking.
-Another reason for the effectiveness of chained generation is that in LLM training
-some concepts and variables are observed more frequently than others\cite{prystawski2023thinkstepstepreasoning}. 
-This discrepancy hurts performance in direct-QA scenarios where the relevant
-variables are rarely seen together in training. With CoT, models can incrementally chain known dependencies and bridge conceptional gaps.
+In figure \ref{fig:chain_generation}, see a diagram of chained meta-generation. In its simplest form, there would be no environment interaction and the LLM would just 
+split processing the input into planning (thinking) and finishing stages. An example of such method is Chain-of-thought\cite{NEURIPS2022_8bb0d291}\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
+
+Alternatively, the partial output can be used to interact with an non-LLM environment, like a code execution tool or a searchable data corpus.
+This augments the final output synthesis, forming techniques like Program of Thoughts\cite{chen2023programthoughtspromptingdisentangling} and ReAct\cite{yao2023reactsynergizingreasoningacting}.
+Furthermore, we can add a history of past actions and environment observations to the architecture in \ref{fig:chain_generation} with a loopback, forming a basic agentic loop.
+
 \begin{figure}[ht]
     \centering
     \begin{tikzpicture}[
@@ -74,46 +103,64 @@ variables are rarely seen together in training. With CoT, models can incremental
         textnode/.style={draw, rectangle, rounded corners=5pt, fill=ctulightblue, text=ctublue, minimum width=1cm, minimum height=1cm, align=center},
         funcnode/.style={draw, circle, fill=ctuorange, text=white, minimum size=2cm, align=center},
         arrow/.style={-Stealth, thick}
-    ]
-    \node[textnode] (input) {User\\Input};
-    \node[funcnode, right=of input] (llm1) {Plan \\LLM};
-    \node[textnode, right=of llm1] (out1) {Partial \\Output};
-    \node[funcnode, right=of out1] (finish) {Finish \\LLM};
-    \node[textnode, right=of finish] (final) {Final\\Output};
-
-    \draw[arrow] (input) -- (llm1);
-    \draw[arrow] (llm1) -- (out1);
-    \draw[arrow] (out1) -- (finish);
-    \draw[arrow] (finish) -- (final);
+        ]
+        \node[draw=white, rectangle,rounded corners = 5pt, minimum width=5cm, minimum height=2.3cm, fill=ctugray!30] (contatiner) at (6,-2.2) {};
+        \node[below left=1cm and -7.8cm of container, font=\large\sffamily, text=ctugray] {Optional};
+        \node[textnode] (input) {User\\Input};
+        \node[funcnode, right=of input] (llm1) {Plan \\LLM};
+        \node[textnode, right=of llm1] (out1) {Partial \\Output};
+        \node[funcnode, right=of out1] (finish) {Finish \\LLM};
+        \node[textnode, right=of finish] (final) {Final\\Output};
+        \node[funcnode, below=of out1] (env) {Environ-\\ment};
+        \node[textnode, below=of finish] (rea) {Obser-\\vation};
+        
+        \draw[arrow] (input) -- (llm1);
+        \draw[arrow] (llm1) -- (out1);
+        \draw[arrow] (out1) -- (finish);
+        \draw[arrow] (out1) -- (env);
+        \draw[arrow] (finish) -- (final);
+        \draw[arrow] (env) -- (rea);
+        \draw[arrow] (rea) -- (finish);
     \end{tikzpicture}
-    \caption{Chain-of-thought or two-stage generation: planning followed by execution.}
+    \caption{Two-stage chained meta-generation.}
     \label{fig:chain_generation}
 \end{figure}
 
-\subsubsection{Chain-of-thought}\label{sec:cot}
-Chain-of-Thought\cite{wei2023chainofthoughtpromptingelicitsreasoning} (CoT) is a LLM prompting technique that works by inducing a coherent series of intermediate 
-reasoning steps that lead to the final answer for a problem, thereby increasing computation time. 
-Upon its discovery, it brought a dramatic performance increase on arithmetic tasks, where models previously struggled.
-This enhanced capability comes with the cost of longer and more computationally expensive outputs\cite{brown2024largelanguagemonkeysscaling} and
-is more noticeable for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}. 
+In its essence, the model is a left-to-right text completion engine. We can make the analogy with human thinking 
+modes, where it is said that humans have a fast automatic "System 1" mode and a slow and deliberate "System 2" mode\cite{yao2023treethoughtsdeliberateproblem}. 
+In direct-QA mode, the LLM can underestimate the difficulty of the task\cite{wang2024chainofthoughtreasoningprompting} and stay in the "System 1" thinking mode.
+Simple greedy decoding paths mostly do not contain a reasoning chain\cite{wang2024chainofthoughtreasoningprompting}, which means the model tends to make a guess, staying in "System 1".
+By crafting a good prompt that instructs the model to reason we can shift the model from "System 1" to "System 2" thinking.
 
-CoT can been elicited by prompting techniques - few-shot with steps demonstrations or 
-zero-shot with specific instructions\cite{wang2024chainofthoughtreasoningprompting}
+Another reason for the effectiveness of chained generation is that in LLM training
+some concepts and variables are observed more frequently than others\cite{prystawski2023thinkstepstepreasoning}. 
+This discrepancy hurts performance in direct-QA scenarios where the relevant
+variables are rarely seen together in training. With CoT, models can incrementally chain known dependencies and bridge conceptional gaps.
+
+\subsubsection{Chain-of-thought}\label{sec:cot}
+Chain-of-thought\cite{wei2023chainofthoughtpromptingelicitsreasoning} (CoT) is an LLM prompting technique that works by inducing a coherent series of intermediate 
+reasoning steps that lead to the final answer for a problem, thereby increasing computation time. 
+Upon its introduction, it brought a dramatic performance increase on arithmetic tasks, where models previously struggled.
+This enhanced capability comes at the cost of longer and more computationally expensive outputs\cite{brown2024largelanguagemonkeysscaling}. 
+Improvements are more noticeable for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}. 
+
+CoT can been elicited by prompting techniques - few-shot with reasoning step demonstrations or 
+zero-shot with specific instructions\cite{wang2024chainofthoughtreasoningprompting}.
 First CoT methods\cite{wei2023chainofthoughtpromptingelicitsreasoning} involved one/few-shot prompting, 
 Although effective, this requires human engineering of multi-step reasoning prompts.
 This method is also highly sensitive to prompt design with performance deteriorating 
 for mismatched prompt example and task question types\cite{NEURIPS2022_8bb0d291}.
 For this method, authors found that CoT is an emergent capability of model scale 
 and did not observe benefits for small models\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
-where the prompt included examples of CoT reasoning in the prompt in facilitate a reasoning chain response.
 
 On the other hand, zero-shot prompting induces a reasoning chain with a simple prompt like "Let's think step-by-step",
 making it versatile and task-agnostic\cite{NEURIPS2022_8bb0d291}. Similar prompts also improve reasoning performance and 
-some research\cite{yang2024largelanguagemodelsoptimizers} has been done on finding the optimal CoT prefix prompt.
+some research\cite{yang2024largelanguagemodelsoptimizers} has been done on finding the optimal CoT prompt.
 
 Apart from prompting, CoT can be elicited and improved by model training or tuning. 
 This method, requiring a significant amount of reasoning data\cite{wang2024chainofthoughtreasoningprompting},
 has gained traction with the development of dedicated reasoning models like OpenAI's o1\cite{openai2024openaio1card} or Deepseek-R1\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}.
+
 Using methods such as supervised fine-tuning (SFT) or reinforcement learning (RL), the model is trained to
 automatically produce longer reasoning chains, often bound in dedicated "thought" tags or tokens. 
 These models have shown significant performance boosts on reasoning benchmarks\cite{openai2024openaio1card}\cite{deepseekai2025deepseekr1incentivizingreasoningcapability}.
@@ -129,7 +176,7 @@ Furthermore, they find that the average length of correct solutions is shorter t
 
 Because self-revision accounts for most of the CoT length, the effectiveness of the method relies on the model's ability to self-revise.
 Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
-during self-revision. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
+on their own, without external environment feedback. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
 
 Further research by Liu et al.\cite{liu2024mindstepbystep} suggests that for some tasks CoT can be detrimental.
 Their experiments proved their hypothesis that CoT hurts performance on tasks where humans do better without deliberation
@@ -139,8 +186,8 @@ This phenomenon was observed on tasks like facial recognition, implicit statisti
 \subsection{Parallel meta-generation}
 
 Parallel meta-generation involves multiple generations concurrently. 
-The final answer can then be chosen - with a reward model or with 
-voting - or constructed from the ensemble of generations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+The final answer can then be chosen using voting or a reward model, or constructed from the ensemble of generations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+
 \begin{figure}[ht]
     \centering
     \begin{tikzpicture}[
@@ -167,33 +214,32 @@ voting - or constructed from the ensemble of generations\cite{welleck2024decodin
     \draw[arrow] (out3) -- (select);
     \draw[arrow] (select) -- (final);
     \end{tikzpicture}
-    \caption{Parallel generation: multiple outputs are generated simultaneously. Final output is then selected based on voting or aggregated by another LLM.}
+    \caption{Parallel generation: multiple outputs are generated simultaneously.}
     \label{fig:parallel_generation}
 \end{figure}
 
 Parallel meta-generation allows weaker models to outperform bigger and more expensive models\cite{brown2024largelanguagemonkeysscaling}.
 This can sometimes reduce cost as multiple samples with a smaller model are cheaper than a single sample with a more capable model.
-This is helped by the fact that parallel sampling can make use of batching and other system throughput optimization
+This is helped by the fact that parallel sampling can make use of batching and other system throughput optimizations
 available for parallel inference\cite{brown2024largelanguagemonkeysscaling}.
 
-One of the simplest such techniques is self-consistency\cite{wang2023selfconsistencyimproveschainthought} (SC),
-a method which builds upon CoT to aggregate answers from diverse reasoning 
+One of such techniques is self-consistency\cite{wang2023selfconsistencyimproveschainthought} (SC),
+a simple method which builds upon CoT to aggregate answers from diverse reasoning 
 chains and selects the best one based on majority voting. 
 It significantly improves accuracy in a range of arithmetic and commonsense reasoning tasks 
 at the cost of increased computation expenditure\cite{wang2023selfconsistencyimproveschainthought}.
 The effectiveness of SC with majority-voting comes from the fact that, for tasks with objective answers, there are often more ways to be wrong than to be right.
 
-For our next discussion of SC and related methods we will compare the 
-terms \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ for a dataset ${\mathbb{D}}$.
-Given a language model $\mathcal{M}$, a task query $q_k \in {\mathbb{D}}$ and a task 
-instruction $\mathbf{i}$, we can define the generation collection of length $n$ as
+For our next discussion of SC and related methods we will formally define and compare the 
+terms \textit{coverage} $\mathrm{C}_{\mathcal{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathcal{D}}$ for a dataset ${\mathcal{D}}$.
+Given a language model $\mathcal{M}$, a task query $q_k \in {\mathcal{D}}$ and a instructional prompt $P$, we can define the generation collection of length $n$ as
 \begin{equation}
     Y_k = \{y_{jk}\mid j \in 1, ..., n\},
 \end{equation}
 \begin{equation}
-    y_{jk} \sim \mathcal{M}(\mathbf{i}(q_k)).
+    y_{jk} \sim \mathcal{M}(P \vsep q_k).
 \end{equation}
-For objective tasks we can check the correctness with a metric $\mathcal{G}$
+For objective tasks, we can check the correctness with a metric $\mathcal{G}$
 \begin{equation}
     \mathcal{G}_{k}(y_{jk}, q_k) = 
     \begin{cases}
@@ -203,13 +249,14 @@ For objective tasks we can check the correctness with a metric $\mathcal{G}$
 \end{equation}
 To choose the final answer, we will define an answer selection function $\mathcal{S}(Y)$. 
 This can be a majority vote selection function or some reward-based method.
-We can now define \textit{coverage} $\mathrm{C}_{\mathbb{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathbb{D}}$ as
+
+We can now define \textit{coverage} $\mathrm{C}_{\mathcal{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathcal{D}}$ as
 \begin{align}
-    \mathrm{C}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \max_{j=1,...,n} \mathcal{G}_k(y_{jk}, q_k) \\
-    \mathrm{A}_{\mathbb{D}} &= \frac{1}{|\mathbb{D}|} \sum_{q_k \in \mathbb{D}} \mathcal{G}_k\left( \mathcal{S}(Y_k), q_k \right).
+    \mathrm{C}_{\mathcal{D}} &= \frac{1}{|\mathcal{D}|} \sum_{q_k \in \mathcal{D}} \max_{j=1,...,n} \mathcal{G}_k(y_{jk}, q_k) \\
+    \mathrm{A}_{\mathcal{D}} &= \frac{1}{|\mathcal{D}|} \sum_{q_k \in \mathcal{D}} \mathcal{G}_k\left( \mathcal{S}(Y_k), q_k \right).
 \end{align}
 In plain language, coverage is the fraction of the tasks where at least one sample results in a correct answer,
-whereas accuracy is the fraction of the tasks where a correct answer is selected by the algorithm as a final answer.
+whereas accuracy is the fraction of the tasks where a correct answer is selected by the algorithm as the final answer.
 
 It is easy to see why coverage might rise as we increase the amount of samples $n$ in SC generation.
 One could imagine that as letting students answer with their top $n$ guesses for each question on a test. 
@@ -225,9 +272,9 @@ Although coverage rises, it diverges\cite{brown2024largelanguagemonkeysscaling} 
 This highlight the necessity to develop better answer selection mechanisms than simple majority voting and automatic answer verification methods.
 
 Zeng et al.\cite{zeng2025revisitingtesttimescalingo1like} make use of the fact that
-correct solutions have shorter CoT on average and develop a length-weighted majority vote that outperforms simple majority voting on 
-the challenging math benchmarks. GLaPE\cite{zhang2024glapegoldlabelagnosticprompt} is a method for gold label-agnostic evaluation which makes use
-of the fact that incorrect answers tend to be inconsistent. 
+correct solutions have shorter CoT on average and develop a length-weighted majority vote that outperforms simple majority voting on challenging math benchmarks. 
+GLaPE\cite{zhang2024glapegoldlabelagnosticprompt} is a method for gold label-agnostic evaluation which makes use
+of the fact that incorrect answers tend to have higher variability, but fails in scenarios where an incorrect answer is produced consistently. 
 
 \subsection{Step-level meta-generation}
 Maintaining the terminology of Welleck et al.\cite{welleck2024decodingmetagenerationinferencetimealgorithms}, step-level meta-generation
@@ -244,39 +291,40 @@ but in this section we will focus on the latter.
     ]
     \node[textnode] (input) {User\\Input};
     \node[funcnode, right=of input] (llm) {LLM};
-    \node[funcnode, below=of input] (append) {Append};
-
-    \node[textnode, right=1cm of llm] (out2) {Output\\2};
-    \node[textnode, above=1cm of out2] (out1) {Output\\1};
-    \node[textnode, below=1cm of out2] (out3) {Output\\3};
-    \node[funcnode, right=1cm of out2] (heur) {Heuristic};
-    \node[textnode, right=1cm of heur] (final) {Final\\Output};
-
+    
+    \node[textnode, right=1.25cm of llm, minimum width=2cm, minimum height=2cm] (outshadow1) {};
+    \node[textnode, below right=-1.5cm -1.5cm of outshadow1, minimum width=2cm, minimum height=2cm] (outshadow2) {};
+    \node[textnode, below right=-1.5cm -1.5cm of outshadow2, minimum width=2cm, minimum height=2cm] (outshadow3) {};
+    \node[textnode, below right=-1.5cm -1.5cm of outshadow3, minimum width=2cm, minimum height=2cm] (out) {New\\Thought\\States};
+    \node[funcnode, right=1.25cm of outshadow1] (app) {Append};
+    \node[draw, diamond, fill=ctublue, text=white, align=center, below=of app] (mem) {State\\Memory};
+    \node[funcnode, left=1cm of mem] (heur) {Heuristic};
+    \node[textnode, left=1.37cm of heur] (rel) {Relevant\\States};
+    \node[textnode, below=1cm of heur] (final) {Final\\Output};
+    
     \draw[arrow] (input) -- (llm);
-    \draw[arrow] (append) -- (input);
-    \draw[arrow] (llm) -- (out1);
-    \draw[arrow] (llm) -- (out2);
-    \draw[arrow] (llm) -- (out3);
-    \draw[arrow] (out1) -- (heur);
-    \draw[arrow] (out2) -- (heur);
-    \draw[arrow] (out3) -- (heur);
-    \draw[arrow] (heur) -- (final);
+    \draw[arrow] (heur) -- (rel);
+    \draw[arrow] (rel) -- (llm);
+    \coordinate (shadowedge) at ($(outshadow1)+(-1.285,0)$);
+    \draw[arrow] (llm) -- (shadowedge);
+    \draw[arrow] (outshadow1) -- (app);
 
-    \coordinate (belowheur) at ($(heur)+(0,-3.75)$);
-    \coordinate (belowappend) at ($(append)+(0,-1.5)$);
-    \draw[arrow] (heur) -- (belowheur) -- (belowappend) -- (append);
+
+    \draw[arrow] (app) -- (mem);
+    \draw[arrow] (mem) -- (heur);
+    \draw[arrow] (heur) -- (final);
     \end{tikzpicture}
-    \caption{Step-wise generation with heuristic control and memory: heuristic decisions loop back to modify inputs. Past outputs can form complex thought structures in input.}
+    \caption{Step-wise generation with heuristic control and memory.}
     \label{fig:heuristic_generation}
 \end{figure}
 
-Previously discussed inference-time scaling techniques all relied on sequential or parallel linear thought processes. 
+Previously discussed inference-time scaling techniques all rely on sequential or parallel linear thought processes. 
 They do not explore different continuations within a thought process and do not make use of 
 planning, lookahead, or backtracking\cite{yao2023treethoughtsdeliberateproblem}. These methods also do not allow 
 combining the flow of reasoning upon discovering new insights, something humans utilize when solving problems\cite{Besta_2024}.
 
 By generalizing CoT\cite{wei2023chainofthoughtpromptingelicitsreasoning}\cite{NEURIPS2022_8bb0d291} into a tree structure,
-Yao et al.\cite{yao2023treethoughtsdeliberateproblem} present Tree of Thoughts (ToT), a technique which maintains a tree of thought.
+Yao et al.\cite{yao2023treethoughtsdeliberateproblem} present Tree of Thoughts (ToT), a technique which maintains a tree of states, representing individual thoughts.
 In this tree, each node is a thought in a form of a coherent language sequence, serving as an intermediate step
 in the reasoning process. For traversing the tree, a general tree-search algorithm, such as breadth-first or depth-first search, can be employed.
 
@@ -287,27 +335,32 @@ Misaki et al.\cite{misaki2025widerdeeperscalingllm} argue that fixed-width multi
 and develop a tree search method with an adaptive branching factor, leading to a more balanced exploration and exploitation capability. 
 
 Although ToT allows for planning and backtracking from unpromising thought chains, its structure is still too rigid\cite{Besta_2024}.
-For example, it is not possible to combine thoughts from independent branches from the tree. Graph of Thoughts\cite{Besta_2024} (GoT) is 
+For example, it is not possible to combine thoughts from independent branches of the tree. Graph of Thoughts\cite{Besta_2024} (GoT) is 
 a framework that models the reasoning process as a heterogenous directed graph where each vertex is a thought containing a (partial) solution
 and edges are dependencies between these thoughts\cite{Besta_2024}. 
 
 In both chain- and tree-based inference-time scaling methods, a substantial amount of compute power is allocated to
-processing historical information that is not beneficial to the reasoning process. To alleviate this,
+processing historical information that are not beneficial to the reasoning process. To alleviate this,
 Atom of Thoughts\cite{teng2025atomthoughtsmarkovllm} (AoT) iteratively decomposes the current question into a directed acyclic graph.
 The graph consists of subquestions which, depending on whether they have dependencies, are dependent or independent.
-All the independent questions can be answered directly and their answers added combined as context with the remaining subquestions
-to be contracted into a new current question. 
+All the independent questions can be answered directly and their answers added to the question context. 
+The remaining subquestions are then contracted into a new current question. 
 
 \subsection{Refinement meta-generation} \label{sec:refine}
 The last category of meta-generation algorithms are refinement algorithms. Refinement algorithms work by alternating between generation and refinement.
 The refiner generates a revised version of the output based on past versions and additional information such as intrinsic or extrinsic feedback or environment observations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}. 
-Intrinsic refinement comes from the model inspecting its own answers. As we discussed in \ref{sec:cot}, models struggle with self-revision and rarely modify their answers in long reasoning chains.
+Intrinsic refinement comes from the model inspecting its own answers, as seen in \ref{fig:refinement_generation}. Optionally, output candidates and feedback can be added into a memory component for later reference.
+
+As we discussed in \ref{sec:cot}, models struggle with self-revision and rarely modify their answers in long reasoning chains.
 Feedback from general models is ineffective compared to dedicated feedback models or other quality feedback sources\cite{wang2025dedicatedfeedbackeditmodels}. 
 
 For extrinsic refinement, the model can utilize external information which can lead to a potential gain with refinement\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+When the \texttt{Evaluator LLM} component also includes environment interaction, figure \ref{fig:refinement_generation} can be seen to depict extrinsic refinement.
+
 One example of a refinement-based framework, Reflexion\cite{shinn2023reflexionlanguageagentsverbal}, converts binary or scalar feedback from the environment into verbal feedback in the form 
 of a textual summary. This feedback is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. 
 Reflexion improves performance over strong baselines on sequential decision making, reasoning and programming tasks\cite{shinn2023reflexionlanguageagentsverbal}.
+
 
 \begin{figure}[ht]
     \centering
@@ -339,7 +392,7 @@ Reflexion improves performance over strong baselines on sequential decision maki
     \draw[arrow] (feedback) -- (fb);
     \draw[arrow] (fb) -- (belowcomb) -- (comb);
     \end{tikzpicture}
-    \caption{Refinement-based generation: feedback and output history influence future model inputs. Output is iteratively improved until it is good enough or a stop condition is reached.}
+    \caption{Refinement-based generation.}
     \label{fig:refinement_generation}
 \end{figure}
 
