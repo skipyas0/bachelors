@@ -31,9 +31,9 @@ In contexts where $P$ serves as a template for an additional query $q$, we will 
 \end{equation}
 where $P \vsep q$ denotes the result of inserting query $q$ into a designated placeholder in $P$.
 
-Let $\mathcal{P} \subseteq \mathcal{I}$ be a population of prompts. Then for a query $q$ we define the set of completions 
+Let $\mathscr{P} \subseteq \mathcal{I}$ be a population of prompts. Then for a query $q$ we define the set of completions 
 \begin{equation}
-    \mathcal{C}_{q}^{\mathcal{P}} = \{\mathscr{M}_{\text{solve}}(P\vsep q)\vsep P \in \mathcal{P}\}.
+    \mathcal{C}_{q}^{\mathscr{P}} = \{\mathscr{M}_{\text{solve}}(P\vsep q)\vsep P \in \mathscr{P}\}.
 \end{equation}
 For convenience, we might omit the explicit population superscript and write just $ \mathcal{C}_{q}$.
 
@@ -64,19 +64,19 @@ Using this, we define the mean performance $\mathcal{E}$ of a prompt $P$ on a da
     \mathcal{E}_{\mathcal{D}}(P) = \frac{1}{\Vert \mathcal{D} \Vert}\underset{t=(q,g)\in \mathcal{D}}{\sum}\mathscr{F}(\mathscr{M}(P\vsep q), t, \mathcal{C}_{q}).
 \end{equation}
 
-For convenience, we will define the scores of the population $\mathcal{P}$ on dataset $\mathcal{D}$ as
+For convenience, we will define the scores of the population $\mathscr{P}$ on dataset $\mathcal{D}$ as
 \begin{equation}
-    \mathcal{E}_{\mathcal{D}}(\mathcal{P}) = \{\mathcal{E}_{\mathcal{D}}(P)\vsep P\in \mathcal{P}\} = \{\mathscr{F}(y, g, \mathcal{C}_{\mathcal{D}})\vsep y \in \mathcal{C}_{\mathcal{D}}\}.
+    \mathcal{E}_{\mathcal{D}}(\mathscr{P}) = \{\mathcal{E}_{\mathcal{D}}(P)\vsep P\in \mathscr{P}\} = \{\mathscr{F}(y, g, \mathcal{C}_{\mathcal{D}})\vsep y \in \mathcal{C}_{\mathcal{D}}\}.
 \end{equation}
 
 We can then formally define the problem of prompt optimization for a task dataset $\mathcal{D}$ as finding the optimal prompt 
 \begin{equation}
     \label{eq:optimdef}
-    P^{\star} = \underset{P\in\mathcal{I}}{\operatorname{argmax}}\,\mathbb{E}_{(q, g) \sim \mathcal{D}}\left[\mathscr{F}(\mathscr{M}_{\text{solve}}(P \vsep q), g, \mathcal{C}_{q}^{\mathcal{P}})\right].
+    P^{\star} = \underset{P\in\mathcal{I}}{\operatorname{argmax}}\,\mathbb{E}_{(q, g) \sim \mathcal{D}}\left[\mathscr{F}(\mathscr{M}_{\text{solve}}(P \vsep q), g, \mathcal{C}_{q}^{\mathscr{P}})\right].
 \end{equation}
 
 In Algorithm \ref{alg:genoptimloop} we can see the general outline of a population-based optimization method.
-The initialization operator $\mathscr{O}_I$ creates an initial population of individuals $\mathcal{P}$. 
+The initialization operator $\mathscr{O}_I$ creates an initial population of individuals $\mathscr{P}$. 
 In each iteration, a selection operator $\mathscr{O}_S$ first selects a portion of the population according to some criteria. 
 These selected individuals are then used by the expansion operator $\mathscr{O}_E$ to create new individuals.
 This process continues until a termination condition $\Phi_{stop}$ is reached.
@@ -85,15 +85,15 @@ This process continues until a termination condition $\Phi_{stop}$ is reached.
     \caption{General optimization loop}
     \label{alg:genoptimloop}
     \KwIn{Initialization Operator $\mathscr{O}_I$, Selection Operator $\mathscr{O}_S$, Expansion Operator $\mathscr{O}_E$, Termination Condition $\Phi_{stop}$}
-    \KwOut{Optimized Population $\mathcal{P}$}
-    \KwData{$\mathcal{P} \gets \mathscr{O}_I$} \tcp{Initialize the population}
-    \While{$\neg \Phi_{stop}(\mathcal{P})$}{
+    \KwOut{Optimized Population $\mathscr{P}$}
+    \KwData{$\mathscr{P} \gets \mathscr{O}_I$} \tcp{Initialize the population}
+    \While{$\neg \Phi_{stop}(\mathscr{P})$}{
         \tcp{Selection and Expansion Steps}
-        $\mathcal{P}_{\text{selected}} \gets \mathscr{O}_S(\mathcal{P})$ \\ 
-        $\mathcal{P}_{\text{expanded}} \gets \mathscr{O}_E(\mathcal{P}_{\text{selected}})$ \\
-        $\mathcal{P} \gets \mathcal{P}_{\text{expanded}}$ \tcp{Update the population} 
+        $\mathscr{P}_{\text{selected}} \gets \mathscr{O}_S(\mathscr{P})$ \\ 
+        $\mathscr{P}_{\text{expanded}} \gets \mathscr{O}_E(\mathscr{P}_{\text{selected}})$ \\
+        $\mathscr{P} \gets \mathscr{P}_{\text{expanded}}$ \tcp{Update the population} 
         }
-        \Return{$\mathcal{P}$} \tcp{Return the optimized population}
+        \Return{$\mathscr{P}$} \tcp{Return the optimized population}
     \end{algorithm}
     
 We apply this technique to the problem of prompt optimization by defining the aforementioned operators.
@@ -106,7 +106,7 @@ Let $M\in\mathcal{I}$ be a \textit{Meta-prompt}, or a prompt-generation prompt. 
     \label{eq:metaprompting}
     P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R})),
 \end{equation}
-where $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}_{\mathcal{D}}(\mathcal{P}))$ is a retrieval function that selects data
+where $\mathcal{R} = \mathcal{R}(\mathscr{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}_{\mathcal{D}}(\mathscr{P}))$ is a retrieval function that selects data
 from the current population, past generations, dataset samples and population scores. 
 By changing the \textit{Meta-prompt} and the retrieval function $\mathcal{R}$, a variety of possible operators $\mathscr{O}_I$ and $\mathscr{O}_E$
 can be defined, thus shaping the prompt optimization process.  

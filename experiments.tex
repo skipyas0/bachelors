@@ -16,10 +16,10 @@ and form 3 equal splits $\mathcal{D}_{\text{train}}$, $\mathcal{D}_{\text{dev}}$
 to alleviate randomness in the results.
 
 To create a strong baseline, we begin by creating $50$ prompts with Instruction Induction through the \texttt{Lamarckian} operator 
-using \texttt{Persona}\cite{ge2024scalingsyntheticdatacreation} seeding. These prompts form $\mathcal{P}_{\text{baseline}}$. Examples are sampled from $\mathcal{D}_{\text{train}}$ with the whole 10 sample split being used for \texttt{Connections} and \texttt{Sequences}
+using \texttt{Persona}\cite{ge2024scalingsyntheticdatacreation} seeding. These prompts form $\mathscr{P}_{\text{baseline}}$. Examples are sampled from $\mathcal{D}_{\text{train}}$ with the whole 10 sample split being used for \texttt{Connections} and \texttt{Sequences}
 and 3 samples for \texttt{CodeContests}. This is because code input/output pairs are a lot longer, and we observed a greater likelihood of failure to follow output structure for more samples.
 
-These $50$ prompts are evaluated on $\mathcal{D}_{\text{test}}$ and the fourth quintile (prompts 11-20 when ranked by test score) is used as the initial population $\mathcal{P}_{\text{init}}$ for the optimizer.
+These $50$ prompts are evaluated on $\mathcal{D}_{\text{test}}$ and the fourth quintile (prompts 11-20 when ranked by test score) is used as the initial population $\mathscr{P}_{\text{init}}$ for the optimizer.
 We use population size $S=10$, iteration count $I=10$, batch size $B=3$ and pruning factor $f_{\text{prune}} = 0.5$. This means that each step produces $5$ new prompts and $50$ prompts overall.
 We select these parameters to make the optimization process resources \textit{roughly} comparable to the Instruction Induction baseline generation.
 
@@ -27,18 +27,18 @@ We select these parameters to make the optimization process resources \textit{ro
 \subsection{Experiment results}
 In tables \ref{tab:rescodecontests}, \ref{tab:resconnections} and \ref{tab:ressequences} we show the results of our 
 main experiment on \texttt{CodeContests}, \texttt{Connections} and \texttt{Sequences} respectively.
-In the row marked HB, we present the maximum score achieved by prompts $P\in\mathcal{P}_{\text{baseline}}$, forming a hard baseline (HB). 
-The next row, marked SB, shows the best score out of the initializing prompts $P\in\mathcal{P}_{\text{init}}$, which forms a soft baseline (SB).
+In the row marked HB, we present the maximum score achieved by prompts $P\in\mathscr{P}_{\text{baseline}}$, forming a hard baseline (HB). 
+The next row, marked SB, shows the best score out of the initializing prompts $P\in\mathscr{P}_{\text{init}}$, which forms a soft baseline (SB).
 The following rows show the best score of each step $s$, which is calculated as an average over all three experiment repetitions $e\in\{1,2,3\}$:
 \begin{equation}
-    \frac{1}{3}\sum_{e=1}^{3}\operatorname{Max}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathcal{P}_{s}^{e})),
+    \frac{1}{3}\sum_{e=1}^{3}\operatorname{Max}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathscr{P}_{s}^{e})),
 \end{equation}
-where $\mathcal{P}_{s}^{e}$ signifies the population at step $s$ of experiment repetition $e$.
+where $\mathscr{P}_{s}^{e}$ signifies the population at step $s$ of experiment repetition $e$.
 For each operator, the best step score is marked in \textbf{bold} and the best score overall is also \underline{underlined}.
 Cells with values which surpass the soft baseline are shaded in \textcolor{green}{green} and those which fall short are in \textcolor{red}{red}.
 We also include the average step score in bracketed smaller script, defined by 
 \begin{equation}
-    \frac{1}{3}\sum_{e=1}^{3}\operatorname{Mean}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathcal{P}_{s}^{e})).
+    \frac{1}{3}\sum_{e=1}^{3}\operatorname{Mean}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathscr{P}_{s}^{e})).
 \end{equation}
 Figures \ref{fig:codecontests}, \ref{fig:connections} and \ref{fig:sequences} show the corresponding graphs with a gray dotted line marking 
 the soft baseline and an orange solid line marking the hard baseline.

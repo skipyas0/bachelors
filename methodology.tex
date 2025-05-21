@@ -162,7 +162,7 @@ fall into this category. For each benchmark we use a simple accuracy metric. Giv
 \subsection{Metrics for Self-Supervised Optimization}\label{sec:ssometrics}
 In self-supervised contexts, metrics are usually based on reward models pretrained on human preference or environment data.
 To allow our method to be applied to gold label-free problems, we turn to LLM-based direct pairwise comparisons.
-Given a dataset $\mathcal{D}$ with queries $q$, output $y$ produced by prompt $P \in \mathcal{P}$ and a set of completions $\mathcal{C}_{q}$ for each query.
+Given a dataset $\mathcal{D}$ with queries $q$, output $y$ produced by prompt $P \in \mathscr{P}$ and a set of completions $\mathcal{C}_{q}$ for each query.
 \begin{equation}
     \mathcal{F}_{\mathcal{D}}^{\text{pairwise}}(q, y, \mathcal{C}_{q}) = \operatorname{WinRate}(\{\operatorname{Compare}(q,y,c)\vsep c\in \mathcal{C}_{q}\}).
 \end{equation}
@@ -183,25 +183,25 @@ This design decision has several reasons.
     \caption{Prompt Optimization Hill-Climber}
     \label{alg:promptoptimloop}
     \KwIn{Dataset $\mathcal{D}$, Population size $S$, Iteration count $I$, Batch size $B$}
-    \KwOut{Optimized Prompts $\mathcal{P}^{\star}$}
+    \KwOut{Optimized Prompts $\mathscr{P}^{\star}$}
     $\mathcal{D}_{\text{train}}, \mathcal{D}_{\text{dev}}, \mathcal{D}_{\text{test}} \gets \operatorname{Split}(\mathcal{D})$ \tcp{Generate training splits}
-    $\mathcal{P} \gets \operatorname{InstructionInduction}(\mathcal{D}_{\text{train}})$ \tcp{Induce initial prompts}
+    $\mathscr{P} \gets \operatorname{InstructionInduction}(\mathcal{D}_{\text{train}})$ \tcp{Induce initial prompts}
     $i \gets 0$ \tcp{Initialize iteration count}
     $\mathcal{C} \gets \{\}$ \tcp{Initialize solutions} 
     $\mathcal{E} \gets \{\}$ \tcp{Initialize scores}
-    $\mathcal{A} \gets \mathcal{P}$ \tcp{All prompts}
+    $\mathcal{A} \gets \mathscr{P}$ \tcp{All prompts}
     \While{$i<I$}{
         $Q, G \gets \operatorname{RandomSample}(\mathcal{D}_{\text{dev}}, B)$ \\
-        $\mathcal{C} \gets \{\mathcal{C}_{q}^{\mathcal{P}}\vsep q \in Q\}$ \\
+        $\mathcal{C} \gets \{\mathcal{C}_{q}^{\mathscr{P}}\vsep q \in Q\}$ \\
         $\mathcal{E} \gets \operatorname{Evaluate}(\mathcal{C}, G)$ \\
-        $\mathcal{P} \gets \operatorname{Selection}(\mathcal{P}, \mathcal{E})$ \tcp{Pruning} 
-        $\mathcal{P} \gets \operatorname{Expand}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D}_{\text{train}})$ \\
-        $\mathcal{A} \gets \mathcal{A} \cup \mathcal{P}$ \\
+        $\mathscr{P} \gets \operatorname{Selection}(\mathscr{P}, \mathcal{E})$ \tcp{Pruning} 
+        $\mathscr{P} \gets \operatorname{Expand}(\mathscr{P}, \mathcal{C}, \mathcal{E}, \mathcal{D}_{\text{train}})$ \\
+        $\mathcal{A} \gets \mathcal{A} \cup \mathscr{P}$ \\
     }
-    $Q_{\text{test}}, G_{\text{test}} \gets D_{\text{test}}$\\
-    $\mathcal{C}_{\text{test}} \gets \{\mathcal{C}_{q}^{\mathcal{A}}\vsep q \in Q_{\text{test}}\}$\\
-    $\mathcal{E}_{\text{test}} \gets \operatorname{Evaluate}(\mathcal{C}, G_{\text{test}})$\\
-    $P^{\star} \gets \underset{P\in\mathcal{A}}{\operatorname{argmax}}(\mathcal{E}_{\text{test}})$\\
+    %$Q_{\text{test}}, G_{\text{test}} \gets D_{\text{test}}$\\
+    %$\mathcal{C}_{\text{test}} \gets \{\mathcal{C}_{q}^{\mathcal{A}}\vsep q \in Q_{\text{test}}\}$\\
+    %$\mathcal{E}_{\text{test}} \gets \operatorname{Evaluate}(\mathcal{C}, G_{\text{test}})$\\
+    $P^{\star} \gets \underset{P\in\mathcal{A}}{\operatorname{argmax}}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(P))$\\
     \Return{$P^{\star}$}
 \end{algorithm}
 
@@ -222,7 +222,7 @@ Expansion operators' job is extending the optimization population with new promp
 \end{equation*}
 Notice the use of $\mathscr{M}_{\text{optim}}$, which utilizes non-zero sampling temperature $\tau > 0$ to encourage output diversity. 
 Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{Meta-prompt} $M$ 
-and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E})$.
+and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathscr{P}, \mathcal{C}, \mathcal{D}, \mathcal{E})$.
 The operators' design should address the following challenges:
 \begin{enumerate}
     \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathscr{M}_{\text{optim}}$ might focus on a single query $q$ and thus fail to generate general instructions.
@@ -273,7 +273,7 @@ Although some research\cite{yang2024largelanguagemodelsoptimizers} only uses the
 and sort to prompts by score in ascending order. The number $N$ is a hyperparameter dictating how many prompts to sample.
 We define the retrieval function as
 \begin{equation}
-   \mathcal{R}_{\text{I}}(\mathcal{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}, N), \mathcal{E})
+   \mathcal{R}_{\text{I}}(\mathscr{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathscr{P}, \mathcal{E}, N), \mathcal{E})
 \end{equation}
 Other methods\cite{tang2024unleashingpotentiallargelanguage} additionally augment the \textit{meta-prompt} with task samples, similar to the \texttt{Lamarckian} operator.
 
@@ -305,7 +305,7 @@ For formatting, we use the same instructions as in previous \textit{meta-prompts
 In $\mathcal{R}$, we want to select the worst possible attempt. This means we optimize "from the bottom up" and try to bootstrap the
 worst prompts. The retrieval function is
 \begin{equation}
-    \mathcal{R}_{\text{R}}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathcal{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
+    \mathcal{R}_{\text{R}}(\mathscr{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathscr{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
 \end{equation}
 
 \begin{figurebox}{Reflective Signature. Formatting specifications trimmed.}{box:reflexsig}
@@ -331,9 +331,9 @@ worst prompts. The retrieval function is
 As we mentioned earlier, the \texttt{Feedback} operator is suitable for use in self-supervised settings.
 It leverages reasoning traces from pairwise LLM-based comparisons, discussed in \ref{sec:ssometrics}. 
 Let $\mathcal{E}_{\text{comp}}$ hold textual comparisons of each prompt and their attempts and
-$P_{\text{base}} = \operatorname{RandomSample}(\mathcal{P})$. Then
+$P_{\text{base}} = \operatorname{RandomSample}(\mathscr{P})$. Then
 \begin{equation}
-    \mathcal{R}_{\text{F}}(\mathcal{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
+    \mathcal{R}_{\text{F}}(\mathscr{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
 \end{equation}
 In the \textit{Meta-prompt}, we frame the task as critique synthesis and use "improve" wording to guide the LLM to start from the base prompt.
 We also explain that each comparison has a different verdict and the base prompt might not always be the winner. For the formatting guide, we use the same instructions
@@ -360,7 +360,7 @@ To serve as another baseline for other operators, we implement a simple \texttt{
 This operator performs random search in the prompt space by changing the wording and structure of a prompt.
 The prompt is selected via the retrieval function
 \begin{equation}
-    \mathcal{R}_{\text{P}}(\mathcal{P}, \mathcal{E}) = \operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}).
+    \mathcal{R}_{\text{P}}(\mathscr{P}, \mathcal{E}) = \operatorname{RouletteSampling}(\mathscr{P}, \mathcal{E}).
 \end{equation}
 This method uses no optimization signal or improvement instructions and relies on pure chance of finding a more potent prompt.
 
@@ -384,23 +384,25 @@ In figure \ref{box:formatting} we show the formatting specification part, which 
 
 \subsection{Selection Operator}
 At the start of each optimization step, we select $n_{\text{continue}}$ prompts to continue in the process and purge the rest. 
-To achieve better prompt diversity, a method based on edit distance is used. This method, outlined in Algorithm \ref{alg:duplicpurge},
+To achieve better prompt diversity, a method based on edit distance is used. 
+
+This method, outlined in Algorithm \ref{alg:duplicpurge},
 removes the closest prompt for each prompt, starting from the best prompts. This ensures that performant prompts are kept and their worse-performing duplicates are deleted.
 We opt to use edit distance instead of semantic similarity, like BERT embeddings.
 
 \begin{algorithm}
     \caption{Purge Duplicates}
     \label{alg:duplicpurge}
-    \KwIn{Population $\mathcal{P}$, Pruning factor $f_{\text{prune}}$}
-    \KwOut{Pruned population $\mathcal{P}_{\text{pruned}}$}
-    $\mathcal{P}_{\text{sorted}} \gets \operatorname{SortByScore}(\mathcal{P}, \mathcal{E})$ \\
-    $n_{\text{continue}} \gets \vert\mathcal{P}\vert(1-f_{\text{prune}})$
+    \KwIn{Population $\mathscr{P}$, Pruning factor $f_{\text{prune}}$}
+    \KwOut{Pruned population $\mathscr{P}_{\text{pruned}}$}
+    $\mathscr{P}_{\text{sorted}} \gets \operatorname{SortByScore}(\mathscr{P}, \mathcal{E})$ \\
+    $n_{\text{continue}} \gets \vert\mathscr{P}\vert(1-f_{\text{prune}})$
     $i \gets 0$
     \While{$i<n_{\text{continue}}$} {
-        $P_{\text{select}} \gets \operatorname{GetFirst}(\mathcal{P}_{\text{sorted}})$ \\ 
-        $P_{\text{purge}} \gets \underset{P\in\mathcal{P}\mid P \neq P_{\text{select}}}{\operatorname{argmax}} \operatorname{LevenshteinRatio}(P, P_{\text{select}})$ \\
-        $\operatorname{Remove}(\mathcal{P}, P_{\text{purge}})$
+        $P_{\text{select}} \gets \operatorname{GetFirst}(\mathscr{P}_{\text{sorted}})$ \\ 
+        $P_{\text{purge}} \gets \underset{P\in\mathscr{P}\mid P \neq P_{\text{select}}}{\operatorname{argmax}} \operatorname{LevenshteinRatio}(P, P_{\text{select}})$ \\
+        $\operatorname{Remove}(\mathscr{P}, P_{\text{purge}})$
     }
-    $\mathcal{P}_{\text{pruned}} \gets \mathcal{P}$\\
-    \Return{$\mathcal{P}$}
+    $\mathscr{P}_{\text{pruned}} \gets \mathscr{P}$\\
+    \Return{$\mathscr{P}$}
 \end{algorithm}
