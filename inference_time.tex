@@ -231,12 +231,12 @@ at the cost of increased computation expenditure\cite{wang2023selfconsistencyimp
 The effectiveness of SC with majority-voting comes from the fact that, for tasks with objective answers, there are often more ways to be wrong than to be right.
 
 For our next discussion of SC and related methods we will formally define and compare the terms \textit{coverage} $\mathrm{C}_{\mathcal{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathcal{D}}$ for a dataset ${\mathcal{D}}$.
-Given a language model $\mathcal{M}$, a task query $q_k \in {\mathcal{D}}$ and an instructional prompt $P$, we can define the generation collection of length $n$ as
+Given a language model $\mathscr{M}$, a task query $q_k \in {\mathcal{D}}$ and an instructional prompt $P$, we can define the generation collection of length $n$ as
 \begin{equation}
     Y_k = \{y_{jk}\mid j \in 1, ..., n\},
 \end{equation}
 \begin{equation}
-    y_{jk} \sim \mathcal{M}(P \vsep q_k).
+    y_{jk} \sim \mathscr{M}(P \vsep q_k).
 \end{equation}
 For objective tasks, we can check the correctness with a metric $\mathcal{G}$
 \begin{equation}

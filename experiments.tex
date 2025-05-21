@@ -3,11 +3,11 @@ In our main experiment, we compare the effectivity of 4 optimization operators o
 We will compare the results and costs of each method against each other and a strong Instruction Induction baseline.
 
 All our experiments were conducted through the \texttt{OpenRouter API}, which offers many LLMs from different providers.
-We will differentiate between optimizer LLM $\mathcal{M}_{\text{optim}}$ and $\mathcal{M}_{\text{solve}}$.
+We will differentiate between optimizer LLM $\mathscr{M}_{\text{optim}}$ and $\mathscr{M}_{\text{solve}}$.
 Both use the medium model \texttt{Google Gemma 3 27B}\cite{gemmateam2025gemma3technicalreport}. 
-To encourage diversity, $\mathcal{M}_{\text{optim}}$ works with sampling temperature $\tau = 0.75$. 
+To encourage diversity, $\mathscr{M}_{\text{optim}}$ works with sampling temperature $\tau = 0.75$. 
 Bigger sampling temperature was observed to diminish the model's ability to follow structured output specifications.
-To keep prompt testing as deterministic as possible, we initialize $\mathcal{M}_{\text{solve}}$ with $\tau = 0.0$.
+To keep prompt testing as deterministic as possible, we initialize $\mathscr{M}_{\text{solve}}$ with $\tau = 0.0$.
 
 
 \subsection{Experiment setup}
@@ -249,9 +249,9 @@ All words should start with the starting letter of the animal given, for example
 We provide three such examples without further context and observe the quality of the results. These examples are used to construct the initial population through
 the \texttt{Lamarckian} operator.
 We run the optimizer with population size $S=4$, iteration count $I=3$, batch size $B=1$ and pruning factor $f_{\text{prune}} = 0.5$.
-The LLM of choice is again the \texttt{Google Gemma 3 27B} with $\tau = 0.75$ for $\mathcal{M}_{\text{optim}}$ and $\tau = 0.0$ for $\mathcal{M}_{\text{solve}}$.
+The LLM of choice is again the \texttt{Google Gemma 3 27B} with $\tau = 0.75$ for $\mathscr{M}_{\text{optim}}$ and $\tau = 0.0$ for $\mathscr{M}_{\text{solve}}$.
 
-We present the best results from the initial population (generation $0$) and the last generation ($3$), as ranked by $\mathcal{M}_{\text{optim}}$.
+We present the best results from the initial population (generation $0$) and the last generation ($3$), as ranked by $\mathscr{M}_{\text{optim}}$.
 The initial prompts already produce satisfactory results, with the winning result making sense and having only one error in alliteration.
 However during the optimization, it seems that the comparison function started favoring longer results, consistent with findings of Ye et al.\cite{ye2024justiceprejudicequantifyingbiases}.
 This problem originated in the first optimization step, where the \texttt{Feedback} operator created a prompt that instructed the LLM to ``provide 3 different poem options''.
@@ -298,7 +298,7 @@ Learning from the failure from the previous experiment, we specialize the operat
 Utilizing the vision capabilities of \texttt{Google Gemma 3 27B}, the \texttt{Feedback} operator is modified to allow direct image comparisons. 
 
 We choose the same hyperparameters as in the Limerick experiment. For the optimizer LLM, the vision-enabled \texttt{Google Gemma 3 27B} is used with $\tau = 0.75$ and 
-$\mathcal{M}_{\text{solve}}$ is a diffusion text-to-image model \texttt{Dall-E 3} with image size $1024\times1024$ and default settings.
+$\mathscr{M}_{\text{solve}}$ is a diffusion text-to-image model \texttt{Dall-E 3} with image size $1024\times1024$ and default settings.
 
 We select two triples of emotionally expressive adjectives and frame the optimization as a search for a prompt that creates an image best fitting this description. 
 The first triple is ``wistful'', ``hopeful'', ``lonely'' and the second is ``graceful'', ``furious'', ``vulnerable''. In figures \ref{fig:wistful} and \ref{fig:graceful} the reader can find

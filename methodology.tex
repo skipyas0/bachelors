@@ -129,7 +129,7 @@ An ideal prompt would attempt to list multiple possible aspects based on which t
 
 \subsection{Code Contests}
 Programming puzzles are a difficult and easily verifiable task. Although \texttt{CodeContests}\cite{li2022competition} is an older dataset, 
-we hope it poses lesser contamination risks than datasets with simpler outputs. With LLM-powered coding assistants on the rise, we
+we anticipate this dataset presents reduced contamination risks compared to datasets with simpler outputs. With LLM-powered coding assistants on the rise, we
 feel this is a relevant application area for our method. 
 
 \subsection{Sequences}
@@ -225,10 +225,10 @@ Evidently the prompt generation task can be separated into two independent probl
 and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathcal{P}, \mathcal{C}, \mathcal{D}, \mathcal{E})$.
 The operators' design should address the following challenges:
 \begin{enumerate}
-    \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathcal{M}_{\text{optim}}$ might focus on a single query $q$ and thus fail to generate general instructions.
+    \item \textbf{Loss of generality}: When using task samples $(q, g) \in \mathcal{D}$, the model $\mathscr{M}_{\text{optim}}$ might focus on a single query $q$ and thus fail to generate general instructions.
     \item \textbf{Loss of diversity}: Even for  $\mathscr{M}_{\text{optim}}$ with $\tau>0$, the resulting prompts can be very similar and fail to explore the prompt space $\mathcal{I}$. 
     This ties into a broader exploration vs. exploitation balance issue.
-    \item \textbf{Lack of optimization signal}: Research\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}\cite{xiang2025selfsupervisedpromptoptimization} suggests that $\mathcal{M}_{\text{optim}}$ 
+    \item \textbf{Lack of optimization signal}: Research\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}\cite{xiang2025selfsupervisedpromptoptimization} suggests that $\mathscr{M}_{\text{optim}}$ 
     can make use of feedback on prompts' outputs and that these textual signals are more effective than numerical scores.
     \item \textbf{Out of distribution \textit{Meta-prompt}}: Prompt engineering is a novel research area and does not have a substantial support in the LLM's training corpus.
     The \textit{Meta-prompt} $M$ thus has to be carefully constructed to help the model output relevant prompts.
