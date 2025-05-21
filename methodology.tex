@@ -113,7 +113,7 @@ While searching available datasets, we focus on the following criteria:
     This disqualifies commonly used datasets as MMLU or BigBenchHard.
     \item \textbf{Contamination}: Recently, researchers have expressed concern\cite{white2025livebenchchallengingcontaminationlimitedllm} 
     whether benchmarks are reliable evaluations of models as they might appear in their training data. We omit most common datasets, such as GSM8k\cite{cobbe2021gsm8k}, which has been shown to have inflated scores for some models\cite{testing_language_models_on_a_held_out_high_school_national_finals_exam}.
-    \item \textbf{Output verification}: We prefer to use simple automatic verification rather that using LLM-as-a-judge, which has been shown to be 
+    \item \textbf{Output verification}: We prefer to use simple automatic verification rather than using LLM-as-a-judge, which has been shown to be 
     biased in some circumstances\cite{ye2024justiceprejudicequantifyingbiases}. Neither do we use human feedback, which defeats the purpose of automatic prompt optimization.
     \item \textbf{Difficulty}: We omit tasks where models already have near-perfect score. 
     \item \textbf{Benefit from non-trivial instruction}: We focus on tasks where helpful hints and step-by-step tutorial-like instructions might increase the probability of successful solution.
@@ -142,7 +142,7 @@ Each sequence is created according to a formula with randomly selected coefficie
 \end{itemize}
 This tests the model's ability to 1. detect and understand patterns and 2. systematically perform simple arithmetic. 
 In practice, we will optimize just for a single sequence category and observe whether the optimizer evolves a prompt with a tutorial for the specific sequence category.
-Experiments revealed that the \texttt{Alternating} class of sequences has a good difficulty balance, and we will use it for evaluation.
+Experiments showed that the \texttt{Alternating} class of sequences has a good difficulty balance, and we will use it for evaluation.
 
 \section{Evaluation Metrics}
 The evaluation metric defines the optimization goal and thus forms its central component. 
