@@ -1,6 +1,6 @@
 \section{Basics of Large Language Models}
 In Natural Language Processing (NLP), language models are machine learning models that model statistical dependencies in language.
-Specifically Large Language Models (LLMs) are language models with many layers and a large number of parameters, often numbered in billions, trained on enormous amounts of text.
+Specifically Large Language Models (LLMs) are language models with many layers and massive parameter counts, often in the billions, trained on enormous amounts of text.
 
 Current state-of-the-art models use the Transformer\cite{vaswani2023attentionneed} architecture and its derivatives. 
 In its essence, this architecture chains attention mechanisms with fully connected layers. 
@@ -14,7 +14,7 @@ This happens both during training, where the probability distribution is used to
 Inference is the process of using a frozen LLM to generate text. 
 
 During inference, a sampling algorithm is employed to pick the next token from the probability distribution.
-Usually a interpolation between greedy and uniform sampling is employed. This process is called temperature sampling and introduces an important hyperparameter - \textit{temperature} $\tau$.
+Usually an interpolation between greedy and uniform sampling is employed. This process is called temperature sampling and introduces an important hyperparameter - \textit{temperature} $\tau$.
 Temperature influences the randomness of next token prediction and affects the outputs' qualities, like creativity and novelty. 
 For $\tau = 0$, the sampling process is deterministic in theory, but in practice variance remains due to numerical errors.
 
@@ -83,17 +83,17 @@ These strategies can be divided into the categories of chained, parallel, step-l
 
 \subsection{Chained meta-generation}
 
-Chained meta-generation is the composition of several subgenerators in sequence. 
+Chained meta-generation is the composition of several sub-generators in sequence. 
 These can be LLM calls or other functions that use previous completions, such as a code execution function\cite{chen2023programthoughtspromptingdisentangling}
 or a tool for interaction with and arbitrary environment or a data source\cite{yao2023reactsynergizingreasoningacting}.
-The subgenerators can be implemented as several LLM calls or with a single call given sufficient instructions in the prompt\cite{khattab2023dspycompilingdeclarativelanguage}.
+The sub-generators can be implemented as several LLM calls or with a single call given sufficient instructions in the prompt\cite{khattab2023dspycompilingdeclarativelanguage}.
 
 In figure \ref{fig:chain_generation}, see a diagram of chained meta-generation. In its simplest form, there would be no environment interaction and the LLM would just 
 split processing the input into planning (thinking) and finishing stages. An example of such method is Chain-of-thought\cite{NEURIPS2022_8bb0d291}\cite{wei2023chainofthoughtpromptingelicitsreasoning}.
 
-Alternatively, the partial output can be used to interact with an non-LLM environment, like a code execution tool or a searchable data corpus.
+Alternatively, the partial output can be used to interact with a non-LLM environment, like a code execution tool or a searchable data corpus.
 This augments the final output synthesis, forming techniques like Program of Thoughts\cite{chen2023programthoughtspromptingdisentangling} and ReAct\cite{yao2023reactsynergizingreasoningacting}.
-Furthermore, we can add a history of past actions and environment observations to the architecture in \ref{fig:chain_generation} with a loopback, forming a basic agentic loop.
+Furthermore, we can add a history of past actions and environment observations to the architecture in \ref{fig:chain_generation} with a loop-back, forming a basic agentic loop.
 
 \begin{figure}[ht]
     \centering
@@ -144,10 +144,10 @@ Upon its introduction, it brought a dramatic performance increase on arithmetic 
 This enhanced capability comes at the cost of longer and more computationally expensive outputs\cite{brown2024largelanguagemonkeysscaling}. 
 Improvements are more noticeable for more complicated problems\cite{wei2023chainofthoughtpromptingelicitsreasoning}. 
 
-CoT can been elicited by prompting techniques - few-shot with reasoning step demonstrations or 
+CoT can be elicited by prompting techniques - few-shot with reasoning step demonstrations or 
 zero-shot with specific instructions\cite{wang2024chainofthoughtreasoningprompting}.
 First CoT methods\cite{wei2023chainofthoughtpromptingelicitsreasoning} involved one/few-shot prompting, 
-Although effective, this requires human engineering of multi-step reasoning prompts.
+Although effective, this requires human engineering of multistep reasoning prompts.
 This method is also highly sensitive to prompt design with performance deteriorating 
 for mismatched prompt example and task question types\cite{NEURIPS2022_8bb0d291}.
 For this method, authors found that CoT is an emergent capability of model scale 
@@ -176,7 +176,7 @@ Furthermore, they find that the average length of correct solutions is shorter t
 
 Because self-revision accounts for most of the CoT length, the effectiveness of the method relies on the model's ability to self-revise.
 Authors of this paper argue that the self-revision ability of models is insufficient as they demonstrate limited capacity to correct their answers
-on their own, without external environment feedback. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice-versa.
+on their own, without external environment feedback. Some models on some tasks are even more likely to change a correct answer to an incorrect one than vice versa.
 
 Further research by Liu et al.\cite{liu2024mindstepbystep} suggests that for some tasks CoT can be detrimental.
 Their experiments proved their hypothesis that CoT hurts performance on tasks where humans do better without deliberation
@@ -186,7 +186,7 @@ This phenomenon was observed on tasks like facial recognition, implicit statisti
 \subsection{Parallel meta-generation}
 
 Parallel meta-generation involves multiple generations concurrently. 
-The final answer can then be chosen using voting or a reward model, or constructed from the ensemble of generations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
+The final answer can then be chosen by voting or a reward model, or constructed from the ensemble of generations\cite{welleck2024decodingmetagenerationinferencetimealgorithms}.
 
 \begin{figure}[ht]
     \centering
@@ -230,9 +230,8 @@ It significantly improves accuracy in a range of arithmetic and commonsense reas
 at the cost of increased computation expenditure\cite{wang2023selfconsistencyimproveschainthought}.
 The effectiveness of SC with majority-voting comes from the fact that, for tasks with objective answers, there are often more ways to be wrong than to be right.
 
-For our next discussion of SC and related methods we will formally define and compare the 
-terms \textit{coverage} $\mathrm{C}_{\mathcal{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathcal{D}}$ for a dataset ${\mathcal{D}}$.
-Given a language model $\mathcal{M}$, a task query $q_k \in {\mathcal{D}}$ and a instructional prompt $P$, we can define the generation collection of length $n$ as
+For our next discussion of SC and related methods we will formally define and compare the terms \textit{coverage} $\mathrm{C}_{\mathcal{D}}$ and \textit{accuracy} $\mathrm{A}_{\mathcal{D}}$ for a dataset ${\mathcal{D}}$.
+Given a language model $\mathcal{M}$, a task query $q_k \in {\mathcal{D}}$ and an instructional prompt $P$, we can define the generation collection of length $n$ as
 \begin{equation}
     Y_k = \{y_{jk}\mid j \in 1, ..., n\},
 \end{equation}
@@ -260,11 +259,11 @@ whereas accuracy is the fraction of the tasks where a correct answer is selected
 
 It is easy to see why coverage might rise as we increase the amount of samples $n$ in SC generation.
 One could imagine that as letting students answer with their top $n$ guesses for each question on a test. 
-Indeed research\cite{brown2024largelanguagemonkeysscaling} has found that the relationship of coverage and the 
+Indeed, research\cite{brown2024largelanguagemonkeysscaling} has found that the relationship of coverage and the 
 number of samples can be modeled by an exponentiated power law, suggesting a scaling law for inference
 similar to the training scaling laws\cite{kaplan2020scalinglawsneurallanguage}.
 
-However coverage alone is not enough to paint the complete picture. What good is it to have a large collection which contains a correct answer
+However, coverage alone is not enough to paint the complete picture. What good is it to have a large collection which contains a correct answer
 if we cannot verify which one is correct. Parallel scaling with large sample collections is only useful 
 if the correct samples in a collection can be identified\cite{brown2024largelanguagemonkeysscaling}\cite{zeng2025revisitingtesttimescalingo1like}.
 The accuracy gain of SC tends to saturate quickly as we increase the number of paths\cite{wang2023selfconsistencyimproveschainthought}.
@@ -320,7 +319,7 @@ but in this section we will focus on the latter.
 
 Previously discussed inference-time scaling techniques all rely on sequential or parallel linear thought processes. 
 They do not explore different continuations within a thought process and do not make use of 
-planning, lookahead, or backtracking\cite{yao2023treethoughtsdeliberateproblem}. These methods also do not allow 
+planning, look-ahead, or backtracking\cite{yao2023treethoughtsdeliberateproblem}. These methods also do not allow 
 combining the flow of reasoning upon discovering new insights, something humans utilize when solving problems\cite{Besta_2024}.
 
 By generalizing CoT\cite{wei2023chainofthoughtpromptingelicitsreasoning}\cite{NEURIPS2022_8bb0d291} into a tree structure,
@@ -342,9 +341,9 @@ and edges are dependencies between these thoughts\cite{Besta_2024}.
 In both chain- and tree-based inference-time scaling methods, a substantial amount of compute power is allocated to
 processing historical information that are not beneficial to the reasoning process. To alleviate this,
 Atom of Thoughts\cite{teng2025atomthoughtsmarkovllm} (AoT) iteratively decomposes the current question into a directed acyclic graph.
-The graph consists of subquestions which, depending on whether they have dependencies, are dependent or independent.
-All the independent questions can be answered directly and their answers added to the question context. 
-The remaining subquestions are then contracted into a new current question. 
+The graph consists of sub-questions which, depending on whether they have dependencies, are dependent or independent.
+All the independent questions can be answered directly, and their answers added to the question context. 
+The remaining sub-questions are then contracted into a new current question. 
 
 \subsection{Refinement meta-generation} \label{sec:refine}
 The last category of meta-generation algorithms are refinement algorithms. Refinement algorithms work by alternating between generation and refinement.
@@ -359,7 +358,7 @@ When the \texttt{Evaluator LLM} component also includes environment interaction,
 
 One example of a refinement-based framework, Reflexion\cite{shinn2023reflexionlanguageagentsverbal}, converts binary or scalar feedback from the environment into verbal feedback in the form 
 of a textual summary. This feedback is then added as additional context for the LLM agent, e.g. CoT or ReAct module, in the next episode. 
-Reflexion improves performance over strong baselines on sequential decision making, reasoning and programming tasks\cite{shinn2023reflexionlanguageagentsverbal}.
+Reflexion improves performance over strong baselines on sequential decision-making, reasoning and programming tasks\cite{shinn2023reflexionlanguageagentsverbal}.
 
 
 \begin{figure}[ht]

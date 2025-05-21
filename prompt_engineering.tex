@@ -90,7 +90,7 @@ for many users and for applications, where extensive data collection is infeasib
 We illustrate this shift in figure \ref{fig:prompttraincomp}. Although prompt design is difficult, it is much less resource-intensive than fine-tuning.
 
 Since the inception of modern LLMs, prompt engineering has evolved into a field of its own. Current LLM systems, often containing
-multiple chained and interlinked models, require robust and well thought-out prompts at each step. 
+multiple chained and interlinked models, require robust and well-thought-out prompts at each step. 
 Indeed, in many modern LLM applications, prompts have become programs themselves\cite{schnabel2024symbolicpromptprogramsearch}.
 
 In this section, we will briefly cover the most notable prompt engineering techniques, which we will then
@@ -209,14 +209,14 @@ With innumerable options for output specification, users should test multiple co
 can heavily influence the final prediction accuracy\cite{salinas2024butterflyeffectalteringprompts}.
 
 \subsection{\textit{Meta-prompting}}
-Before we proceed, we first need to overview the terminology discrepencies in contemporary research. 
+Before we proceed, we first need to overview the terminology discrepancies in contemporary research. 
 \textit{Meta-prompts} (also meta prompts or metaprompts) were first coined as a term by Reynolds and McDonell\cite{reynolds2021promptprogramminglargelanguage}. 
 Since then, this term was used in multiple contexts.
 \begin{enumerate}
     \item \textbf{Task-agnostic zero-shot prompt:} In contrast to task-sample specific few-shot prompting, 
     \textit{meta-prompts} were used to mean a ``task-agnostic zero-shot prompt'', or ``seeds encapsulating a more general intention that will unfold into
-    a specific prompt when combined with the task question''\cite{reynolds2021promptprogramminglargelanguage}. 
-    \item \textbf{Natural language metaprocedure:} Extending 1, Zhang et al.\cite{zhang2025metapromptingaisystems} define \textit{meta-prompts} as example-agnostic prompts
+    a specific prompt when combined with the task question'' \cite{reynolds2021promptprogramminglargelanguage}. 
+    \item \textbf{Natural language meta-procedure:} Extending 1, Zhang et al.\cite{zhang2025metapromptingaisystems} define \textit{meta-prompts} as example-agnostic prompts
     designed to capture the reasoning structure of a specific category of tasks. They do this by employing a typed and structured prompt, 
     resembling control flow templates and often expressed in JSON-like structures.
     This is similar to how DSPy\cite{khattab2023dspycompilingdeclarativelanguage} implements LLM calls with function signatures.
@@ -236,7 +236,7 @@ all the principles regarding prompt design for other difficult tasks apply to \t
 
 \textit{Meta-prompts} are usually templates for other data, such as examples of the task for Instruction Induction\cite{honovich2022instructioninductionexamplesnatural},
 past prompt generations along with their scores\cite{yang2024largelanguagemodelsoptimizers} and critiques of prompt outputs\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}
-or text descriptions of the task\cite{ye2024promptengineeringpromptengineer}. Some reseach also utilizes professional task advice\cite{ramnath2025systematicsurveyautomaticprompt}
+or text descriptions of the task\cite{ye2024promptengineeringpromptengineer}. Some research also utilizes professional task advice\cite{ramnath2025systematicsurveyautomaticprompt}
 or a prompt engineering tutorial\cite{ye2024promptengineeringpromptengineer}. Other methods used seed phrases, like a thinking 
 style\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}, to steer the generation.
 

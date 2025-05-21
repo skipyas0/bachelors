@@ -1,7 +1,7 @@
 \section{Prompt optimization}
 In a previous section on inference-time algorithms, we outlined several methods for improving the performance of LLM generation
 and contrasted it to the traditional training-time scaling paradigm. In this section, we will discuss prompt optimization. 
-This technique fits in neither training- or inference-time scaling techniques, as the computation allocated on
+This technique fits in neither training- nor inference-time scaling techniques, as the computation allocated on
 optimizing our prompts can then be amortized over multiple uses of the prompt. 
 We will refer to this as compile-time\cite{schnabel2024symbolicpromptprogramsearch} scaling.
 
@@ -35,7 +35,7 @@ In table \ref{tab:cotprefixperf} we illustrate the prompt performance variabilit
 
 The average user is not used to the meticulous process of systematic program crafting and debugging. It seems that
 some coding proficiency is, in a way, a prerequisite for prompt engineering. With these limitations barring the general public from utilizing LLMs to their full potential,
-automatic prompt engineering and prompt optimization (PO) have become an exceptionally active research field in the recent years.
+automatic prompt engineering and prompt optimization (PO) have become an exceptionally active research field in recent years.
 \newpage
 We can divide the PO research into two distinct branches depending on whether 
 they treat prompts as sequences of discrete tokens or as soft embedding vectors. 
@@ -90,7 +90,7 @@ PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} & manual or instruction ind
 PromptWizard\cite{agarwal2024promptwizardtaskawarepromptoptimization} & variations from problem description & selects best prompt & critique + synthesis & improves examples after instructions \\
 CriSPO\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic} & manual initial prompt & filter top-k prompts & \textit{meta-prompt} with critique history & self-generates critique aspects \\
 SPRIG\cite{zhang2024sprigimprovinglargelanguage} & blank prompt & large-scale statistical resource allocation algorithms & edit-based enumeration of sentence-level operations & focus is on task-agnostic system prompts \\
-SPO\cite{xiang2025selfsupervisedpromptoptimization} & basic prompt template (e.g. CoT) & winner of pairwise evaluation & metaprompt utilizing feedback from evaluation & focus is on reference-free optimization\\
+SPO\cite{xiang2025selfsupervisedpromptoptimization} & basic prompt template (e.g. CoT) & winner of pairwise evaluation & \textit{meta-prompt} utilizing feedback from evaluation & focus is on reference-free optimization\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -109,7 +109,7 @@ exemplars often outperform optimized instructions alone and even simple optimiza
 This effect is further amplified when exemplar optimization is used together with instruction optimization, suggesting that the two should be co-optimized rather than treated separately\cite{wan2024teachbettersmarterinstructions}
 
 Exemplar optimization is useful even for tasks without available examples with techniques like Bootstrapping\cite{khattab2023dspycompilingdeclarativelanguage},
-which utilizes inputs solved during optimization. By indentifying useful and informative solutions, it allows for exemplar optimization without hand-crafted input-output pairs.
+which utilizes inputs solved during optimization. By identifying useful and informative solutions, it allows for exemplar optimization without hand-crafted input-output pairs.
 
 
 \subsection{Instruction optimization}
@@ -156,7 +156,7 @@ is essential due to the intractably large search space\cite{opsahlong2024optimiz
 The latter is beneficial as it allows the optimization to leverage human knowledge\cite{guo2024connectinglargelanguagemodels}, but
 to an extent defeats the purpose of automatic prompt optimization. Also, it is impossible to have pre-defined expert prompts for tasks that are not known yet.
 
-\subsubsection{"Gradient"-based approaches}
+\subsubsection{``Gradient''-based approaches}
 Although gradient-based optimization is unavailable in the discrete text space, many prompt optimization methods try to approximate with,
 as Tang et al.\cite{tang2024unleashingpotentiallargelanguage} put it, analogical gradient forms. Analogical gradient forms provide a clear
 optimization direction in a hill-climber setting and allow the use of gradient descent strategies such momentum, step size, warm-up and decay.
@@ -169,9 +169,9 @@ and apply the observed pattern to acquire a better performing prompt.
     \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
     Below is a sequence of past prompts and their scores.\\
     Design a new prompt in the sequence so that it achieves a better score. 
-    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.'' \hfill \textbf{Score}: 34.5\;\\
+    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ``Do the math.'' \hfill \textbf{Score}: 34.5\;\\
      ...\\
-     \textbf{Prompt $n$:} ''Let's think step-by-step.'' \hfill \textbf{Score}: 70.3\;
+     \textbf{Prompt $n$:} ``Let's think step-by-step.'' \hfill \textbf{Score}: 70.3\;
     }
     \hlbox{ctuorange}{\textbf{Optional:} Examples of the task like in \ref{box:insinductexample} }
     }
@@ -204,10 +204,10 @@ Feedback-enriched \textit{meta-prompts}, such as in figure \ref{box:crispometa},
     \textbf{LLM Input:} \hlbox{ctublue}{Your task is to create a new prompt for a language model. \\
     Below is a sequence of past prompts and their critiques and scores.\\
     Design a new prompt in the sequence so that it achieves a better score. 
-    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.'' \hfill \textbf{Score}: 34.5\;\\
+    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ``Do the math.'' \hfill \textbf{Score}: 34.5\;\\
      \textbf{Critique:} Does not encourage step-by-step reasoning.\\
      ...\\
-     \textbf{Prompt $n$:} ''Let's think step-by-step.'' \hfill \textbf{Score}: 70.3\;\\
+     \textbf{Prompt $n$:} ``Let's think step-by-step.'' \hfill \textbf{Score}: 70.3\;\\
      \textbf{Critique:} Too general, could be more enthusiastic.
     }
     }
@@ -221,14 +221,14 @@ improve on APE and ProTeGi by designing a more complete \textit{meta-prompt}.
 
 By extending the gradient analogy, Tang et al.\cite{tang2024unleashingpotentiallargelanguage} introduce other concepts
 known from traditional machine learning. First, a learning rate feature can be implemented by limiting the number of token, word or sentence edits the model
-can perform. Next, we can encorporate variable learning rate with strategies such as warm-up (learning rate grows in the beggining) or decay (learning rate
+can perform. Next, we can incorporate variable learning rate with strategies such as warm-up (learning rate grows in the beginning) or decay (learning rate
 decreases towards the end).
 
 Another way of balancing exploration and exploitation, besides edit limit-based learning rate analogies, is tuning the LLM sampling temperature. 
 Lower temperature encourages exploitation in the local solution space and higher temperature allows 
 more aggressive exploration of different solutions\cite{yang2024largelanguagemodelsoptimizers}.
 
-By encorporating a history of past prompts into the metaprompt we can implement an analogy of momentum. 
+By incorporating a history of past prompts into the \textit{meta-prompt} we can implement an analogy of momentum. 
 This is a machine learning concept which maintains gradients from past steps and uses them in computation of the next gradient.
 
 Including the optimization trajectory is useful but poses the problem of inflating the \textit{meta-prompt}. 
@@ -253,7 +253,7 @@ The intersection between LLMs and EAs, among other traditional meta-heuristics, 
 It lends itself to leverage LLM-powered EAs to improve prompts for the LLM, extending previously
 discussed prompt optimization methods. The seminal work in this space is EvoPrompt\cite{guo2024connectinglargelanguagemodels},
 which repurposed two EAs: Genetic Algorithm and Differential Evolution for prompt optimization. 
-Treating the text sequences in prompts as gene sequences, EvoPrompt performes crossover and mutation
+Treating the text sequences in prompts as gene sequences, EvoPrompt performs crossover and mutation
 on text prompts. 
 
 EA-based prompt optimization seems to demonstrate lower sensitivity to initial prompts. Although EvoPrompt utilizes some manual prompts,
@@ -264,7 +264,7 @@ Methods like PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} and Promptbree
 improve the efficiency and convergence of EA-based prompt optimization methods by supercharging them with more operators to provide balance between exploration and exploitation.
 Cui et al.\cite{cui2024phaseevounifiedincontextprompt} argue that the standard EA operators prioritize exploration and categorize them as global operators.
 To supplement them, they introduce local operators based on feedback, optimization trajectory and paraphrasing. By alternating between global and local 
-search, PhaseEvo demostrates better cost-efficiency compared to other EA-based prompt optimization methods\cite{cui2024phaseevounifiedincontextprompt}. 
+search, PhaseEvo demonstrates better cost-efficiency compared to other EA-based prompt optimization methods\cite{cui2024phaseevounifiedincontextprompt}. 
 
 In Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}, authors also include multiple different operators.
 Besides variations of previously discussed operators, they also include shuffling ICL examples and, most notably, a "hyper-prompt" which mutates 
@@ -278,7 +278,7 @@ Besides initialization, Lamarckian mutation can be useful for adding task-releva
 \begin{figurebox}{Mutation \textit{meta-prompt}, similar to paraphrasing.}{box:mutate}
     \textbf{LLM Input:} \hlbox{ctublue}{Rewrite the prompt below in a semantically equivalent but novel way.
     \hlbox{ctulightblue}{
-     \textbf{Prompt:} ''Let's think step-by-step.'' 
+     \textbf{Prompt:} ``Let's think step-by-step.'' 
     }
     }
     \textbf{LLM Output:} 
@@ -287,9 +287,9 @@ Besides initialization, Lamarckian mutation can be useful for adding task-releva
 
 \begin{figurebox}{Crossover/EDA \textit{meta-prompt}}{box:crossover}
     \textbf{LLM Input:} \hlbox{ctublue}{Combine the following prompts into a novel prompt. 
-    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ''Do the math.''\\
+    \hlbox{ctulightblue}{\textbf{Prompt $1$:} ``Do the math.''\\
      ...\\
-     \textbf{Prompt $n$:} ''Let's think step-by-step.''
+     \textbf{Prompt $n$:} ``Let's think step-by-step.''
     }
     }
     \textbf{LLM Output:}
@@ -297,8 +297,8 @@ Besides initialization, Lamarckian mutation can be useful for adding task-releva
 \end{figurebox}
 
 In figures \ref{box:mutate} and \ref{box:crossover} the reader can find possible \textit{meta-prompts} for a mutation and a crossover operator, respectively.
-By changing the meta-instructions in \ref{box:crossover} and increasing $n$, we can shift the crossover operator into a Estimation-of-Distribution (EDA)
-operator. Whereas crossover aims to combine 2-3 prompts into 1, EDA infers the distribution of a larger number of prompts and tries to 
+By changing the meta-instructions in \ref{box:crossover} and increasing $n$, we can shift the crossover operator into an Estimation-of-Distribution (EDA)
+operator. Whereas crossover aims to combine 2 or 3 prompts into 1, EDA infers the distribution of a larger number of prompts and tries to 
 create a new prompt from that distribution. 
 
 An important factor in the implementation of the crossover and EDA operators is the way of selecting prompt specimens.
@@ -313,19 +313,19 @@ the prompts in ascending order of fitness. To prevent the model from relying too
 lie to the model by telling it the prompt are in descending order of fitness. 
 This somewhat curbs the bias toward the later examples\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}.
 
-EAs are but one of many metaheuristics historically used for optimization and the 
-interactions of LLMs and metaheuristics is poised to be a fruitful research area in the near future.
-In their research, Pan et al.\cite{pan2024plumpromptlearningusing} adapted and compared several metaheuristics
+EAs are but one of many meta-heuristics historically used for optimization and the 
+interactions of LLMs and meta-heuristics is poised to be a fruitful research area in the near future.
+In their research, Pan et al.\cite{pan2024plumpromptlearningusing} adapted and compared several meta-heuristics
 including Hill-Climbing, Simulated Annealing, Genetic Algorithm, Tabu Search and Harmony Search for prompt optimization.
 
 
 \subsubsection{Note on evaluation cost reduction} 
-In many prompt optimization methods, prompt candidate evalutation is the most computation-intensive part of the process.
+In many prompt optimization methods, prompt candidate evaluation is the most computation-intensive part of the process.
 Especially with score-based evaluation, it has to be performed multiple times to ensure scoring robustness\cite{xiang2025selfsupervisedpromptoptimization}.
 To lower the evaluation costs, research adopts two approaches. 
 
 First branch, represented by ProTeGI\cite{pryzant2023automaticpromptoptimizationgradient} and SPRIG\cite{zhang2024sprigimprovinglargelanguage} use statistical resource allocation methods such as the
-Upper Confidence Bound algorithm and Succesive Rejects to allocate evaluations only to promising candidates. This way, the total compute budget gets reduced.
+Upper Confidence Bound algorithm and Successive Rejects to allocate evaluations only to promising candidates. This way, the total compute budget gets reduced.
 The other branch relies on ditching the numerical scoring and comparing outputs directly in a pairwise manner with a LLM judge\cite{xiang2025selfsupervisedpromptoptimization}.
 
 \subsection{Multi-stage and reference-free methods}
@@ -334,7 +334,7 @@ Common critique of the methods is that they are unpractical and not applicable t
 Most methods depend heavily on external references for evaluation which are often unavailable or 
 unpractical to define, especially for open-ended tasks \cite{xiang2025selfsupervisedpromptoptimization}.
 Xiang et al.\cite{xiang2025selfsupervisedpromptoptimization} tackle this problem by using pairwise LLM-based evaluation
-and Zhang et al.\cite{zhang2024glapegoldlabelagnosticprompt} develop a gold label-free method method on evaluation based
+and Zhang et al.\cite{zhang2024glapegoldlabelagnosticprompt} develop a gold label-free method on evaluation based
 on self-consistencies of different answers.
 
 Also, as the complexity of prompt structure increases, many prompt optimization techniques are no longer applicable\cite{schnabel2024symbolicpromptprogramsearch}.
@@ -345,7 +345,7 @@ and a multitude of search algorithms.
 
 Furthermore, modern LLM workflows interconnect various LLM and prompt instances into complex prompt programs.
 Most prompt optimizer approaches do not apply to these multi-stage LLM programs\cite{opsahlong2024optimizinginstructionsdemonstrationsmultistage}
-as a whole. Optimizing each component separately is possible but this approach ignores their mutual influence.
+as a whole. Optimizing each component separately is possible, but this approach ignores their mutual influence.
 
 DSPy\cite{khattab2023dspycompilingdeclarativelanguage} is a Python library aiming to simplify LLM program composition with 
 an intuitive interface. Most importantly, it allows for optimizing the whole pipeline, including exemplar optimization, instruction optimization and weight fine-tuning

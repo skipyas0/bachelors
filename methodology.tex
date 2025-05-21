@@ -23,7 +23,7 @@ Consider the simple \texttt{Signature} in figure \ref{box:simplesig}, which impl
 
 \begin{figurebox}{Simple Signature}{box:simplesig}
     \hlbox{ctuorange}{Word: \texttt{str}}  
-    \hlbox{brown}{Antonymum: \texttt{str}}
+    \hlbox{brown}{Antonym: \texttt{str}}
 \end{figurebox}
 
 For more complex tasks, filling the output descriptions or even adding explicit instructions is necessary.
@@ -36,7 +36,7 @@ In figure \ref{box:complexsig}, notice that it is possible to specify multiple i
      Grade: \texttt{int} (Numerical grade 1-10)} 
     \hlbox{ctublue}{Grade the text.\\ You are an expert text evaluator. \\
     Use the grading guide to evaluate the test and give a final grade. 
-    Use formal language and markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}
+    Use formal language and Markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}
 \end{figurebox}
 
 We will maintain this formatting style whenever showing a \texttt{Signature} structure in the future: \textcolor{ctuorange}{orange inputs}, \textcolor{brown}{brown outputs} and the optional \textcolor{ctublue}{blue instructions}.
@@ -44,7 +44,7 @@ We will maintain this formatting style whenever showing a \texttt{Signature} str
 Sufficiently large instruction-tuned LLMs are usually good at reliably producing JSON output.
 For smaller models or more complex output structures, it might be necessary to use some form of constrained generation as discussed in \ref{sec:inference}.
 A JSON schema could be constructed automatically from the \texttt{Signature} and passed into a parser-based sampler.
-However this is not necessary for our use-case and the only safe-guard we implement is repeated generation in case of a parsing error.
+However, this is not necessary for our use-case and the only safeguard we implement is repeated generation in case of a parsing error.
 
 \subsection{Predict method}
 To facilitate \texttt{Signature}-powered generation, we implement a \texttt{predict} method that 
@@ -81,9 +81,9 @@ In figure \ref{box:predictdev} notice the sections of the prompt following promp
 
 First, the directive states the task, then further context is added about the \texttt{Signature} data structure and the task.
 Next, notice the example showing the proper output. Finally, few more clarifying instructions about the output format are added.
-In experiments, this prompt is successful in incentivizing parseable outputs adhering to the \texttt{Signature} specifications.
+In experiments, this prompt is successful in incentivizing parsable outputs adhering to the \texttt{Signature} specifications.
 
-Parsing the output presents some challenges as the LLM sometimes wraps the JSON output into a markdown code block
+Parsing the output presents some challenges as the LLM sometimes wraps the JSON output into a Markdown code block
 or uses inconsistent escape sequences. We implement a simple parser based on regular expressions that is able to parse 
 the majority of outputs. In case of a parsing issue or model failure, such as getting stuck in a generation loop, we add a repeated generation
 feature.
@@ -91,10 +91,10 @@ feature.
 \subsection{Inference techniques implementation}
 Leveraging the \texttt{predict} method and the modular \texttt{Signature}-based interface, we implement a suite of inference-time prompting techniques. 
 Each technique is realized through systematic modifications of the \texttt{Signature} fields, changing the developer prompt and the chaining of multiple generation steps 
-and function calls. This design allows for composability and reuse while preserving transparency.
+and function calls. This design allows for modularity and reuse while preserving transparency.
 We implement the following methods.
 \begin{enumerate}
-    \item \textbf{Chain-of-thought}\cite{NEURIPS2022_8bb0d291}: Prepends a reasoning field to the \texttt{Signature} outputs which forms a scratchpad for the LLM.
+    \item \textbf{Chain-of-thought}\cite{NEURIPS2022_8bb0d291}: Prepends a reasoning field to the \texttt{Signature} outputs which forms a scratch pad for the LLM.
     \item \textbf{Chain-of-thought with Self-consistency}\cite{wang2023selfconsistencyimproveschainthought}: Multiple CoT generations with majority-voting.
     \item \textbf{ReAct}\cite{yao2023reactsynergizingreasoningacting}: Adding tools allows the LLM to interleave thoughts and action steps.
     \item \textbf{Program-of-thought}\cite{chen2023programthoughtspromptingdisentangling}: Two-stage CoT with Python-code execution
@@ -102,7 +102,7 @@ We implement the following methods.
     \item \textbf{Tree of Thoughts}\cite{yao2023treethoughtsdeliberateproblem}: The problem is first decomposed and each step is expanded, forming a thought tree, which is then traversed with BFS or DFS.
 \end{enumerate}
 
-These techniques are however not the main focus of this bachelor's thesis and we proceed without further discussion or evaluation.
+These techniques are however not the main focus of this bachelor's thesis, and we proceed without further discussion or evaluation.
 In our prompt optimization method, we will utilize only the basic Chain-of-thought module.
 
 \section{Datasets}
@@ -112,7 +112,7 @@ While searching available datasets, we focus on the following criteria:
     \item \textbf{Output complexity}: We focus on more complex outputs. Specifically, datasets with multiple-choice or Yes/No answers are omitted. 
     This disqualifies commonly used datasets as MMLU or BigBenchHard.
     \item \textbf{Contamination}: Recently, researchers have expressed concern\cite{white2025livebenchchallengingcontaminationlimitedllm} 
-    whether benchmarks are reliable evaluations of models as they might appear in their training data. We omit most common datasets, such as GSM8k\cite{cobbe2021gsm8k}, which has been shown to have enflated scores for some models\cite{testing_language_models_on_a_held_out_high_school_national_finals_exam}.
+    whether benchmarks are reliable evaluations of models as they might appear in their training data. We omit most common datasets, such as GSM8k\cite{cobbe2021gsm8k}, which has been shown to have inflated scores for some models\cite{testing_language_models_on_a_held_out_high_school_national_finals_exam}.
     \item \textbf{Output verification}: We prefer to use simple automatic verification rather that using LLM-as-a-judge, which has been shown to be 
     biased in some circumstances\cite{ye2024justiceprejudicequantifyingbiases}. Neither do we use human feedback, which defeats the purpose of automatic prompt optimization.
     \item \textbf{Difficulty}: We omit tasks where models already have near-perfect score. 
@@ -142,7 +142,7 @@ Each sequence is created according to a formula with randomly selected coefficie
 \end{itemize}
 This tests the model's ability to 1. detect and understand patterns and 2. systematically perform simple arithmetic. 
 In practice, we will optimize just for a single sequence category and observe whether the optimizer evolves a prompt with a tutorial for the specific sequence category.
-Experiments revealed that the \texttt{Alternating} class of sequences has a good difficulty balance and we will use it for evaluation.
+Experiments revealed that the \texttt{Alternating} class of sequences has a good difficulty balance, and we will use it for evaluation.
 
 \section{Evaluation Metrics}
 The evaluation metric defines the optimization goal and thus forms its central component. 
@@ -162,7 +162,7 @@ fall into this category. For each benchmark we use a simple accuracy metric. Giv
 \subsection{Metrics for Self-Supervised Optimization}\label{sec:ssometrics}
 In self-supervised contexts, metrics are usually based on reward models pretrained on human preference or environment data.
 To allow our method to be applied to gold label-free problems, we turn to LLM-based direct pairwise comparisons.
-Given a dataset $\mathcal{D}$ with queries $q$, output $y$ produced by prompt $P \in \mathcal{P}$ and a set completions $\mathcal{C}_{q}$ for each query.
+Given a dataset $\mathcal{D}$ with queries $q$, output $y$ produced by prompt $P \in \mathcal{P}$ and a set of completions $\mathcal{C}_{q}$ for each query.
 \begin{equation}
     \mathcal{F}_{\mathcal{D}}^{\text{pairwise}}(q, y, \mathcal{C}_{q}) = \operatorname{WinRate}(\{\operatorname{Compare}(q,y,c)\vsep c\in \mathcal{C}_{q}\}).
 \end{equation}
@@ -175,7 +175,7 @@ This design decision has several reasons.
 \begin{enumerate}
     \item Most PO research uses a hill-climber architecture.
     \item EAs suffer from slow convergence compared to state-of-the-art hill-climber PO\cite{xiang2025selfsupervisedpromptoptimization}.
-    \item PO is complex as it is and more complicated architectures only introduce more hyperparameters.
+    \item PO is complex as it is, and more complicated architectures only introduce more hyperparameters.
 \end{enumerate}
 
 
@@ -237,12 +237,12 @@ The operators' design should address the following challenges:
 We now discuss the design of each prompt generation operator and display their signatures and \textit{meta-prompts}. 
 Note that all operators are ultimately used in a CoT context, where a \texttt{reasoning} field is prepended to each signature's outputs.
 \subsubsection{Lamarckian}
-Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} is used by many PO methods and often refered to as \texttt{Lamarckian Mutation}. 
+Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} is used by many PO methods and often referred to as \texttt{Lamarckian Mutation}. 
 We will adopt this terminology from now on and design our \texttt{Lamarckian} operator. 
 Design of its meta-prompt, shown in figure \ref{box:lamarcksig}, takes into account the design challenges mentioned earlier by 1. warning the LLM to be general and not to focus on a single example, 
 2. clearly states the problem using a directive and formatting specifications. 
 
-The problem with diversity still persists and we consider two approaches to solving it. 
+The problem with diversity still persists, and we consider two approaches to solving it. 
 We can increase the model's creativity by increasing its sampling temperature. Another approach is to use
 some kind of \textit{seed}, for example a \textit{persona}. We experiment with using personas from PersonaHub\cite{ge2024scalingsyntheticdatacreation}.
 Authors of this paper argued that seeding generation with the persona helps with creating novel synthetic data. 
@@ -266,11 +266,11 @@ We randomly sample $N$ examples from a separate training split. So
 \newpage
 \subsubsection{Iterative}
 The \texttt{Iterative} operator is one of the most common and simplest operators. 
-It uses a sequence of prompts and their scores in an ascending order.
+It uses a sequence of prompts and their scores in ascending order.
 The hope is for the LLM to deduce the optimization direction by looking at the differences in the prompts and incite it to continue the pattern.
 
 Although some research\cite{yang2024largelanguagemodelsoptimizers} only uses the top prompts, we opt for a roulette selection method
-and sort to prompts by score in an ascending order. The number $N$ is a hyperparameter dictating how many prompts to sample.
+and sort to prompts by score in ascending order. The number $N$ is a hyperparameter dictating how many prompts to sample.
 We define the retrieval function as
 \begin{equation}
    \mathcal{R}_{\text{I}}(\mathcal{P}, \mathcal{E}) = \operatorname{SortByScore}(\operatorname{RouletteSampling}(\mathcal{P}, \mathcal{E}, N), \mathcal{E})
@@ -285,7 +285,7 @@ as opposed to 'improve a prompt' to incite more novelty. For formatting, we use 
     \hlbox{ctublue}{Craft a new prompt for an LLM.
     
     You are an intelligent pattern continuation function capable of advanced reasoning and prompt synthesis.\\
-    You are given a given a history of past prompts along with their scores.\\
+    You are given a history of past prompts along with their scores.\\
     They are listed in ascending order of fitness.\\
     Follow the sequence and design an improved prompt. \\
 }
@@ -330,7 +330,7 @@ worst prompts. The retrieval function is
 \subsubsection{Feedback}
 As we mentioned earlier, the \texttt{Feedback} operator is suitable for use in self-supervised settings.
 It leverages reasoning traces from pairwise LLM-based comparisons, discussed in \ref{sec:ssometrics}. 
-Let $\mathcal{E}_{\text{comp}}$ hold textual comparisons of each prompts and their attempts and
+Let $\mathcal{E}_{\text{comp}}$ hold textual comparisons of each prompt and their attempts and
 $P_{\text{base}} = \operatorname{RandomSample}(\mathcal{P})$. Then
 \begin{equation}
     \mathcal{R}_{\text{F}}(\mathcal{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
@@ -377,7 +377,7 @@ This method uses no optimization signal or improvement instructions and relies o
 In figure \ref{box:formatting} we show the formatting specification part, which is identical for all prompt generation \textit{meta-prompts}.
 
 \begin{figurebox}{Formatting specifications, which are the same for all operators}{box:formatting}
-    Use markdown formatting in you final answer to indicate bullet points and whatever else necessary.\\
+    Use Markdown formatting in your final answer to indicate bullet points and whatever else necessary.\\
     As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
     In the final answer, do not include a title or any additional data, just the prompt.
 \end{figurebox}

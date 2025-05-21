@@ -7,7 +7,7 @@ Let $\mathcal{T}$ be the space of character sequences. Then we will define an LL
     \mathscr{M}: \mathcal{T} \rightarrow \mathcal{L}(\mathcal{T}),
 \end{equation}
 where $\mathcal{L}(\mathcal{T})$ is a probabilistic language distribution learned during the LLM's training.
-This distribution is governed by the LLM's hyperparameters $H$, which affext its behaviour. 
+This distribution is governed by the LLM's hyperparameters $H$, which affect its behavior. 
 
 Of particular interest is the sampling temperature $\tau \in H$ which interpolates between greedy decoding and uniform sampling.
 In theory, $\mathscr{M}$ is deterministic for $\tau=0$, but in practice numerical errors still introduce variance.
@@ -56,10 +56,10 @@ we formulate a metric based on pairwise comparisons and define
 \begin{equation}
     \mathscr{F}_{\mathcal{D}}^{\text{pairwise}}: \mathcal{Q} \times 2^\mathcal{U} \rightarrow \mathbb{R},
 \end{equation}
-which maps a query and a set of outputs to a real number. Here we use the powerset notation $2^\mathcal{U}$ to signify the set of all possible pairs of completions $y \in \mathcal{U}$.
+which maps a query and a set of outputs to a real number. Here we use the power set notation $2^\mathcal{U}$ to signify the set of all possible pairs of completions $y \in \mathcal{U}$.
 
 To generalize, we define $\mathscr{F}_{\mathcal{D}}$ which combines both $\mathscr{F}_{\mathcal{D}}^{\text{pairwise}}$ and $\mathscr{F}_{\mathcal{D}}^{\text{supervised}}$
-Using this, we define the mean perfomance $\mathcal{E}$ of a prompt $P$ on a dataset $\mathcal{D}$ as
+Using this, we define the mean performance $\mathcal{E}$ of a prompt $P$ on a dataset $\mathcal{D}$ as
 \begin{equation}
     \mathcal{E}_{\mathcal{D}}(P) = \frac{1}{\Vert \mathcal{D} \Vert}\underset{t=(q,g)\in \mathcal{D}}{\sum}\mathscr{F}(\mathscr{M}(P\vsep q), t, \mathcal{C}_{q}).
 \end{equation}
