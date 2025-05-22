@@ -205,11 +205,12 @@ The most striking was the failure of the \texttt{Feedback} operator. This operat
 proposes new prompts using a history of comparisons between a base prompt and other prompts and their outputs. 
 
 We now discuss several possible explanations for the failure of the \texttt{Feedback} and \texttt{Reflective} operators.
+\newpage
 \begin{enumerate}
     \item \textbf{Weak model}: Our optimizer model \texttt{Google Gemma 3 27B} is smaller than most models used in the literature, due to our limited computation budget. It could be the case that generating effective feedback and using it to improve prompts is an emergent capability of larger models.
     \item \textbf{Structured generation}: We used our custom structured generation framework which allowed us to easily define \textit{meta-prompts} and use inference techniques such as CoT, but it is possible that it made the already challenging prompt optimization task even harder and more convoluted, favoring simpler operators.
     \item \textbf{Unclear comparison formulation}: In \texttt{Feedback}, the comparisons are made between \texttt{prompt\_a} and \texttt{prompt\_b}. Although we include information about whether the base prompt won the comparison, we did not state whether it was \texttt{prompt\_a} or \texttt{prompt\_b}. This was done under the assumption that the model could deduce this.
-    \item \textbf{Overfitting}: In comparisons using \texttt{Reflective} and \texttt{Feedback}, the model looks at outputs on a single task. For example, in \texttt{Sequences}, many prompts include instructions like ``Output the last negative number''. It would probably be beneficial to compare or score attempts at multiple tasks simultaneously.
+    \item \textbf{Overfitting}: In comparisons using \texttt{Reflective} and \texttt{Feedback}, the model looks at outputs on a single task. For example, in \texttt{Sequences}, many prompts include instructions like ``Output the last negative number''. It would probably be beneficial to compare or score attempts at multiple tasks simultaneously. \\\\
     \item \textbf{Diversity and chance}: Both \texttt{Reflective} and \texttt{Feedback} use the ``improve'' wording as opposed to \texttt{Paraphrase} and \texttt{Iterative}, which use the ``create new'' wording. Although not substantiated in data, the latter operators seem to be generating more diverse prompts. This plays well with our edit distance-based pruning method.
     \item \textbf{Comparisons vs. performance}: It begs whether our LLM-generated comparisons reflect the actual quality of outputs and prompts, or if they promote the model's biases — which favor length and sounding smart~\cite{ye2024justiceprejudicequantifyingbiases}.
 \end{enumerate}
@@ -218,7 +219,7 @@ By trying to establish a strong baseline, we did not utilize the best prompts fo
 As initial prompts play a crucial role\cite{yang2024dualphaseacceleratedpromptoptimization} in exploring the vast search space,
 this might have hindered our method's performance. We hoped to achieve better initial prompt diversity by seeding the \texttt{Lamarckian} operator using \texttt{Personas}~\cite{ge2024scalingsyntheticdatacreation}.
 However, this diversity seems to come at the cost of diminished initial scores. We cannot answer for sure whether this trade-off is worth it. 
-
+\newpage
 Our optimizer hyperparameters were selected arbitrarily and focused on depth rather than breadth by prioritizing iteration count over population size.
 On all tasks except \texttt{Sequences}, the optimization process saturated quite early. This suggests that focusing on depth is misguided,
 and larger population sizes might be beneficial.
@@ -248,12 +249,14 @@ All words should start with the starting letter of the animal given, for example
 
 We provided three such examples without further context and observed the quality of the results. These examples were used to construct the initial population through
 the \texttt{Lamarckian} operator.
+
 We ran the optimizer with population size $S=4$, iteration count $I=3$, batch size $B=1$ and pruning factor $f_{\text{prune}} = 0.5$.
 The LLM of choice was again the \texttt{Google Gemma 3 27B} with $\tau = 0.75$ for $\mathscr{M}_{\text{optim}}$ and $\tau = 0.0$ for $\mathscr{M}_{\text{solve}}$.
 
 We present the best results from the initial population (generation $0$) and the last generation ($3$), as ranked by $\mathscr{M}_{\text{optim}}$.
 The initial prompts already produced satisfactory results, with the winning result making sense and having only one error in alliteration.
 However during the optimization, it seems that the comparison function started favoring longer results, consistent with findings of Ye et al.\cite{ye2024justiceprejudicequantifyingbiases}.
+
 This problem originated in the first optimization step, where the \texttt{Feedback} operator created a prompt that instructed the LLM to ``provide 3 different poem options''.
 Comparisons show that multiple options are preferred by the comparison function as they ``showcase more variety and exploration of the theme''.
 
@@ -289,8 +292,10 @@ Comparisons show that multiple options are preferred by the comparison function 
 \end{figurebox}
 
 We conclude that our method failed to improve poem-generating prompts in this experiment, probably due to the 
-ambiguous task definition, small population and batch sizes. Performance could be improved by designing 
-a more specific operator set for creative tasks, as opposed our general-purpose operator set.
+ambiguous task definition, small population and batch sizes. 
+
+Performance could be improved by designing 
+a more specific operator set for creative tasks, as opposed to our general-purpose operator set.
 
 \subsection{Images}
 We employed OpenAI's \texttt{Dall-E 3}\cite{BetkerImprovingIG} to demonstrate that our method can create prompts even for diffusion text-to-image models.
@@ -363,7 +368,7 @@ All generated images reflect the target description and, as artistic taste is su
 to decide if the optimized prompts produced better images. We observe, that in figure \ref{fig:wistful}, the image seems to get more personal as it zooms in on the subject.
 The winning images are all in a very similar style. This is in contrast to figure \ref{fig:graceful}, where the focus seems to have shifted to 
 photorealistic images in the first optimization step.
-
+\newpage
 Note that in this case, the optimization is framed differently from previous experiments. 
 Whereas before we optimized a prompt template which works with a whole class of tasks,
 in this case we are optimizing a complete prompt for a particular image description in an attempt to

@@ -1,23 +1,23 @@
 \section{Conclusion}
-In this bachelor's thesis, we conducted a thorough and extensive survey of cutting-edge literature, spanning 
+In this bachelor's thesis, we conducted a comprehensive survey of cutting-edge literature, spanning 
 inference-time scaling methods, prompt engineering and automatic prompt optimization.
 We conceptually framed our research topic as a part of the compile-time paradigm, contrasting against training-time and inference-time scaling.
 
-Inspired by research trends, we created a structured generation framework, implementing several of the discussed inference-time techniques.
-We then establish strong mathematical formalism and, building upon our structured generation framework, we design a modular prompt optimizer.
-Our prompt optimization framework, a population-based hill-climber algorithm, features 4 diverse expansion operators using \textit{meta-prompts} - prompts which generate other prompts.
+Drawing inspiration from contemporary research trends, we developed a structured generation framework, implementing several of the discussed inference-time techniques.
+We established strong mathematical formalism and, building upon our structured generation framework, designed a modular prompt optimizer.
+Our prompt optimization framework, a population-based hill-climber algorithm, features four distinct expansion operators using \textit{meta-prompts} - prompts which generate other prompts.
 Additionally, we include an initialization operator utilizing an instruction induction \textit{meta-prompt} and a diversity-maintaining pruning feature.
 One of our expansion approaches is built upon a LLM-based pairwise comparison technique, suitable for self-supervised contexts.
 
-In our primary experiment, we focused on comparing our 4 \textit{meta-prompting} approaches against each other and an instruction induction baseline.
-We evaluate all variants of our method on 3 tasks from various disciplines, including a custom numerical pattern prediction task.
-All evaluations were repeated 3 times for higher statistical significance.
-Although the performance of some variants of our method did not meet expectations, we showed that it is possible to surpass a strong instruction induction baseline even with weak initialization prompts. 
+In our primary experiment, we focused on comparing our four \textit{meta-prompting} approaches against each other and an instruction induction baseline.
+We evaluate all variants of our method on three tasks from various disciplines, including a custom numerical pattern prediction task.
+All evaluations were repeated three times for higher statistical significance.
+Although the performance of some variants of our method did not meet expectations, we demonstrated that it is possible to surpass a strong instruction induction baseline even with weak initialization prompts. 
 Our results show that LLMs' sensitivity to input prompts is just as pronounced in the design of \textit{meta-prompts}, highlighting the need for their careful design.
 
-Our secondary experiment focused on optimizing prompt for creative tasks in a self-supervised context.
+Our secondary experiment focused on optimizing prompts for creative tasks in a self-supervised context.
 We applied our method to creative text and image generation tasks with interesting results. 
-This showcases the wide applicability of prompt optimization in general.
+These results showcase the wide applicability of prompt optimization in general.
 
 Working on this thesis has been an excellent opportunity to gain hands-on experience with cutting-edge research in a rapidly advancing field.
 Although our method did not achieve impressive results, we incorporated ideas from a plethora of recent papers, 
