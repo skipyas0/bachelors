@@ -20,7 +20,6 @@ For $\tau = 0$, the sampling process is deterministic in theory, but in practice
 
 The input sequence is generally called a \textit{prompt}. The model recursively generates next tokens, forming an output sequence, which is also referred to as a \textit{completion}.
 Generation continues until a special \texttt{stop} token is generated or until a token limit is reached.
-
 In LLM training, loss has been empirically found to scale with computation resources used\cite{kaplan2020scalinglawsneurallanguage}. This is referred to as training-time scaling.
 With diminishing returns, research has turned to inference-time scaling, characterized by expending more resources during inference, for example by post-training the LLM to begin completions
 with a reasoning chain. This brought impressive results particularly in reasoning-heavy domains. The post-training is done using both reinforcement learning and supervised finetuning.

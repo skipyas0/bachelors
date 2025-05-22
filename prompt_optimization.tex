@@ -240,6 +240,7 @@ To fit into the context limit, trajectory can be summarized or retrieved based o
 Evolutionary Algorithms (EAs) are a time-proven and versatile optimization method. 
 They have been shown to be effective in search spaces with millions and billions of variables\cite{meyerson2024languagemodelcrossovervariation}
 by emulating the processes observed in natural evolution using crossover (sexual reproduction) and mutation (asexual reproduction) operators.
+
 Although widely successful, EAs have been limited by the challenging nature of operator design.
 Developing them requires extensive manual work by experts with domain knowledge\cite{liu2024largelanguagemodelsevolutionary}.
 
@@ -268,8 +269,9 @@ search, PhaseEvo demonstrates better cost-efficiency compared to other EA-based 
 
 In Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt}, authors also include multiple different operators.
 Besides variations of previously discussed operators, they also include shuffling ICL examples and, most notably, a "hyper-prompt" which mutates 
-the optimizer \textit{meta-prompt} in an attempt to make the method self-referential. A possible flaw in this method is the fact that it
-selects the operators randomly at each step, leading to diminished efficiency compared to a more organized approach\cite{cui2024phaseevounifiedincontextprompt}, 
+the optimizer \textit{meta-prompt} in an attempt to make the method self-referential. 
+
+A possible flaw in this method is the fact that it selects the operators randomly at each step, leading to diminished efficiency compared to a more organized approach\cite{cui2024phaseevounifiedincontextprompt}, 
 necessitating hundreds of evaluations before convergence\cite{wan2024teachbettersmarterinstructions}.
 
 All three discussed EA-based methods utilize Instruction Induction\cite{honovich2022instructioninductionexamplesnatural} to some extent, usually under the term "Lamarckian mutation". 
@@ -303,7 +305,9 @@ create a new prompt from that distribution.
 
 An important factor in the implementation of the crossover and EDA operators is the way of selecting prompt specimens.
 In EvoPrompt\cite{guo2024connectinglargelanguagemodels}, a roulette selection method is employed. Other methods utilize more advanced
-selection methods to encourage diversity. Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} filters inputs
+selection methods to encourage diversity. 
+\newpage
+Promptbreeder\cite{fernando2023promptbreederselfreferentialselfimprovementprompt} filters inputs
 for its EDA based on their BERT embedding and PhaseEvo\cite{cui2024phaseevounifiedincontextprompt} selects parent prompts
 based on the Hamming distance of their "performance vectors", which hold the prompts' performance on task samples.  
 This method ensures that the prompts that get paired with each other do not make the same mistakes.

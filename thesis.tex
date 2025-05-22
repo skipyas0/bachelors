@@ -32,7 +32,7 @@
 	day = 10,
 	month = 5,
 	year = 2025,
-%	specification-file = {ctutest-zadani.pdf},
+	specification-file = {Thesis-assignment.pdf},
 %	front-specification = true,
 %	front-list-of-figures = false,
 %	front-list-of-tables = false,
@@ -141,17 +141,39 @@ In Prague, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \usetikzlibrary{positioning, arrows.meta, shapes, decorations.pathreplacing, calc}
 %\geometry{margin=1in}
 
-\newcommand{\hlbox}[2]{%
-  \begin{tcolorbox}[colback=#1!10!white,
-                    colframe=#1!80!black,
-                    boxrule=0.8pt,
-                    arc=4pt,
-                    left=6pt,
-                    right=6pt,
-                    top=4pt,
-                    bottom=4pt,
-                    enhanced,
-                    breakable]
+% \newcommand{\hlbox}[2]{%
+%   \begin{tcolorbox}[colback=#1!10!white,
+%                     colframe=#1!80!black,
+%                     boxrule=0.8pt,
+%                     arc=4pt,
+%                     left=6pt,
+%                     right=6pt,
+%                     top=4pt,
+%                     bottom=4pt,
+%                     enhanced,
+%                     breakable]
+%   #2
+%   \end{tcolorbox}
+% }
+\NewDocumentCommand{\hlbox}{m +m o}{%
+  \begin{tcolorbox}[
+    colback=#1!10!white,
+    colframe=#1!80!black,
+    boxrule=0.8pt,
+    arc=4pt,
+    left=6pt,
+    right=6pt,
+    top=4pt,
+    bottom=4pt,
+    enhanced,
+    breakable,
+    overlay={
+      \IfValueT{#3}{%
+        \node[anchor=north east, font=\scriptsize\bfseries, text=#1!80!black] 
+        at (frame.north east) {#3};
+      }
+    }
+  ]
   #2
   \end{tcolorbox}
 }
@@ -242,6 +264,7 @@ In Prague, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \bibliographystyle{ieeetr}
 \bibliography{references}
 
-\include{appendix}
-%\ctutemplate{specification.as.chapter}
+\ctutemplate{specification.as.chapter}
+
+
 \end{document}

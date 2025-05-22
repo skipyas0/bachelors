@@ -1,3 +1,29 @@
+\section{Conclusion}
+In this bachelor's thesis, we conducted a thorough and extensive survey of cutting-edge literature, spanning 
+inference-time scaling methods, prompt engineering and automatic prompt optimization.
+We conceptually framed our research topic as a part of the compile-time paradigm, contrasting against training-time and inference-time scaling.
+
+Inspired by research trends, we created a structured generation framework, implementing several of the discussed inference-time techniques.
+We then establish strong mathematical formalism and, building upon our structured generation framework, we design a modular prompt optimizer.
+Our prompt optimization framework, a population-based hill-climber algorithm, features 4 diverse expansion operators using \textit{meta-prompts} - prompts which generate other prompts.
+Additionally, we include an initialization operator utilizing an instruction induction \textit{meta-prompt} and a diversity-maintaining pruning feature.
+One of our expansion approaches is built upon a LLM-based pairwise comparison technique, suitable for self-supervised contexts.
+
+In our primary experiment, we focused on comparing our 4 \textit{meta-prompting} approaches against each other and an instruction induction baseline.
+We evaluate all variants of our method on 3 tasks from various disciplines, including a custom numerical pattern prediction task.
+All evaluations were repeated 3 times for higher statistical significance.
+Although the performance of some variants of our method did not meet expectations, we showed that it is possible to surpass a strong instruction induction baseline even with weak initialization prompts. 
+Our results show that LLMs' sensitivity to input prompts is just as pronounced in the design of \textit{meta-prompts}, highlighting the need for their careful design.
+
+Our secondary experiment focused on optimizing prompt for creative tasks in a self-supervised context.
+We applied our method to creative text and image generation tasks with interesting results. 
+This showcases the wide applicability of prompt optimization in general.
+
+Working on this thesis has been an excellent opportunity to gain hands-on experience with cutting-edge research in a rapidly advancing field.
+Although our method did not achieve impressive results, we incorporated ideas from a plethora of recent papers, 
+and we walk away with many ideas for future research.
+We discuss these possible research avenues in the next section.
+
 \section{Future work}
 Prompt optimization is an exciting and exceptionally active branch of research. 
 Our experiments inspire further work on this topic, and we will discuss possible research topics in this section.
@@ -7,14 +33,9 @@ Our experiments inspire further work on this topic, and we will discuss possible
     \item \textbf{Improved structured generation}: Our structured generation method is in no way perfect and could represent a bottleneck, limiting the LLM's capabilities. More work is needed to find the best format for LLM usage in this context. Although modern LLM's are proficient JSON generators, recently leaked system prompts reveal that some top LLM's use XML tags instead. 
     \item \textbf{Prompt representation structures}: More sophisticated prompt representation, like using acyclic directed graphs\cite{zhang2024sprigimprovinglargelanguage}, could allow us to make more precisely defined changes to the prompts. This could help retain diversity and task relevancy as the optimized prompts grow ever longer for more complicated tasks.
     \item \textbf{Applying meta-heuristics}: The majority of research made use of basic meta-heuristics, such as the hill-climber algorithms. Application of evolutionary algorithms\cite{guo2024connectinglargelanguagemodels} and other meta-heuristics\cite{pan2024plumpromptlearningusing} presents an exciting intersection of deep learning and classical optimization.
-    \item \textbf{Inference-time techniques}: For all LLM calls, we used the Chain-of-thought end-point of our inference framework. It is possible to use other inference techniques such as Tree-of-Thoughts in its place.
+    \item \textbf{Inference-time techniques}: For all LLM calls, we used the Chain-of-thought end-point of our inference framework. It is possible to use other inference techniques such as Tree-of-Thoughts in its place. Alternatively, dedicated reasoning models which perform Chain-of-thought automatically could be utilized.
     \item \textbf{Agentic optimization}: An interesting possibility is handing the control over the optimization process over to a \textit{manager} LLM that would control it using tools in a ReAct-like setting. We conducted preliminary experiments on this topic, but further exploration is needed. 
 \end{enumerate}
 
 These topics provide intriguing avenues for future research. Another possibility is increasing the experiment scale, either by making them more efficient
 using clever optimizations or more cost-effective models, or by increasing the computation budget. 
-
-\section{Conclusion}
-We showed that it is possible to apply prompt optimization to a variety of tasks, spanning language understanding, numerical pattern recognition and coding, as well as some creative tasks.
-Although some variants of our method did not meet expectations, we showed that it is possible to surpass a strong Instruction Induction baseline even with weak initialization prompts. 
-Our results show that LLMs' sensitivity to input prompts is just as pronounced in the design of \textit{meta-prompts}, highlighting the need for their careful design.

@@ -22,8 +22,8 @@ When employing good naming practices the model can often deduce the task only by
 Consider the simple \texttt{Signature} in figure \ref{box:simplesig}, which implicitly instructs the LLM to return a word with a meaning opposite to the provided input.
 
 \begin{figurebox}{Simple Signature}{box:simplesig}
-    \hlbox{ctuorange}{Word: \texttt{str}}  
-    \hlbox{brown}{Antonym: \texttt{str}}
+    \hlbox{ctuorange}{Word: \texttt{str}}[Inputs]  
+    \hlbox{brown}{Antonym: \texttt{str}}[Outputs]
 \end{figurebox}
 
 For more complex tasks, filling the output descriptions or even adding explicit instructions is necessary.
@@ -31,15 +31,15 @@ In figure \ref{box:complexsig}, notice that it is possible to specify multiple i
 
 \begin{figurebox}{Complex Signature. }{box:complexsig}
     \hlbox{ctuorange}{Text: \texttt{str} (Student text)\\
-    Grading guide: \texttt{str} (Steps to follow during evaluation)} 
+    Grading guide: \texttt{str} (Steps to follow during evaluation)}[Inputs]
     \hlbox{brown}{Evaluation: \texttt{str} (Textual feedback)\\
-     Grade: \texttt{int} (Numerical grade 1-10)} 
+     Grade: \texttt{int} (Numerical grade 1-10)}[Outputs] 
     \hlbox{ctublue}{Grade the text.\\ You are an expert text evaluator. \\
     Use the grading guide to evaluate the test and give a final grade. 
-    Use formal language and Markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}
+    Use formal language and Markdown formatting in the evaluation\\ and output a 1-10 integer for the grade.}[Instructions]
 \end{figurebox}
 
-We will maintain this formatting style whenever showing a \texttt{Signature} structure in the future: \textcolor{ctuorange}{orange inputs}, \textcolor{brown}{brown outputs} and the optional \textcolor{ctublue}{blue instructions}.
+We will maintain this formatting style whenever showing a \texttt{Signature} structure in the future: \textcolor{ctuorange}{orange inputs}, \textcolor{brown}{brown outputs} and optional \textcolor{ctublue}{blue instructions}.
 
 Sufficiently large instruction-tuned LLMs are usually good at reliably producing JSON output.
 For smaller models or more complex output structures, it might be necessary to use some form of constrained generation as discussed in \ref{sec:inference}.
@@ -51,8 +51,8 @@ To facilitate \texttt{Signature}-powered generation, we implement a \texttt{pred
 involves 1) prepending a developer prompt to the messages, and 2) parsing of \texttt{Signature} outputs.
 
 \begin{figurebox}{Predict method developer prompt with highlighted prompt sections: directive, context, examples and format specifications.}{box:predictdev}
-    \hlbox{ctulightblue}{You are an intelligent function that returns structured JSON outputs matching a given schema.
-    }
+    \hlbox{ctulightblue}{You are an intelligent function that returns structured \\JSON outputs matching a given schema.
+    }[Directive]
     
     \hlbox{ctulightblue}{
     You will receive a JSON object containing: \\
@@ -64,20 +64,21 @@ involves 1) prepending a developer prompt to the messages, and 2) parsing of \te
         1. Understand the task from `instructions` or infer it from `inputs` and `outputs`\\
         2. Use the `inputs` to compute or generate the answer\\
         3. Respond **only** with keys from the `outputs` dictionary and values matching the described types
-    }
+    }[Context]
     \hlbox{ctulightblue}{Only return a flat JSON object like:\\
     \{
     "field1": <value matching type and description>,\\
     "field2": <...>
-    \}}
+    \}}[Examples]
     
-    \hlbox{ctulightblue}{Do not add metadata, explanations, or wrap outputs in additional structures.\\
+    \hlbox{ctulightblue}{Do not add metadata, explanations, or wrap \\outputs in additional structures.
     Do not include type names or field descriptions in the output.\\
-    Your output must be strictly valid JSON and fill **all** requested output fields.}
+    Your output must be strictly valid JSON and fill **all** requested output fields.}[Formatting specifications]
 \end{figurebox}
 
 The developer prompt has to clearly explain to the LLM how to work with the JSON-based \texttt{Signature}.
 In figure \ref{box:predictdev} notice the sections of the prompt following prompt engineering principles outlined in \ref{sec:preng}.
+The directive in this case slightly overlaps with the context and includes a memetic proxy by telling the model it is ``an intelligent function''.
 
 First, the directive states the task, then further context is added about the \texttt{Signature} data structure and the task.
 Next, notice the example showing the proper output. Finally, few more clarifying instructions about the output format are added.
@@ -153,11 +154,18 @@ These include classification metrics like accuracy or Hamming Loss, regression m
 
 All three main benchmarks that we will use (\texttt{Connections}, \texttt{CodeContests}, \texttt{Sequences}) 
 fall into this category. For each benchmark we use a simple accuracy metric. Given a dataset $\mathcal{D}$ and questions $q$ and gold labels $g$, $(q,g) \in \mathcal{D}$:
-\begin{enumerate}
-    \item \textbf{Connections}:  $\mathcal{F}_{\mathcal{D}_{\text{Conn}}}(q, g) = \operatorname{Overlap}(\operatorname{Groups}(q), \operatorname{Groups}(g))$
-    \item \textbf{CodeContests}: $\mathcal{F}_{\mathcal{D}_{\text{Code}}}(q, g) = \operatorname{FinishesExecution}(q) + \operatorname{PassesAllCases}(q, g)$
-    \item \textbf{Sequences}: $\mathcal{F}_{\mathcal{D}_{\text{Seq}}}(q, g) = \operatorname{Equals}(q, g)$
-\end{enumerate} 
+\begin{align}
+\textbf{Connections:} \quad
+\mathcal{F}_{\mathcal{D}_{\text{Conn}}}(q, g) 
+&= \operatorname{Overlap}(\operatorname{Groups}(q), \operatorname{Groups}(g)) \label{eq:connections} \\[0.5em]
+\textbf{CodeContests:} \quad
+\mathcal{F}_{\mathcal{D}_{\text{Code}}}(q, g) 
+&= \operatorname{FinishesExecution}(q) \notag \\
+&\quad + \operatorname{PassesAllCases}(q, g) \label{eq:codecontests} \\[0.5em]
+\textbf{Sequences:} \quad
+\mathcal{F}_{\mathcal{D}_{\text{Seq}}}(q, g) 
+&= \operatorname{Equals}(q, g) \label{eq:sequences}
+\end{align}
 
 \subsection{Metrics for Self-Supervised Optimization}\label{sec:ssometrics}
 In self-supervised contexts, metrics are usually based on reward models pretrained on human preference or environment data.
@@ -174,7 +182,7 @@ Although our first implementation attempt utilized an evolutionary algorithm, we
 This design decision has several reasons.
 \begin{enumerate}
     \item Most PO research uses a hill-climber architecture.
-    \item EAs suffer from slow convergence compared to state-of-the-art hill-climber PO\cite{xiang2025selfsupervisedpromptoptimization}.
+    \item Prompt optimization based on EAs suffer from slow convergence compared to state-of-the-art hill-climber PO\cite{xiang2025selfsupervisedpromptoptimization}.
     \item PO is complex as it is, and more complicated architectures only introduce more hyperparameters.
 \end{enumerate}
 
@@ -221,7 +229,7 @@ Expansion operators' job is extending the optimization population with new promp
     P = \mathscr{M}_{\text{optim}}(M\vsep \mathcal{R}).
 \end{equation*}
 Notice the use of $\mathscr{M}_{\text{optim}}$, which utilizes non-zero sampling temperature $\tau > 0$ to encourage output diversity. 
-Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{Meta-prompt} $M$ 
+Evidently the prompt generation task can be separated into two independent problems: 1. crafting the optimal \textit{meta-prompt} $M$ 
 and 2. designing a data retrieval function $\mathcal{R} = \mathcal{R}(\mathscr{P}, \mathcal{C}, \mathcal{D}, \mathcal{E})$.
 The operators' design should address the following challenges:
 \begin{enumerate}
@@ -230,8 +238,8 @@ The operators' design should address the following challenges:
     This ties into a broader exploration vs. exploitation balance issue.
     \item \textbf{Lack of optimization signal}: Research\cite{he2024crispomultiaspectcritiquesuggestionguidedautomatic}\cite{xiang2025selfsupervisedpromptoptimization} suggests that $\mathscr{M}_{\text{optim}}$ 
     can make use of feedback on prompts' outputs and that these textual signals are more effective than numerical scores.
-    \item \textbf{Out of distribution \textit{Meta-prompt}}: Prompt engineering is a novel research area and does not have a substantial support in the LLM's training corpus.
-    The \textit{Meta-prompt} $M$ thus has to be carefully constructed to help the model output relevant prompts.
+    \item \textbf{Out of distribution \textit{meta-prompt}}: Prompt engineering is a novel research area and does not have a substantial support in the LLM's training corpus.
+    The \textit{meta-prompt} $M$ thus has to be carefully constructed to help the model output relevant prompts.
 \end{enumerate}
 
 We now discuss the design of each prompt generation operator and display their signatures and \textit{meta-prompts}. 
@@ -254,14 +262,14 @@ We randomly sample $N$ examples from a separate training split. So
 \end{equation}
 \begin{figurebox}{Lamarckian Signature. Formatting specifications trimmed.}{box:lamarcksig}
     \hlbox{ctuorange}{Task examples: \texttt{str} (Samples from a problem class) \\
-    Persona (Optional): \texttt{str} (Assume this persona when writing the prompt)} 
-    \hlbox{brown}{Prompt proposal: \texttt{str} (Instructions for solving the problem)} 
-    \hlbox{ctublue}{Craft a \textbf{general} developer prompt to help an LLM with solving a class of problems.\\
+    Persona (Optional): \texttt{str} (Assume this persona when writing the prompt)}[Inputs]
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Instructions for solving the problem)}[Outputs]
+    \hlbox{ctublue}{Craft a \textbf{general} developer prompt to help an LLM\\ with solving a class of problems.\\
     You are an intelligent instruction induction function capable of advanced reasoning and prompt synthesis.\\
     Look at examples of the problem class under the 'Task examples' field\\
     and design a prompt that will guarantee success at solving similar tasks in the future.\\
     Make sure your instructions are \textbf{TRULY GENERAL} and apply to all given samples \textbf{simultaneously}.
-}
+}[Instructions]
 \end{figurebox}
 \newpage
 \subsubsection{Iterative}
@@ -280,15 +288,15 @@ Other methods\cite{tang2024unleashingpotentiallargelanguage} additionally augmen
 In the \textit{meta-prompt}, we instruct the LLM to try to follow the sequence. Also, we specifically say to 'craft a new prompt'
 as opposed to 'improve a prompt' to incite more novelty. For formatting, we use the same instruction set as in the \texttt{Lamarckian}.
 \begin{figurebox}{Iterative Signature. Formatting specifications trimmed.}{box:itersig}
-    \hlbox{ctuorange}{Old prompts: \texttt{list} (List of previous prompts with scores)}
-    \hlbox{brown}{Prompt proposal: \texttt{str} (Better prompt)} 
+    \hlbox{ctuorange}{Old prompts: \texttt{list} (List of previous prompts with scores)}[Inputs]
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Better prompt)}[Outputs]
     \hlbox{ctublue}{Craft a new prompt for an LLM.
     
     You are an intelligent pattern continuation function capable of advanced reasoning and prompt synthesis.\\
     You are given a history of past prompts along with their scores.\\
     They are listed in ascending order of fitness.\\
-    Follow the sequence and design an improved prompt. \\
-}
+    Follow the sequence and design an improved prompt. 
+}[Instructions]
 \end{figurebox}
 
 \subsubsection{Reflective}
@@ -305,15 +313,17 @@ For formatting, we use the same instructions as in previous \textit{meta-prompts
 In $\mathcal{R}$, we want to select the worst possible attempt. This means we optimize "from the bottom up" and try to bootstrap the
 worst prompts. The retrieval function is
 \begin{equation}
-    \mathcal{R}_{\text{R}}(\mathscr{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{JoinAttemptWithTask}(\operatorname{FindWorstAttempt}(\mathscr{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
+    \mathcal{R}_{\text{R}}(\mathscr{P}, \mathcal{C}, \mathcal{D}, \mathcal{E}) = \operatorname{FindWorstAttemptData}(\mathscr{P}, \mathcal{C}, \mathcal{E}, \mathcal{D})
 \end{equation}
+The function \texttt{FindWorstAttemptData} finds the worst attempt overall. This is done with the goal of guaranteeing an attempt with score $0$.
+We first find the prompt with the worst worst-case performance and then fetch data about its worst attempt - task question, reasoning chain (solution) and the prompt itself.
 
 \begin{figurebox}{Reflective Signature. Formatting specifications trimmed.}{box:reflexsig}
     \hlbox{ctuorange}{Original prompt: \texttt{str} (Improve this prompt) \\
     Task question: \texttt{str} (Task on which the prompt was used) \\
-    Solution: \texttt{str} (What the original prompt produced)}
+    Solution: \texttt{str} (What the original prompt produced)}[Inputs]
     \hlbox{brown}{Original prompt critique: \texttt{str} (Faults in the original prompt) \\
-    Prompt proposal: \texttt{str} (Improved prompt)} 
+    Prompt proposal: \texttt{str} (Improved prompt)}[Outputs]
 
     \hlbox{ctublue}{Improve a prompt for an LLM.
     
@@ -323,7 +333,7 @@ worst prompts. The retrieval function is
     - Find failure points in the solution and cross-reference to identify weaknesses in the prompt.\\
     - Think of a critique that captures your findings\\
     - Apply your critique to \textit{slightly} alter the original prompt to improve it.\\
-    Your improved prompt should still be \textbf{widely applicable and generic}.}
+    Your improved prompt should still be \textbf{widely applicable and generic}.}[Instructions]
 \end{figurebox}
 
 
@@ -335,9 +345,9 @@ $P_{\text{base}} = \operatorname{RandomSample}(\mathscr{P})$. Then
 \begin{equation}
     \mathcal{R}_{\text{F}}(\mathscr{P}, \mathcal{E}_{\text{comp}}) = \{P_{\text{base}}, \operatorname{GetComparisons}(P_{\text{base}}, \mathcal{E}_{\text{comp}})\}
 \end{equation}
-In the \textit{Meta-prompt}, we frame the task as critique synthesis and use "improve" wording to guide the LLM to start from the base prompt.
+In the \textit{meta-prompt}, we frame the task as critique synthesis and use "improve" wording to guide the LLM to start from the base prompt.
 We also explain that each comparison has a different verdict and the base prompt might not always be the winner. For the formatting guide, we use the same instructions
-as in the previous operators.
+as in the previous operators. In figure \ref{box:compexample}, we show an example of a comparison between two outputs and their prompts. This is a by-product of gold label-free evaluation.
 
 For large populations or tasks producing long prompts, we might run into issues with LLM context window length. 
 However for our purpose, modern LLMs provide more than sufficient context limits. 
@@ -345,14 +355,22 @@ However for our purpose, modern LLMs provide more than sufficient context limits
     \hlbox{ctuorange}{
         Base prompt: \texttt{str} (Improve this prompt) \\
         Comparisons: \texttt{str} (Base prompt compared to others)
-    }
-    \hlbox{brown}{Prompt proposal: \texttt{str} (Improved prompt)} 
+    }[Inputs]
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Improved prompt)}[Outputs]
     \hlbox{ctublue}{Improve a prompt for an LLM.
 
     You are an intelligent critique synthesis function capable of advanced reasoning. \\
     You are given a base prompt and a list of comparisons between the base prompt and other prompts.\\
     Some other prompts are better than the base prompt, some are worse.\\
-    Your task is to analyze the comparisons and synthesize a new prompt that incorporates the feedback.}
+    Your task is to analyze the comparisons and synthesize a new prompt that incorporates the feedback.}[Instructions]
+\end{figurebox}
+
+\begin{figurebox}{Example of a comparison of two prompts for \texttt{CodeContests}}{box:compexample}
+    {
+        \hlbox{ctulightblue}{Prompt A failed to produce an output. \\Prompt B produced a correct Python solution. The reasoning provided by Prompt B is also helpful in understanding the solution.}[Output comparison]
+        \hlbox{ctulightblue}{Prompt A is verbose and provides a comprehensive \\framework for code generation. Prompt B is concise and directly requests a solution. Prompt B is significantly more effective in this context as it directly leads to a solution.}[Prompt comparison]
+        \hlbox{ctublue}{Prompt B}[Verdict]
+    }
 \end{figurebox}
 
 \subsubsection{Paraphrase}
@@ -366,17 +384,17 @@ This method uses no optimization signal or improvement instructions and relies o
 
 
 \begin{figurebox}{Paraphrase Signature. Formatting specifications trimmed.}{box:parasig}
-    \hlbox{ctuorange}{Original prompt: \texttt{str} (Prompt to paraphrase)}
-    \hlbox{brown}{Prompt proposal: \texttt{str} (Paraphrased prompt)} 
+    \hlbox{ctuorange}{Original prompt: \texttt{str} (Prompt to paraphrase)}[Inputs]
+    \hlbox{brown}{Prompt proposal: \texttt{str} (Paraphrased prompt)}[Outputs]
     \hlbox{ctublue}{Paraphrase a prompt for an LLM.
                     
     You are an intelligent paraphrasing function capable of advanced reasoning and prompt synthesis.\\
     You are given a prompt and your task is to paraphrase it. \\
-    Use synonyms and change the structure of the prompt but keep it semantically equivalent.}
+    Use synonyms and change the structure of the prompt but keep it semantically equivalent.}[Instructions]
 \end{figurebox}
 In figure \ref{box:formatting} we show the formatting specification part, which is identical for all prompt generation \textit{meta-prompts}.
 
-\begin{figurebox}{Formatting specifications, which are the same for all operators}{box:formatting}
+\begin{figurebox}{Formatting specifications, which are identical for all operators}{box:formatting}
     Use Markdown formatting in your final answer to indicate bullet points and whatever else necessary.\\
     As a placeholder for the task question, '<INSERT TASK QUESTION HERE>' should be used exactly ONCE.\\
     In the final answer, do not include a title or any additional data, just the prompt.
@@ -395,11 +413,11 @@ We opt to use edit distance instead of semantic similarity, like BERT embeddings
     \label{alg:duplicpurge}
     \KwIn{Population $\mathscr{P}$, Pruning factor $f_{\text{prune}}$}
     \KwOut{Pruned population $\mathscr{P}_{\text{pruned}}$}
-    $\mathscr{P}_{\text{sorted}} \gets \operatorname{SortByScore}(\mathscr{P}, \mathcal{E})$ \\
-    $n_{\text{continue}} \gets \vert\mathscr{P}\vert(1-f_{\text{prune}})$
-    $i \gets 0$
+    $\mathscr{P}_{\text{sorted}} \gets \operatorname{SortByScoreDescending}(\mathscr{P}, \mathcal{E})$ \\
+    $n_{\text{continue}} \gets \vert\mathscr{P}\vert(1-f_{\text{prune}})$ \\
+    $i \gets 0$ \\
     \While{$i<n_{\text{continue}}$} {
-        $P_{\text{select}} \gets \operatorname{GetFirst}(\mathscr{P}_{\text{sorted}})$ \\ 
+        $P_{\text{select}} \gets \operatorname{Get}(\mathscr{P}_{\text{sorted}}, i)$ \tcp{Get i-th best}
         $P_{\text{purge}} \gets \underset{P\in\mathscr{P}\mid P \neq P_{\text{select}}}{\operatorname{argmax}} \operatorname{LevenshteinRatio}(P, P_{\text{select}})$ \\
         $\operatorname{Remove}(\mathscr{P}, P_{\text{purge}})$
     }

@@ -30,14 +30,14 @@ main experiment on \texttt{CodeContests}, \texttt{Connections} and \texttt{Seque
 In the row marked HB, we present the maximum score achieved by prompts $P\in\mathscr{P}_{\text{baseline}}$, forming a hard baseline (HB). 
 The next row, marked SB, shows the best score out of the initializing prompts $P\in\mathscr{P}_{\text{init}}$, which forms a soft baseline (SB).
 The following rows show the best score of each step $s$, which is calculated as an average over all three experiment repetitions $e\in\{1,2,3\}$:
-\begin{equation}
+\begin{equation}\label{eq:maxaverage}
     \frac{1}{3}\sum_{e=1}^{3}\operatorname{Max}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathscr{P}_{s}^{e})),
 \end{equation}
 where $\mathscr{P}_{s}^{e}$ signifies the population at step $s$ of experiment repetition $e$.
 For each operator, the best step score is marked in \textbf{bold} and the best score overall is also \underline{underlined}.
 Cells with values which surpass the soft baseline are shaded in \textcolor{green}{green} and those which fall short are in \textcolor{red}{red}.
 We also include the average step score in bracketed smaller script, defined by 
-\begin{equation}
+\begin{equation}\label{eq:avgaverage}
     \frac{1}{3}\sum_{e=1}^{3}\operatorname{Mean}(\mathcal{E}_{\mathcal{D}_{\text{test}}}(\mathscr{P}_{s}^{e})).
 \end{equation}
 Figures \ref{fig:codecontests}, \ref{fig:connections} and \ref{fig:sequences} show the corresponding graphs with a gray dotted line marking 
@@ -46,7 +46,7 @@ the soft baseline and an orange solid line marking the hard baseline.
 \begin{table}[htbp]
     \centering
     \captionsetup{font=small}
-    \caption{Results for codecontests}  
+    \caption{Results for CodeContests.  Listed values are calculated using equations \ref{eq:maxaverage} and \ref{eq:avgaverage} according to the metric function in equation \ref{eq:codecontests}.}  
     \label{tab:rescodecontests}
     \renewcommand{\arraystretch}{1.4} % row spacing
 
@@ -86,7 +86,7 @@ $10$ & \cellcolor{lightgreen}\maxmean{0.24}{0.13} & \cellcolor{lightgreen}\maxme
 \begin{table}[htbp]
     \centering
     \captionsetup{font=small}
-    \caption{Results for connections}  
+    \caption{Results for Connections. Listed values are calculated using equations \ref{eq:maxaverage} and \ref{eq:avgaverage} according to the metric function in equation \ref{eq:connections}.}  
     \label{tab:resconnections}
     \renewcommand{\arraystretch}{1.4} % row spacing
 
@@ -127,7 +127,7 @@ $10$ & \cellcolor{lightred}\maxmean{0.16}{0.07} & \cellcolor{lightgreen}\maxmean
 \begin{table}[htbp]
     \centering
     \captionsetup{font=small}
-    \caption{Results for sequences}  
+    \caption{Results for Sequences.  Listed values are calculated using equations \ref{eq:maxaverage} and \ref{eq:avgaverage} according to the metric function in equation \ref{eq:sequences}.}  
     \label{tab:ressequences}
     \renewcommand{\arraystretch}{1.4} % row spacing
 
@@ -364,5 +364,7 @@ to decide if the optimized prompts produced better images. We observe, that in f
 The winning images are all in a very similar style. This is in contrast to figure \ref{fig:graceful}, where the focus seems to have shifted to 
 photorealistic images in the first optimization step.
 
-Note that in this case, the optimization is framed differently from previous experiments.
-We are conducting inference-time optimization for a particular task instance unlike previous compile-time experiments, where we optimized for a whole task class.
+Note that in this case, the optimization is framed differently from previous experiments. 
+Whereas before we optimized a prompt template which works with a whole class of tasks,
+in this case we are optimizing a complete prompt for a particular image description in an attempt to
+create a fitting image. This is a shift from compile-time to inference-time as the optimized image prompt only reflects the single image description. 
