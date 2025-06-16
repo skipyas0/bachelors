@@ -17,22 +17,22 @@
 	%subtitle-english = {abcd},
 	doctype = B,
 	faculty = F3,
-	department-english = {Artificial Intelligence Center},
-	department-czech = {Centrum pro umělou inteligenci},
+	department-english = {Department of Control Engineering},
+	department-czech = {Katedra řídicí techniky},
 	author = {Vojtěch Klouda},
 	supervisor = {Ing. Jan Drchal PhD.},
 	supervisor-address = {Resslova 307/9 Praha, E-322},
 %	supervisor-specialist = {John Doe},
-	fieldofstudy-english = {Artificial Intelligence},
-	subfieldofstudy-english = {Natural Language Processing},
-	fieldofstudy-czech = {Umělá inteligence},
-	subfieldofstudy-czech = {Zpracování přirozeného jazyka},
+	fieldofstudy-english = {Cybernetics and Robotics},
+	%subfieldofstudy-english = {Natural Language Processing},
+	fieldofstudy-czech = {Kybernetika a robotika},
+	%subfieldofstudy-czech = {Zpracování přirozeného jazyka},
 	keywords-czech = {velký jazykový model, optimalizace promptů, metody inference, promptovací techniky, strukturovaná generace},
 	keywords-english = {large language model, prompt optimization, inference methods, prompting techniques, structured generation},
 	day = 10,
 	month = 5,
 	year = 2025,
-	specification-file = {Thesis-assignment.pdf},
+	specification-file = {declaration_merged.pdf},
 %	front-specification = true,
 %	front-list-of-figures = false,
 %	front-list-of-tables = false,
@@ -235,7 +235,7 @@ In Prague, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 \begin{document}
 
 \maketitle
-
+\ctutemplate{specification.as.chapter}
 \chapter{Introduction}
 \include{introduction}
 
@@ -263,8 +263,6 @@ In Prague, \ctufield{day}.~\monthinlanguage{title}~\ctufield{year}
 
 \bibliographystyle{ieeetr}
 \bibliography{references}
-
-\ctutemplate{specification.as.chapter}
 
 
 \end{document}
