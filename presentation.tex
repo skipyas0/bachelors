@@ -9,6 +9,7 @@
 %===============================================================
 
 \documentclass[aspectratio=169]{beamer}
+\setbeamertemplate{footline}[frame number]
 
 \usepackage[utf8]{inputenc}
 \usepackage{eqnarray,amsmath}
@@ -282,7 +283,7 @@
 	}[Connections]
 	\hlbox{ctublue}{\vspace{0.5em}
 		\begin{itemize}
-			\item Řešení úloh kompetetivního programování
+			\item Řešení úloh programovacích rébusů z programovacích soutěží
 		\end{itemize}
 	}[CodeContests]
 	\hlbox{ctublue}{\vspace{0.5em}
@@ -318,15 +319,34 @@
 	\frametitle{Výsledky}
 	\begin{figure}
 		\includegraphics[width=8cm]{sequences.pdf}
-		\caption{Výsledky jednotlivých operátorů na úloze hledání dalšího čísla v celočíselné posloupnosti. Hard Baseline (Oranžová) - nejlepší z 50 promptů z Instruction Induction operátoru, Soft Baseline (Šedá, čárkovaná) - nejlepší z promptů inicializační populace.}
+		\caption{Výsledky jednotlivých operátorů na úloze hledání dalšího čísla v celočíselné posloupnosti. Hard Baseline (oranžová) - nejlepší z 50 promptů z Instruction Induction operátoru, Soft Baseline (šedá, čárkovaná) - nejlepší z promptů inicializační populace.}
 	\end{figure}
 \end{frame}
 
 \begin{frame}
-	\frametitle{Výsledky}
+\frametitle{Příklad optimalizovaného promptu}	
+\hlbox{ctublue}{
+\scriptsize{\vspace{0.7em}
+- You are an expert in pattern recognition and numerical sequence analysis. - You will be given a sequence of numbers.- Your task is to identify the underlying pattern in the sequence and predict the next number in the sequence.- Specifically, analyze the differences between consecutive numbers in the sequence.- Determine if the differences follow a \textcolor{red}{consistent pattern (e.g., arithmetic, geometric, quadratic)}.- Extrapolate the pattern to predict the next value in the sequence.- Return only the predicted number. Here is the sequence: $<$INSERT TASK QUESTION HERE$>$
+}
+}[Špatný inicializační prompt, generace $0$, skóre $0.1$]
+{
+
+\setbeamercolor{itemize item}{fg=ctuorange}
+\hlbox{ctuorange}{
+\scriptsize{\vspace{0.7em}
+- You are an expert at identifying mathematical patterns in numerical sequences. - You will be given a sequence of numbers. Your task is to determine the next number in the sequence. - Analyze the sequence for patterns, including differences between consecutive numbers and \textcolor{red}{alternating trends}. Here are some \textcolor{red}{examples}: Example 1: Input: 0 -1 30 -3 60 -5 90 -7 120 -9 150 -11 180 -13 210 -15 240 -17 270 -19 300 -21 330 -23 360 Output: \textcolor{red}{-25} Example 2: Input: 0 3 22 9 44 15 66 21 88 27 110 33 132 39 154 45 176 51 198 57 220 63 242 69 264 Output: \textcolor{red}{75} Now, solve the following problem: $<$INSERT TASK QUESTION HERE$>$- Provide only the final numerical answer.
+}
+}[Dobrý optimalizovaný prompt, generace $9$, skóre $0.7$]
+
+}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Relativní zlepšení operátorů}
 	\begin{figure}
 		\includegraphics[width=8cm]{relative.pdf}
-		\caption{Relativní zlepšení vzhledem k inicializačním promptům (Soft Baseline).}
+		\caption{Relativní zlepšení operátorů vzhledem k inicializačním promptům (Soft Baseline).}
 	\end{figure}
 \end{frame}
 
@@ -374,10 +394,13 @@
 		\item framework pro strukturovanou generaci s inference-time metodami
 		%\pause
 		\item porovnání operátorů na různých úlohách oproti silnému referenčnímu řešení
+		\item odkaz na GitHub v abstraktu
 	\end{itemize}
+
 \end{frame}
 
-\begin{frame}
+%\addtocounter{framenumber}{-3}
+\begin{frame}[noframenumbering, plain]
 	\frametitle{Otázky oponenta}
 	\hlbox{ctuorange}{\vspace{0.5em}Do jaké míry lze navržené řešení použít obecně v praxi, např. pro úlohu převodu PDF obsahu na strukturovaný
 JSON výstup?}[Otázka]
@@ -392,7 +415,7 @@ JSON výstup?}[Otázka]
 	
 \end{frame}
 
-\begin{frame}
+\begin{frame}[noframenumbering, plain]
 	\frametitle{Otázky oponenta}
 
 	
@@ -408,7 +431,7 @@ prohledávání pouze na úzkou oblast prostoru? Jsou nějaké zkušenosti s nas
 	}[Odpověď]
 \end{frame}
 
-\begin{frame}
+\begin{frame}[noframenumbering, plain]
 	\frametitle{Otázky oponenta}
 
 	\hlbox{ctublue}{\vspace{0.5em}
@@ -421,9 +444,4 @@ prohledávání pouze na úzkou oblast prostoru? Jsou nějaké zkušenosti s nas
 	}[Odpověď]
 \end{frame}
 
-\begin{frame}
-	\begin{center}
-		\Large{Děkuji za pozornost}
-	\end{center}
-\end{frame}
 \end{document}
