@@ -283,7 +283,7 @@
 	}[Connections]
 	\hlbox{ctublue}{\vspace{0.5em}
 		\begin{itemize}
-			\item Řešení úloh programovacích rébusů z programovacích soutěží
+			\item Řešení programovacích rébusů z programovacích soutěží
 		\end{itemize}
 	}[CodeContests]
 	\hlbox{ctublue}{\vspace{0.5em}
@@ -298,11 +298,11 @@
 \begin{frame}
 	\frametitle{Hlavní experiment}
 	\begin{itemize}
-		\item úlohy s objektivním řešením
-		\item porovnání 4 operátorů
-		\item 3 operátory používají metriky úloh
-		\item 1 pracuje s porovnáváním výstupů pomocí LLM
-		\item referenční řešení - rekonstrukce instrukcí z příkladů
+		\item porovnání expanzních operátorů
+		\item nejdříve 50 promptů pomocí Instruction Induction
+		\item nejlepší = Hard Baseline (HB)
+		\item 4. kvintil (11.-20. prompt) - inicializace populace, Soft Baseline (SB)
+		\item 10 iterací - celkem se vytvoří dalších 50 promptů
 		\item každý experiment zopakován třikrát
 	\end{itemize}
 \end{frame}
